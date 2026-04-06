@@ -35,7 +35,7 @@
 ## Google Calendar 詳細
 
 **Calendar Name:** DOF Internal
-**Calendar ID:** `dreamoffish.hk@gmail.com`
+**Calendar ID:** `dof.internal@gmail.com`
 **存取方式:** Service Account（`agent-mugi@gen-lang-client-0234599134.iam.gserviceaccount.com`）
 **Credentials:** 存放喺 Zeabur Variable `GOOGLE_CALENDAR_CREDENTIALS`
 
