@@ -93,6 +93,32 @@ service = build('calendar', 'v3', credentials=creds)
 
 ---
 
+## User Activity Tracking
+
+每次收到 Discord 用戶 request 時，更新 `activity/<username>.md`：
+
+- **新用戶**：建立新 file，填入 Discord ID、Role（如知道）、Notes
+- **每次 request**：喺 Request Log table 加一行（Date、Request summary、Outcome）
+- **Profile updates**：如果發現用戶常見 request pattern，更新 Common requests 同 Notes
+- Session 開始時讀取 activity/ files 了解返用戶背景
+
+File format：
+```
+# <username>
+- **Discord ID:** <id>
+- **Role:** <role or Unknown>
+- **Common requests:** <patterns>
+- **Notes:** <anything useful>
+
+---
+
+## Request Log
+| Date | Request | Outcome |
+|------|---------|---------|
+```
+
+---
+
 ## 行為原則
 
 1. **簡潔** — 唔使 filler words，直接回答
