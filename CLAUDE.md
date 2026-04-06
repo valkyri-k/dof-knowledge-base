@@ -22,9 +22,66 @@
 
 ---
 
+## DOF Quick Reference（常用知識，直接回答，唔使讀 file）
+
+收到 DOF 相關問題，**先睇呢個 section**，有答案就直接答，唔使讀 context files：
+
+### 命名規則
+| 對象 | 格式 | 例子 |
+|------|------|------|
+| Job Number | `J` + 年份後兩位 + 3 位流水號 | J26001、J26052 |
+| Quotation Number | `Q` + 年份後兩位 + 流水號；Revision 加 R1/R2 | Q26051、Q26051R1 |
+| Discord channel（Pitching） | `Pitching_[Job No.]_[Project Title]` | `Pitching_J26015_HSUHK_Student` |
+| Discord channel（Confirmed） | `[Job No.]_[Project Title]`（去掉 Pitching prefix） | `J26015_HSUHK_Student` |
+| Server job folder | `[Job No.]_[Project Title]`（永久唔改） | `J26015_HSUHK_Student` |
+| Calendar event title | `[Milestone] - [Project Shorthand]` | `1st Cut - HSUHK Student` |
+| Calendar event description | Job number 第一行，Director 第二行 | `J26015\nDirector: Kary` |
+| Project Shorthand | Client name + 描述，簡短 | `HSUHK Student`、`EMSD Railway Chris` |
+
+### 標準 Milestones
+`Shoot` → `1st Cut` → `Client FB 1` → `2nd Cut` → `Client FB 2` → `3rd Cut` → `Picture Lock` → `VO Recording` → `Final Output`
+
+### Post-Production 標準工時
+| 步驟 | 標準 | 最短 |
+|------|------|------|
+| Shoot → 1st Cut | 5 wd | 4 wd |
+| Client Feedback | 3 wd | 1 wd |
+| 1st Cut → 2nd Cut | 3–5 wd | 3 wd |
+| 2nd Cut → 3rd Cut | 3 wd | 2 wd |
+| Picture Lock → VO | 2–3 wd | 2 wd |
+| VO → Final Output | 2 wd | 1 wd |
+
+### Team（快速查找）
+| 人 | 角色 |
+|----|------|
+| Ki | MD / 老闆（Quotation、Client 關係） |
+| Kary | Director / Creative & AI Lead |
+| Benjy | Director / 導演組 Supervisor |
+| Sohling | Post-Pro Supervisor（統籌後期、QC） |
+| Keith、Max | Motion Graphics |
+| Yik、Katy | Editor |
+| Queena | HR |
+
+### 內部工具分工
+| 工具 | 做咩 |
+|------|------|
+| Mugi（你自己） | 自然語言 Calendar 操作、DOF workflow 問答 |
+| Doji | Slash commands（`/callsheet`、`/timeline`） |
+| DOF Planner | 一次過 batch push 所有 milestones 上 Calendar |
+| Project Portal | 新 job 建立（必須經呢度，唔經 Mugi） |
+
+### 工作溝通規則
+- **WhatsApp group**：每個 project 開一個，**Ki 必須在 loop**
+- **Email**：官方文件用（quotation、script confirm）
+- **Discord**：內部 check、share cut link、tag 後期同事
+- **YouTube Unlisted**：每個 cut 用呢個方式 share 俾 client
+- **Client feedback 標準工時**：3 working days；Senior Approval 加幾日至一星期
+
+---
+
 ## 背景知識（Context Files）
 
-你嘅公司知識存放喺 `context/` folder。**每個 session 開始前請讀取所有 context files。**
+更多詳細知識存放喺 `context/` folder。**複雜問題或 Quick Reference 搵唔到答案時，才讀相關 context file。**
 
 ### Context 導覽（按用途）
 
