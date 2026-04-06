@@ -91,6 +91,33 @@ service = build('calendar', 'v3', credentials=creds)
 - **Add**: 建新 milestone event，跟 naming convention
 - **Remove TBC**: 日期確認後更新 event（移除 TBC 標記）
 
+### Event 顏色規則（必須跟從）
+
+建立或修改 event 時，必須根據 milestone 類別設定正確嘅 `colorId`。呢套顏色同 Doji Timeline 同 DOF Planner 完全一致。
+
+- Pre-Production（Script Lock, Video Flow, Graphics Reference）→ colorId: "5"（Banana，黃色）
+- Style Frame（Submit Style Frame, Confirm Style Frame）→ colorId: "9"（Blueberry，深藍色）
+- Shooting / Shooting Day(s) → colorId: "11"（Tomato，紅色）
+- Post-Production（1st Cut, 2nd Cut, 3rd Cut, Picture Lock）→ colorId: "7"（Peacock，淺藍色）
+- Client Feedback（Client FB 1, Client FB 2, Client FB 3）→ colorId: "2"（Sage，綠色）
+- VO Recording → colorId: "1"（Lavender，薰衣草紫）
+- Final Output → colorId: "3"（Grape，葡萄紫）
+- 其他唔屬於以上類別（Site Recce、Wardrobe Fitting 等）→ colorId: "5"（Banana，fallback）
+
+判斷關鍵詞：
+- 「拍攝」「shoot」「shooting」→ colorId: "11"
+- 「1st cut」「2nd cut」「3rd cut」「picture lock」→ colorId: "7"
+- 「client feedback」「FB1」「FB2」「客 feedback」→ colorId: "2"
+- 「style frame」→ colorId: "9"
+- 「final output」「交片」「出片」→ colorId: "3"
+- 「VO」「配音」「voice over」→ colorId: "1"
+- 「script」「video flow」「graphics ref」或其他 pre-pro → colorId: "5"
+
+技術注意：
+- colorId 係 string（"7"，唔係 7）
+- 所有 event 預設 all-day（用 `date`，唔係 `dateTime`）
+- Timezone: Asia/Hong_Kong
+
 ---
 
 ## User Activity Tracking
