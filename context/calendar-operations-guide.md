@@ -70,19 +70,32 @@ Director: Kary
 
 ## colorId Mapping
 
-建立 Calendar event 時，按 milestone 類型設定 colorId：
+建立或修改 Calendar event 時，必須根據 milestone 類別設定正確嘅 `colorId`。呢套顏色同 Doji Timeline 同 DOF Planner 完全一致。
 
-| Milestone | colorId | 顏色 |
-|-----------|---------|------|
-| Shoot | `11` | Tomato（紅色） |
-| 1st Cut / 2nd Cut / 3rd Cut | `9` | Blueberry（深藍） |
-| Client FB 1 / 2 / 3 | `5` | Banana（黃色） |
-| Picture Lock | `10` | Basil（深綠） |
-| VO Recording | `3` | Grape（紫色） |
-| Final Output | `2` | Sage（綠色） |
-| General / 其他 | `8` | Graphite（灰色） |
+| 類別 | 包含嘅 Milestones | colorId | 顏色 |
+|------|-------------------|---------|------|
+| Pre-Production | Script Lock, Video Flow, Graphics Reference | `5` | Banana（黃色） |
+| Style Frame | Submit Style Frame, Confirm Style Frame | `9` | Blueberry（深藍色） |
+| Shooting | Shoot / Shooting Day(s) | `11` | Tomato（紅色） |
+| Post-Production | 1st Cut, 2nd Cut, 3rd Cut, Picture Lock | `7` | Peacock（淺藍色） |
+| Client Feedback | Client FB 1, Client FB 2, Client FB 3 | `2` | Sage（綠色） |
+| VO Recording | VO Recording | `1` | Lavender（薰衣草紫） |
+| Final Output | Final Output | `3` | Grape（葡萄紫） |
+| 其他 | Site Recce, Wardrobe Fitting 等 | `5` | Banana（fallback） |
 
-呢個 mapping 同 Doji Timeline 同 DOF Planner 對齊。
+### 判斷關鍵詞
+- 「拍攝」「shoot」「shooting」→ colorId: `11`
+- 「1st cut」「2nd cut」「3rd cut」「picture lock」→ colorId: `7`
+- 「client feedback」「FB1」「FB2」「客 feedback」→ colorId: `2`
+- 「style frame」→ colorId: `9`
+- 「final output」「交片」「出片」→ colorId: `3`
+- 「VO」「配音」「voice over」→ colorId: `1`
+- 「script」「video flow」「graphics ref」或其他 pre-pro → colorId: `5`
+
+### 技術注意
+- colorId 係 **string**（`"7"`，唔係 `7`）
+- 所有 event 預設 **all-day**（用 `date`，唔係 `dateTime`）
+- Timezone: `Asia/Hong_Kong`
 
 ---
 
