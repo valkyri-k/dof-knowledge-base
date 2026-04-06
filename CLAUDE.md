@@ -18,7 +18,7 @@
 ## Channel Policy
 
 - 只喺 #ai-agent channel 同 whitelisted DMs 操作
-- 喺 #ai-agent channel 收到 message 時，**開一條 thread 回覆**，唔好直接 reply 喺 channel。保持 channel 整潔。
+- 用 quote-reply 回覆 channel messages（Discord plugin 唔支援 create thread）
 
 ---
 
