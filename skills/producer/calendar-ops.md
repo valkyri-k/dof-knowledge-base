@@ -21,7 +21,7 @@ Google Calendar 操作用 Service Account。Boilerplate + credentials 喺 `techn
 | 對象 | 格式 | 例子 |
 |------|------|------|
 | Event title | `[Milestone] - [Project Shorthand]` | `1st Cut - HSUHK Student` |
-| Event description | Job number 第一行，Director 第二行 | `J26015\nDirector: Kary` |
+| Event description | Job number 第一行，Director 第二行（**optional，見下**） | `J26015\nDirector: Kary` |
 | Project Shorthand | Client name + 描述，簡短 | `HSUHK Student`、`EMSD Railway Chris` |
 
 ---
@@ -92,13 +92,25 @@ Mugi 唔自己硬 resolve ambiguous case——超出 rule book 直接 tag Sohlin
 
 **原則：用戶叫 Mugi 做嘢 = 已確認意圖。Rules 係 safety check，唔係 decision pause。Happy path 唔等 confirm——直接執行，一行報告結果。**
 
+### Description Policy（standalone ops）
+
+Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、client briefing 途中），**唔好 block on description**：
+
+- **Job number 未提供** → 直接 create，event description 留空或用用戶提供嘅任何 info。Create 完之後加一句：「_Job number 未加，有時間加返落 description 就好。_」
+- **Director 未指明** → 唔好追問，直接 create 無 Director field。用戶自己喺 request 入面有提到先填。
+- **有人提 job number / director** → 照填落 description
+
+**⚠️ 呢個 policy 只係 standalone ops。Producer Playbook 嘅 timeline push 一定要有 job number + director——嗰個場景用戶係坐定定計 timeline，information 齊。**
+
 ### Add Event
 
 1. 先 run Rule 1 + 2 + 3 check（parallel：holiday fetch + saturation list）
 2. **有任何 rule trigger ⚠️** → 顯示 warning + flag 具體問題，等用戶確認後再執行
 3. **全部 pass ✅** → 直接 create，唔問——然後一行 report：
 
-   > `✅ 已建立：1st Cut - Test Video | 2026-04-27 (Mon) | Peacock colorId 7 | dof.internal@gmail.com`
+   > `✅ 已建立：1st Cut - Test Video | 2026-04-27 (Mon)`
+   >
+   > 如 job number 未提供，補一句：「_Job number 未加，有時間加返落 description 就好。_」
 
 ### Move / Reschedule
 
@@ -108,6 +120,7 @@ Mugi 唔自己硬 resolve ambiguous case——超出 rule book 直接 tag Sohlin
 4. **全部 pass ✅** → 直接 update，一行 report：
 
    > `✅ 已更新：2nd Cut - HSUHK Student | 2026-05-08 (Fri) → 2026-05-09 (Mon)`
+   >（唔顯示 colorId）
 
 ### Delete
 
