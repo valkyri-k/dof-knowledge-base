@@ -47,18 +47,37 @@ Director: Kary
 
 ## 標準 Milestone Set
 
-| Milestone | 用途 | 備註 |
-|-----------|------|------|
-| `Shoot` | 拍攝日 | 可能有多日 |
-| `1st Cut` | 第一版剪接交客 | 4–5 wd after shoot（標準） |
-| `Client FB 1` | 客戶第一輪 Feedback deadline | |
-| `2nd Cut` | 第二版剪接交客 | 3–5 wd after Client FB 1 |
-| `Client FB 2` | 客戶第二輪 Feedback deadline | |
-| `3rd Cut` | 第三版剪接交客 | 3 wd after Client FB 2 |
-| `Client FB 3` | 客戶第三輪 Feedback deadline | 唔係每個 project 都有 |
-| `Picture Lock` | 畫面鎖定 | |
-| `VO Recording` | 旁白錄音 | 如有需要 |
-| `Final Output` | 最終成品交付 | |
+呢個係一個完整 timeline 嘅所有 milestones，按階段分組。**Push timeline 上 Calendar 時，default 行為係 push 完整集合**（適用嘅 milestones），唔好淨係 push post-pro section。
+
+### Pre-Production
+
+| Milestone | colorId | 顏色 | 用途 | 條件 |
+|-----------|---------|------|------|------|
+| `Client Confirm Script` | `2` | Client Feedback 綠 | Script 確認 deadline（client 做嘅嘢） | 標準 — 不論 client 提供定 DOF 撰寫都要有 |
+| `Video Flow` | `5` | Pre-Pro 黃 | Submit Video Flow + Graphics Reference（DOF 做嘅嘢） | 標準 |
+| `Confirm Video Flow` | `2` | Client Feedback 綠 | Client confirm Video Flow + Reference（client 做嘅嘢） | 標準 |
+| `Submit Style Frame` | `9` | Style Frame 深藍 | Style Frame 提交（DOF 做嘅嘢） | 該 project 走 style frame 流程 |
+| `Confirm Style Frame` | `2` | Client Feedback 綠 | Style Frame 確認（client 做嘅嘢） | 該 project 走 style frame 流程 |
+
+### Shooting
+
+| Milestone | colorId | 顏色 | 用途 | 備註 |
+|-----------|---------|------|------|------|
+| `Shoot` | `11` | Shooting 紅 | 拍攝日 | 多日就 push 多個 event |
+
+### Post-Production
+
+| Milestone | colorId | 顏色 | 用途 | 備註 |
+|-----------|---------|------|------|------|
+| `1st Cut` | `7` | Post-Pro 淺藍 | 第一版剪接交客 | 4–5 wd after shoot（標準） |
+| `Client FB 1` | `2` | Client Feedback 綠 | 客戶第一輪 feedback deadline | |
+| `2nd Cut` | `7` | Post-Pro 淺藍 | 第二版剪接交客 | 3–5 wd after Client FB 1 |
+| `Client FB 2` | `2` | Client Feedback 綠 | 客戶第二輪 feedback deadline | |
+| `3rd Cut` | `7` | Post-Pro 淺藍 | 第三版剪接交客 | 3 wd after Client FB 2 |
+| `Client FB 3` | `2` | Client Feedback 綠 | 客戶第三輪 feedback deadline | 唔係每個 project 都有 |
+| `Picture Lock` | `7` | Post-Pro 淺藍 | 畫面鎖定 | |
+| `VO Recording` | `1` | VO 薰衣草紫 | 旁白錄音 | 如有需要 |
+| `Final Output` | `3` | Final 葡萄紫 | 最終成品交付 | |
 
 **重要：** 統一用呢套名稱。例如：
 - ✅ `1st Cut - HSUHK Student`
@@ -68,17 +87,53 @@ Director: Kary
 
 ---
 
+## Milestone Selection Logic（push timeline 時用）
+
+當你 build 或 push 一個完整 timeline 上 Calendar 時，**default 包含所有適用嘅 milestones**，唔好淨係 push post-pro。
+
+### Default Inclusion Rules
+
+| Milestone | Always Push? | 條件 |
+|-----------|--------------|------|
+| `Client Confirm Script` | ✅ Always | 不論 client 提供定 DOF 撰寫，都要有確認步驟 |
+| `Video Flow` | ✅ Always | 標準 pre-pro deliverable |
+| `Confirm Video Flow` | ✅ Always | 標準 pre-pro deliverable |
+| `Submit Style Frame` | Conditional | 該 project 走 style frame 流程 |
+| `Confirm Style Frame` | Conditional | 該 project 走 style frame 流程 |
+| `Shoot` | Conditional | hasShooting === true（多日就 push 多個 event） |
+| `1st Cut` → `Final Output` | ✅ Always | 標準 post-pro 流程 |
+| `Client FB 3` | Conditional | 該 project 預咗 3 輪 client feedback |
+| `VO Recording` | Conditional | needsVO === true |
+
+### 常見錯誤（Anti-patterns）
+
+- ❌ **只 push post-production milestones** — pre-pro 都要 push（包括 Client Confirm Script、Video Flow、Confirm Video Flow）
+- ❌ **跳過 Style Frame milestones** — 除非用戶明確講該 project 唔走 style frame 流程
+- ❌ **「壓縮版就唔 push pre-pro」** — 壓縮版只係縮短工時（後期 Tier 1 → Tier 2/3/4），milestone set 唔變
+- ❌ **假設 client 提供 script 就唔需要 confirm** — 仍然要 push `Client Confirm Script`
+- ❌ **顏色邏輯搞錯** — 原則：DOF 做嘅嘢 = 黃（Pre-Pro）；Client 做嘅嘢 = 綠（Client Feedback）。所以 `Video Flow`（DOF submit）= 黃；`Client Confirm Script` + `Confirm Video Flow`（client 確認）= 綠；Style Frame submit/confirm = `9` 深藍
+
+### 用戶冇明確講要 push 邊啲時
+
+Default 行為 = push **完整 milestone set**（pre-pro + shoot + post-pro），按上面 conditional rules filter。如果用戶只想 push 某個階段，佢會明確講「淨係 push post-pro」之類。
+
+### Push 之前要列俾用戶睇
+
+跟「先確認再執行」原則 — 列出將會 push 嘅完整 milestone list（按階段分組），等用戶 confirm 後先 batch create。如果有 milestone 用戶覺得唔需要，佢會話你知 skip 邊個。
+
+---
+
 ## colorId Mapping
 
 建立或修改 Calendar event 時，必須根據 milestone 類別設定正確嘅 `colorId`。呢套顏色同 Doji Timeline 同 DOF Planner 完全一致。
 
 | 類別 | 包含嘅 Milestones | colorId | 顏色 |
 |------|-------------------|---------|------|
-| Pre-Production | Script Lock, Video Flow, Graphics Reference | `5` | Banana（黃色） |
-| Style Frame | Submit Style Frame, Confirm Style Frame | `9` | Blueberry（深藍色） |
+| Pre-Production | Video Flow, Graphics Reference | `5` | Banana（黃色） |
+| Style Frame | Submit Style Frame | `9` | Blueberry（深藍色） |
 | Shooting | Shoot / Shooting Day(s) | `11` | Tomato（紅色） |
 | Post-Production | 1st Cut, 2nd Cut, 3rd Cut, Picture Lock | `7` | Peacock（淺藍色） |
-| Client Feedback | Client FB 1, Client FB 2, Client FB 3 | `2` | Sage（綠色） |
+| Client Feedback | Client Confirm Script, Confirm Video Flow, Confirm Style Frame, Client FB 1, Client FB 2, Client FB 3 | `2` | Sage（綠色） |
 | VO Recording | VO Recording | `1` | Lavender（薰衣草紫） |
 | Final Output | Final Output | `3` | Grape（葡萄紫） |
 | 其他 | Site Recce, Wardrobe Fitting 等 | `5` | Banana（fallback） |
@@ -87,10 +142,12 @@ Director: Kary
 - 「拍攝」「shoot」「shooting」→ colorId: `11`
 - 「1st cut」「2nd cut」「3rd cut」「picture lock」→ colorId: `7`
 - 「client feedback」「FB1」「FB2」「客 feedback」→ colorId: `2`
-- 「style frame」→ colorId: `9`
+- 「style frame」「submit style」→ colorId: `9`（DOF 提交）
+- 「confirm style」→ colorId: `2`（client 確認）
 - 「final output」「交片」「出片」→ colorId: `3`
 - 「VO」「配音」「voice over」→ colorId: `1`
-- 「script」「video flow」「graphics ref」或其他 pre-pro → colorId: `5`
+- 「client confirm script」「confirm script」「confirm video flow」「client feedback」→ colorId: `2`（client 做嘅嘢）
+- 「video flow」「graphics ref」或其他 pre-pro DOF deliverable → colorId: `5`
 
 ### 技術注意
 - colorId 係 **string**（`"7"`，唔係 `7`）
