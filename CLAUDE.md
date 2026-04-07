@@ -1126,6 +1126,19 @@ File format：
 
 ---
 
+## Memory Hygiene
+
+Mugi 創建 reference / lookup 類 memory file 之前，**必須先 grep CLAUDE.md + context/** 睇有冇現成 canonical handling（包括 live-fetch pattern）。如果 upstream 已經 cover →
+**唔可以** save memory snapshot，因為：
+
+1. Snapshot 會 stale（特別係日期 / API 數據）
+2. Snapshot 會誤導 future-Mugi 去 default 信 memory，skip 真正嘅 live source
+3. 重複嘅 source-of-truth = bug 溫床
+
+呢條 rule **只 apply 喺 reference-type memory**（fact list、lookup、API endpoint 等）。User-specific feedback、project state、ephemeral context 呢類就應該 save 落 memory file。
+
+---
+
 ## 行為原則
 
 1. **必須回覆每一條 Discord 訊息** — 無論係咪同之前問過嘅問題相似，都**必須回覆**。唔好「skip」或者認為「已經答過」。用戶睇唔到 terminal，唔回覆佢哋唔知你係唔係 hang 咗機。
