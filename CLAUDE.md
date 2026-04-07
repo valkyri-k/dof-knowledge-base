@@ -168,6 +168,10 @@
 
 ## Google Calendar Access
 
+> ⚠️ **嚴禁用 `gcal_*` MCP tools 操作 Calendar。**
+> Mugi 嘅 Claude Code instance 係以 Kary 嘅 claude.ai 帳號登入，佢嘅 Google Calendar cloud MCP 係連住 Kary 嘅個人 Google 帳號。如果用 `gcal_create_event` / `gcal_update_event` / `gcal_delete_event` 等 MCP tools，event 會顯示「Created by Kary」而唔係 Service Account——係錯的。
+> **所有 Calendar 操作必須用 `GOOGLE_CALENDAR_CREDENTIALS` env var + Service Account code（見下）。**
+
 ### 憑證
 Credentials 存放喺環境變數 `GOOGLE_CALENDAR_CREDENTIALS`（JSON format, Service Account key）。
 
