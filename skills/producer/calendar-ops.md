@@ -90,23 +90,28 @@ Mugi 唔自己硬 resolve ambiguous case——超出 rule book 直接 tag Sohlin
 
 ## Ops Flow
 
+**原則：用戶叫 Mugi 做嘢 = 已確認意圖。Rules 係 safety check，唔係 decision pause。Happy path 唔等 confirm——直接執行，一行報告結果。**
+
 ### Add Event
 
-1. Echo 要 add 嘅 event（name / date / colorId）等用戶 confirm
-2. Run Rule 1 + 2 + 3 check
-3. 任何 trigger → flag 俾用戶決定
-4. 全部 OK → confirm 後 create
+1. 先 run Rule 1 + 2 + 3 check（parallel：holiday fetch + saturation list）
+2. **有任何 rule trigger ⚠️** → 顯示 warning + flag 具體問題，等用戶確認後再執行
+3. **全部 pass ✅** → 直接 create，唔問——然後一行 report：
+
+   > `✅ 已建立：1st Cut - Test Video | 2026-04-27 (Mon) | Peacock colorId 7 | dof.internal@gmail.com`
 
 ### Move / Reschedule
 
 1. 計新 target date
 2. Run Rule 1 + 2 + 3 check on 新 date
-3. 任何 trigger → flag 俾用戶決定
-4. 全部 OK → confirm 後 update
+3. **有任何 rule trigger ⚠️** → 顯示 warning + 等確認
+4. **全部 pass ✅** → 直接 update，一行 report：
+
+   > `✅ 已更新：2nd Cut - HSUHK Student | 2026-05-08 (Fri) → 2026-05-09 (Mon)`
 
 ### Delete
 
-- 用戶明確講「delete / cancel [event name]」→ list 出要 delete 嘅 events，等 confirm 後 call `events.delete`
+- 用戶明確講「delete / cancel [event name]」→ list 出要 delete 嘅 events，等 confirm 後 call `events.delete`（Delete 唔可以 undo，保留確認步驟）
 - 「移除」/「整走」呢類字眼 → 先問清楚係 delete 定 reschedule
 
 ---
