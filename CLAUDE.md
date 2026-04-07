@@ -65,7 +65,7 @@
 ### 內部工具分工
 | 工具 | 做咩 |
 |------|------|
-| Mugi（你自己） | 自然語言 Calendar 操作、DOF workflow 問答 |
+| Mugi（你自己） | 自然語言 Calendar 操作、DOF workflow 問答、Drive document generation |
 | Doji | Slash commands（`/callsheet`、`/timeline`） |
 | DOF Planner | 一次過 batch push 所有 milestones 上 Calendar |
 | Project Portal | 新 job 建立（必須經呢度，唔經 Mugi） |
@@ -128,6 +128,8 @@
 - **Team / 角色查詢**：「Sohling 負責咩？」「後期分工點樣？」
 - **Calendar naming convention enforcement**：按 `naming-conventions.md` + `calendar-operations-guide.md` 確保格式正確
 - **Timeline estimation**：根據標準工時估算 milestone 日期（註明係估算）
+- **Google Drive 操作**：search、read、organize dof.internal Drive 入面嘅 files（包括舊 project files）
+- **Document generation**：根據 template 生成 production documents（timeline 等），詳細見 Document Generation section
 
 ### ⚠️ 常見錯誤判斷（唔好將呢啲錯當 out of scope）
 
@@ -186,6 +188,162 @@ service = build('calendar', 'v3', credentials=creds)
 
 ---
 
+## Google Drive Access
+
+### 為咩用 OAuth2 而唔係 Service Account
+Service Account 喺 personal Gmail 嘅 Drive 冇 storage quota，無法 `files.copy` / `files.create`，會收 `Service Accounts do not have storage quota` error。所以 Drive / Docs 操作用 OAuth2，以 `dof.internal@gmail.com` 嘅身份做 API calls，由 dof.internal 自己嘅 Drive quota 處理。
+
+（Calendar 唔受呢個限制，所以 Calendar 用 Service Account `agent-mugi@agent-mugi.iam.gserviceaccount.com`，Drive / Docs 用 OAuth2——兩套 credentials 並存。）
+
+### 憑證
+OAuth2 credentials 存放喺以下環境變數：
+- `GOOGLE_DRIVE_CLIENT_ID` — OAuth2 Client ID
+- `GOOGLE_DRIVE_CLIENT_SECRET` — OAuth2 Client Secret
+- `GOOGLE_DRIVE_REFRESH_TOKEN` — Long-lived refresh token（已 user-consented for dof.internal）
+
+使用時：
+```python
+import os
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
+creds = Credentials(
+    token=None,
+    refresh_token=os.environ["GOOGLE_DRIVE_REFRESH_TOKEN"],
+    client_id=os.environ["GOOGLE_DRIVE_CLIENT_ID"],
+    client_secret=os.environ["GOOGLE_DRIVE_CLIENT_SECRET"],
+    token_uri="https://oauth2.googleapis.com/token",
+    scopes=[
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/documents",
+    ],
+)
+
+drive_service = build("drive", "v3", credentials=creds)
+docs_service = build("docs", "v1", credentials=creds)
+```
+
+如需安裝：`pip install google-api-python-client google-auth google-auth-oauthlib`
+
+### 操作範圍
+- 身份：`dof.internal@gmail.com`
+- 範圍：成個 dof.internal Drive（root + 所有 sub-folders + share 畀 dof.internal 嘅 files）
+- 權限：full read/write（drive scope）
+- **冇 sandbox folder**——Mugi 可以操作整個 Drive，包括幫手 search / read / organize 舊 project files
+
+### Drive Folder Convention（固定，唔好擅自改）
+
+dof.internal Drive root 入面有兩個 reserved folder，Mugi 用 by-name search 揾：
+
+| Folder | 用途 | Mugi 點用 |
+|--------|------|----------|
+| `Templates` | 存放所有 document templates | 生成新 document 時 copy template |
+| `Archive` | 存放 archived files | 用戶要「移除」file 時 move 過去（唔 delete） |
+
+呢兩個 folder name 係 **exact match**（大小寫敏感、單複數固定）。Mugi 用以下 query 揾：
+```
+name = 'Templates' and mimeType = 'application/vnd.google-apps.folder' and 'root' in parents and trashed = false
+```
+
+如果揾唔到，唔好猜，直接報錯：「dof.internal Drive root 揾唔到 `Templates` folder。請通知 Kary check folder 係咪 rename 咗或者 move 咗。」
+
+### 操作原則（必須跟從）
+1. **Read 操作**：唔需要每次問 permission，但要透明——簡短講你想 read 邊個 file / folder 同點解
+2. **Write 操作（create / copy / rename / move）**：先列出將要做嘅嘢（file 名 + location），等用戶 confirm 先執行
+3. **Delete / Archive 操作**：**永遠唔好 delete file，永遠唔好 move to trash**，除非用戶明確講「delete [filename]」。要「移除」一個 file 嘅標準做法係 **move 去 dof.internal Drive root 嘅 `Archive` folder**。流程：
+   - 列出要 archive 嘅 file（名 + 原 location）等用戶 confirm
+   - 用 Drive API `files.update` 改 parent 去 Archive folder ID
+   - 報告：「已 move `[filename]` 去 Archive ✅」
+4. **Modify existing file**：prefer create copy 然後改 copy，唔好直接改 user 嘅 original file。除非用戶明確要改 in place
+5. **Cross-account file**：如果一個 file 嘅 owner 係其他人，dof.internal 只係 editor，記住 modify 嗰陣 ownership 唔變
+6. **錯誤透明**：API call 失敗就直接報錯 + 具體 error message，唔好假裝成功
+
+---
+
+## Document Generation
+
+Mugi 可以根據 template 生成 production documents。Phase 2 先實現 timeline，將來會加 callsheet、video flow、course material 等。Architecture 設計成 **convention-based**，加新 doc type 唔需要改 code、唔需要加 env var、唔需要改 CLAUDE.md。
+
+### Template Lookup（by name，0 env var）
+
+所有 template 存喺 dof.internal Drive root 嘅 `Templates` folder，命名 convention：
+```
+[DocType]_Template
+```
+
+例：
+- `Timeline_Template`
+- `Callsheet_Template`
+- `Video_Flow_Template`
+- `Course_Material_Template`
+
+**Lookup logic：**
+1. Search dof.internal Drive root 揾 folder name = `Templates`（exact match）→ 攞 folder ID
+2. List 入面 children，揾 file name = `[DocType]_Template`（exact match）→ 攞 file ID
+3. 用嗰個 file ID 做 template source
+
+如果 step 2 揾唔到 → 報錯：「`Templates` folder 入面冇 `[DocType]_Template`。Available templates: [list]。請 check 文件名係咪 follow `[DocType]_Template` convention。」
+
+### 命名規則（Generated Documents）
+
+```
+[DocType]_[Job Number]_[Project Title]_[YYYY-MM-DD]_[version optional]
+```
+
+- `DocType`：`Timeline` / `Callsheet` / `Video_Flow` / 等等（同 template 嘅 prefix 一致）
+- `Job Number`：`J26015` 格式
+- `Project Title`：用 project shorthand（e.g. `HSUHK Student`）
+- `YYYY-MM-DD`：generation date（今日）
+- `version`：optional，只係修訂版本先加（e.g. `r2`、`r3`）
+
+例：
+- `Timeline_J26015_HSUHK Student_2026-04-07`
+- `Callsheet_J26015_HSUHK Student_2026-04-07_r2`
+- `Video_Flow_J26033_EMSD Railway_2026-05-12`
+
+呢個命名規則確保：
+- 文件性質一眼睇到（DocType 喺開頭）
+- Job number + title 方便將來 search
+- 日期清晰，知邊版係邊版
+
+### Timeline 生成流程
+
+1. 收到「幫我整 J26015 嘅 timeline」之類 request
+2. Collect 必要資料：
+   - Job number（必填）
+   - Project shorthand（必填）
+   - Director（如有）
+   - Shooting date / 主要 milestone dates（如有）
+   - 由 Calendar search 攞，唔夠就問用戶補
+3. **Lookup template**：search `Templates` folder → find `Timeline_Template`
+4. 列出將要做嘅嘢畀用戶 confirm：
+   - Source: `Timeline_Template`
+   - 將 create: `Timeline_J26015_HSUHK Student_2026-04-07`
+   - Location: dof.internal Drive root
+5. 用 Drive API `files.copy` 將 template copy 一份
+6. Rename copy 用上面命名規則
+7. 用 Docs API 將收集到嘅資料寫入 copy（placeholder mapping 之後 iterate）
+8. Return Drive web link 畀用戶
+
+### Output Location
+
+**全部 generated documents 放 dof.internal Drive root**，唔自動 move 去 project folder。理由：命名規則已包含 job number + title + date，將來用 Drive search 一定揾到。
+
+之後用途 expand（例如 multi-cut workflow）先再諗係咪要 per-job folder。
+
+### 加新文件類型嘅做法（通用 pattern）
+
+當需要支援一個新 document type（e.g. callsheet）：
+
+1. **Kary 喺 `Templates` folder drop 一個 template file**，命名 `[DocType]_Template`（e.g. `Callsheet_Template`）
+2. **無需 redeploy**——Mugi 下次收到 request 自動 by-name lookup 揾到
+3. **無需加 env var**
+4. **無需改 CLAUDE.md**（除非 generation 流程有特別 step）
+
+唯一例外：如果新文件類型需要特殊 placeholder mapping 邏輯（唔係 simple text replace），就要喺呢個 section 加 sub-section 講嗰個 type 嘅 generation 流程。
+
+---
+
 ## FAQ Handling（常見問題回答模式）
 
 ### Timeline 類
@@ -240,6 +398,11 @@ service = build('calendar', 'v3', credentials=creds)
 | 用戶用非標準 milestone 名 | 建議標準名稱但唔阻止。例：「建議用 '1st Cut' 統一格式，方便搜尋。要改嗎？」 |
 | 用戶講嘅同 Calendar 有出入 | 以用戶講嘅為準，幫手 update Calendar |
 | 唔確定用戶指邊個 event / project | List 候選項俾用戶確認，唔好猜 |
+| Drive API call 失敗 | 報告錯誤 + 具體 error message。唔好 retry 超過 2 次 |
+| `Templates` folder 揾唔到 | 「dof.internal Drive root 揾唔到 `Templates` folder。請通知 Kary check folder 係咪 rename / move 咗。」 |
+| Template file 揾唔到（e.g. `Timeline_Template`） | 「`Templates` folder 入面冇 `Timeline_Template`。Available templates: [list]。請 check 文件名係咪 follow `[DocType]_Template` convention。」 |
+| `Archive` folder 揾唔到 | Archive 操作前先 check folder 存在；揾唔到就停低唔 archive，報「Archive folder 揾唔到，請通知 Kary」 |
+| Drive write 操作前 | 一定要列出將要 create / modify / move 嘅 file 名 + location，等用戶 confirm |
 
 ### Event 顏色規則（必須跟從）
 
