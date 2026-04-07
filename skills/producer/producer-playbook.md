@@ -169,6 +169,26 @@ Fetch HK public holidays for the planning range（用 calendar-operations-guide.
 
 ### Step 3: Minimal Follow-up
 
+#### Director Auto-detection（先做，唔使問）
+
+收到 timeline request 之前，先對 sender 嘅 Discord User ID 對返 CLAUDE.md Team table：
+
+| Discord User ID | 係邊位 | 係導演？ |
+|----------------|--------|---------|
+| `1328602029303791646` | Kary | ✅ Director |
+| `1221464062085562441` | Benjy | ✅ Director |
+| 其他 ID | 唔係導演 | ❌ |
+
+**如果 sender 係導演（Kary 或 Benjy）：**
+- **`Director` field 自動填入 sender 嘅名**，唔使問
+- 整個 timeline 當係「導演幫自己 plan」——Mugi 跳過問「邊個負責」
+- Director Discussion 嘅 patterns（A-J）直接 address 嗰位導演
+
+**如果 sender 唔係導演（其他同事）：**
+- Director field 留空，generate 完喺 Pattern C（缺嘢未填）remind：「Director 我唔知係邊位，你睇完 doc 自己填返。」
+
+---
+
 **Mandatory asks**（如 request / Calendar 冇明確提供）：
 
 **一次過問晒，唔好一條一條問：**
@@ -509,7 +529,7 @@ docs_service.documents().batchUpdate(
 |-------|---------|--------|---------|
 | Client | Contact person 嘅名（唔係 brand） | `Sarah Chan` / `Mr. Wong` | `EMSD` / `HSUHK` |
 | Delivery | 幾多條片 + 片長 + 幾多個 version | `1 video, ~3 min, 1 version (English)` | 留空 / `—` |
-| Director | DOF director 名 | `Kary` / `Benjy` | 留空 |
+| Director | DOF director 名——**由 sender Discord ID 自動 detect**（見 Step 3 Director Auto-detection） | `Kary` / `Benjy` | 留空 |
 | Job Number | J-number | `J26015` | `26015` |
 | Project Name | Project shorthand | `HSUHK Student` | `Recruitment Video` |
 
