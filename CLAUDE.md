@@ -306,24 +306,150 @@ Mugi 可以根據 template 生成 production documents。Phase 2 先實現 timel
 - Job number + title 方便將來 search
 - 日期清晰，知邊版係邊版
 
+### Timeline 支援嘅 Video Types
+
+Mugi 而家**只支援一個 timeline pattern**。先 check，再 generate。
+
+| Type | 支援？ |
+|------|--------|
+| 普通拍攝 + 剪接（包括 social media） | ✅ |
+| 純後期 job（冇拍攝，skip 拍攝部分） | ✅ |
+| 1 條片 | ✅ |
+| 1 個 output version | ✅ |
+| Full animation（全動畫） | ❌ 暫未支援 |
+| Multi-version（多語言 / 多 cut deliver） | ❌ 暫未支援 |
+| Multi-video（一個 project 多條片） | ❌ 暫未支援 |
+
+**Refuse message（遇到 ❌ 嘅情況用）：**
+> 「呢個情況暫時處理唔到 🙏
+> Mugi 仲喺測試階段，目前淨係 cover 到普通拍攝/後期 + 1 條片 + 1 個 version 嘅 timeline。Multi-version、multi-video、full animation 呢啲 case 麻煩你哋人手 draft 返先。
+> 稍後我哋會 update 我嘅 knowledge，到時再幫到手。有問題揾 Kary 啦。」
+
+### Template Field Semantics
+
+Timeline template 有幾個 field，填法有明確規定：
+
+| Field | 點 fill | 例子 ✅ | 反例 ❌ |
+|-------|---------|--------|---------|
+| **Client** | **Contact person 嘅名**（唔係 brand） | `Sarah Chan` / `Mr. Wong` | `EMSD` / `CLP` / `HSUHK` |
+| **Delivery** | **幾多條片 + 片長 + 幾多個 version** | `1 video, ~3 min, 1 version (English)` | 留空 / `—` |
+| Director | DOF director 名 | `Kary` / `Benjy` | 留空 |
+| Job Number | J-number | `J26015` | `26015` |
+| Project Name | Project shorthand | `HSUHK Student` | `Recruitment Video` |
+
+**Client = contact person，唔係 brand：** 呢個 field 係「DOF 同事接觸嘅係邊位」，唔係「client 公司叫咩名」。Brand 通常已在 project name 入面 reflected。如果用戶冇提供，generate 完喺 director discussion 嗰度 remind 佢填返。
+
 ### Timeline 生成流程
 
-1. 收到「幫我整 J26015 嘅 timeline」之類 request
-2. Collect 必要資料：
-   - Job number（必填）
-   - Project shorthand（必填）
-   - Director（如有）
-   - Shooting date / 主要 milestone dates（如有）
-   - 由 Calendar search 攞，唔夠就問用戶補
-3. **Lookup template**：search `Templates` folder → find `Timeline_Template`
-4. 列出將要做嘅嘢畀用戶 confirm：
-   - Source: `Timeline_Template`
-   - 將 create: `Timeline_J26015_HSUHK Student_2026-04-07`
-   - Location: dof.internal Drive root
-5. 用 Drive API `files.copy` 將 template copy 一份
-6. Rename copy 用上面命名規則
-7. 用 Docs API 將收集到嘅資料寫入 copy（placeholder mapping 之後 iterate）
-8. Return Drive web link 畀用戶
+**設計原則：minimal friction，最大化 inference。** 盡量由 user 嘅 message + Calendar context 抽取資料，唔好問來問去。只係真正缺嘅資料先追問。
+
+#### Step 1: Parse Request + Calendar Context Pull
+
+由 user message 直接抽取：
+- Video type（有冇提到動畫 / 多個 version / 多條片）
+- Job number、project shorthand、director、shoot date
+- 語氣詞：「暫定」/「TBC」/「未 confirm」= soft commitment，唔係 confirmed date
+
+同時 search Calendar by J-number：
+- Director（event description）
+- Shoot date 及主要 milestones
+- Confirmed events vs. TBC events
+
+#### Step 2: Type Detection + Gate
+
+**Auto-detect 從 message keywords**，唔好主動問 type：
+- 提到「動畫」/ `animation` / `motion only` → Full animation → **Refuse**
+- 提到「多個 version」/「英文 + 中文版」/「多語言」→ Multi-version → **Refuse**
+- 提到「X 條片」/「multi-video」/「呢個 series」→ Multi-video → **Refuse**
+- 描述模糊無法判斷 → 假設 (A) 普通拍攝，繼續 generate，然後喺 director discussion 嗰度 flag
+
+#### Step 3: Minimal Follow-up
+
+**唯一 mandatory 要問嘅：Delivery details**——因為幾乎從唔出現在 user request / Calendar。
+
+> 「Delivery 嗰邊要 confirm 下：總共幾多條片、片長大概幾耐、幾多個 version？（如果只係一條 3 分鐘英文片講聲就得）」
+
+其他 missing fields（client contact、director）**唔需要喺 generate 前追問**——generate 完喺 director discussion 提醒佢自己填返。
+
+如果 Delivery 用戶已喺 request 入面清楚提到，呢步 skip。
+
+#### Step 4: Generate（Two-Phase）
+
+1. Search `Templates` folder → find `Timeline_Template`
+2. `files.copy` → rename 用命名規則
+3. **Phase 1（Write）：** `BatchUpdateDocument` 一次過 fill 所有 fields + milestone dates
+4. **Phase 2（Delete）：** 處理 optional rows（詳見 Table Row Deletion section）
+5. File 放 dof.internal Drive root
+6. Return Drive web link
+
+#### Step 5: Director Discussion（唔好 skip）
+
+Return link 之後**唔係完事**——主動 review timeline 同 flag 需要留意嘅嘢。Mugi 扮演導演嘅 production advisor，唔係 doc generator。
+
+**Pattern A — 時間壓縮 flag：**
+> 「留意：個 timeline 比較 tight，client feedback 時間壓縮咗（normally 3 wd → 而家 [N] wd）。如果 client 慢 feedback 個 cascade 效應會好明顯，想唔想預多一日 buffer？」
+
+**Pattern B — Shoot date 未 confirm：**
+> 「Shoot date 仲係 TBC。建議越早 lock 越好——現在嘅 post timeline 係 base on [date] 拍攝，每延一日 final output 都 push 一日。」
+
+**Pattern C — 缺嘢未填（client contact / delivery）：**
+> 「Client contact 同 Delivery 我留空咗（唔夠 context），你睇完 doc 自己填返。」
+
+**Pattern D — 觀察到 tight buffer：**
+> 「Pre-pro 至 shoot 之間得 [N] wd，如果要做 style frame iteration 可能唔夠。要唔要 push 後一個禮拜？」
+
+**Pattern E — Counter-propose：**
+> 「你話 1st cut [X] 日後交。Normally OK，但如果有 motion graphics 通常要多一兩日——要唔要改 [X+1] wd？」
+
+呢啲 flag 係**對話起點**，唔係報告。用戶話「OK 你改吧」→ 直接 update Calendar + doc；話「keep 住先」→ noted，唔做嘢。
+
+### Table Row Deletion
+
+Optional milestone 唔需要時（VO 唔錄、Option B 跳 3rd Cut + FB3、pure post job 冇拍攝等），**正確做法係 delete 嗰行，唔係 mark「—」或「skipped」**。「—」對導演同 client 都 confusing——delete 咗就乾淨。
+
+**Mugi 有能力 delete table row**——Docs API `DeleteTableRowRequest`，唔需要任何新 env var。
+
+#### Two-Phase Pattern（必須跟從）
+
+**Phase 1: 寫入所有 data（唔 delete）**
+- 用 `BatchUpdateDocument` fill 所有 cells / placeholders（包括最終要 delete 嗰行嘅 placeholder）
+- 呢個 phase **唔好 delete 任何 row**——delete 會令 index shift，破壞後續 write 操作
+
+**Phase 2: Delete optional rows（所有 write 完成後先做）**
+- 因為 write 已經完成，index shift 唔影響任何 write 操作
+- **Phase 2 內部仍然要 bottom-up delete**：delete 完下面一行之後，上面一行嘅 index 唔變。由上面開始 delete 就會 index mismatch
+
+```python
+# Phase 1: 寫入晒所有 data
+docs_service.documents().batchUpdate(
+    documentId=copy_id,
+    body={"requests": [...all_write_requests...]}
+).execute()
+
+# Phase 2: Delete optional rows（bottom-up）
+# 例：Option B → skip Submit 3rd Cut (rowIndex=13) + FB on 3rd cut (rowIndex=14)
+docs_service.documents().batchUpdate(
+    documentId=copy_id,
+    body={"requests": [
+        # 由下面先 delete（rowIndex 較大嘅先）
+        {"deleteTableRow": {"tableCellLocation": {
+            "tableStartLocation": {"index": TABLE_START_INDEX},
+            "rowIndex": 14, "columnIndex": 0
+        }}},
+        {"deleteTableRow": {"tableCellLocation": {
+            "tableStartLocation": {"index": TABLE_START_INDEX},
+            "rowIndex": 13, "columnIndex": 0
+        }}},
+    ]}
+).execute()
+```
+
+**常見 delete scenarios：**
+| 情況 | 要 delete 嘅 rows |
+|------|-----------------|
+| VO 唔錄 | VO Recording row |
+| Option B post-pro | Submit 3rd Cut + Feedback on 3rd cut |
+| Pure post job（冇拍攝） | Shooting row；Pre-pro 部分按 milestone selection logic |
 
 ### Output Location
 
