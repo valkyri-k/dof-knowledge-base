@@ -353,6 +353,84 @@ Timeline template 有幾個 field，填法有明確規定：
 
 **Client = contact person，唔係 brand：** 呢個 field 係「DOF 同事接觸嘅係邊位」，唔係「client 公司叫咩名」。Brand 通常已在 project name 入面 reflected。如果用戶冇提供，generate 完喺 director discussion 嗰度 remind 佢填返。
 
+### Milestone Completeness Rule（必須跟從，唔可以漏）
+
+**核心要求：** Mugi 生成 timeline 嘅時候，**所有 milestone 都要逐個 enumerate 出嚟**——包括前期、拍攝、後期、交付——每個都係**獨立一行 + 獨立日期**。前期 milestones **絕對唔可以**揈成「Pre-Pro Apr 8 – May 1」呢類大 range，亦**絕對唔可以**喺後面 Calendar push 時悄悄丟咗。
+
+**呢個 rule apply 喺三個位：**
+1. **Timeline preview**（chat reply 入面俾用戶睇嘅 markdown table）
+2. **Document generation**（寫入 Timeline_Template 嘅每一行）
+3. **Calendar push list**（push 上 dof.internal Calendar 嘅每個 event）
+
+**三個位都要 1:1 對齊**——preview 顯示嘅 milestones、template doc 入面嘅 milestones、push 上 Calendar 嘅 milestones，**必須完全一樣**，唔可以 preview 顯示但 Calendar 漏 push，亦唔可以 doc 寫低咗但 preview 揈晒做 range。
+
+#### Standard Milestone Set（每個 timeline 都要諗一次）
+
+**Pre-Production（前期，逐個拆開）：**
+| Milestone | colorId | 點計日期 |
+|-----------|---------|---------|
+| Script Lock | 5 (Banana) | Shoot 之前 ~3–4 wd |
+| Video Flow Submit | 5 (Banana) | Script Lock 之後 1–2 wd（DOF 寫俾 client） |
+| Graphics Reference Submit | 5 (Banana) | Video Flow 之後 1–2 wd（DOF 揀 ref 俾 client） |
+| Style Frame Submit | 9 (Blueberry, 深藍) | Graphics Ref confirm 之後 2–3 wd（DOF 出 frame） |
+| Style Frame Confirm | 2 (Sage, 綠) | Style Frame Submit 之後 1–2 wd（client 回覆） |
+
+**Shooting：**
+| Milestone | colorId | 點計日期 |
+|-----------|---------|---------|
+| Shooting | 11 (Tomato) | 用戶提供 / Mugi propose |
+
+**Post-Production：**
+| Milestone | colorId | 點計日期 |
+|-----------|---------|---------|
+| 1st Cut | 7 (Peacock) | Shoot 後 5 wd（標準）/ 4 wd（min） |
+| Client FB 1 | 2 (Sage, 綠) | 1st Cut 後 3 wd（標準） |
+| 2nd Cut | 7 (Peacock) | FB1 後 3–5 wd |
+| Client FB 2 | 2 (Sage, 綠) | 2nd Cut 後 3 wd |
+| 3rd Cut | 7 (Peacock) | FB2 後 3 wd（**optional**——Option B skip 呢個 + FB3） |
+| Client FB 3 | 2 (Sage, 綠) | 3rd Cut 後 3 wd（**optional**） |
+| Picture Lock | 7 (Peacock) | 3rd Cut（或 2nd Cut 如 Option B）approve 之後 |
+
+**Delivery：**
+| Milestone | colorId | 點計日期 |
+|-----------|---------|---------|
+| VO Recording | 1 (Lavender) | Picture Lock 後 2–3 wd（**optional**——冇 VO 就 skip） |
+| Final Output | 3 (Grape) | VO 後 2 wd（或 Picture Lock 後 2 wd 如冇 VO） |
+
+#### Optional Milestone Handling（清晰嘅判斷規則）
+
+| Milestone | 時候 skip | 點呈現 |
+|-----------|---------|--------|
+| 3rd Cut + FB 3 | Option B post-pro flow（用戶話「2 cut 夠」/ tight schedule） | **完全唔出現**——preview 跳過嗰兩行、template doc 用 DeleteTableRow 刪、Calendar 唔 create event |
+| VO Recording | 用戶答「冇 VO」/「無對白」/ 純配樂 | 同上，完全唔出現 |
+| Style Frame Submit + Confirm | 純拍攝、冇 motion graphics 嘅 simple corporate / event | Mugi 主動問用戶有冇 graphics，冇就 skip |
+| Graphics Reference | 同上 | 同上 |
+| Pre-pro 全部 | Pure post-pro genre（冇拍攝） | Skip pre-pro + Shooting，但**post-pro 入面如有 Style Frame 都要保留** |
+
+**重要：** 「Skip」嘅意思係**完全冇出現**——唔係用「—」/「skipped」/ 大 range 嚟 collapse。要嘛逐個 enumerate，要嘛完全消失。**冇中間態。**
+
+#### ❌ Anti-patterns（呢啲全部係 bug，發現要立即 fix）
+
+| ❌ 錯 | ✅ 啱 |
+|------|------|
+| `Pre-Pro (Script Lock / Video Flow / Graphics Ref / Style Frame) \| Apr 8 – May 1 \| ~3.5 週 OK` | 4 行獨立 milestone，每行有自己嘅 date |
+| Preview 入面有「Pre-Pro」一行，Calendar push list 直接由 Shooting 開始 | Preview 同 Calendar push **完全 1:1** |
+| Calendar push 由 Shooting 開始，Mugi 默認「pre-pro 唔使 push」 | Pre-pro events 都要 push（colorId 5 / 9） |
+| Doc 入面有 Pre-Pro 行，Calendar 冇 | 兩邊一致 |
+| 後面 director discussion 唔提 pre-pro，仲扮冇事 | 如果 skip 咗任何 pre-pro，要喺 director discussion 講明點解 skip + 等用戶 confirm |
+
+#### Pre-flight Self-Check（每次 finalize timeline 前，Mugi 內心要 run 一次）
+
+```
+☐ Pre-pro milestones 我有冇 enumerate 晒？（Script Lock / Video Flow / Graphics Ref / Style Frame Submit / Style Frame Confirm — 預設 5 個都要列，除非用戶明確話冇 graphics / pure post）
+☐ 每個 milestone 有冇獨立日期？（冇 date range collapse）
+☐ Preview 嘅 milestone list 同 Calendar push list 係咪 1:1？（一條都唔可以漏）
+☐ Doc template 嘅 row 同 preview / Calendar 係咪 1:1？
+☐ 任何 skip 咗嘅 milestone 我有冇喺 director discussion 講明？
+```
+
+**5 個 ☐ 全部 yes 先可以 finalize**。任何一個 no → 補返。
+
 ### Timeline 生成流程
 
 **設計原則：minimal friction，最大化 inference。** 盡量由 user 嘅 message + Calendar context 抽取資料，唔好問來問去。只係真正缺嘅資料先追問。
@@ -397,14 +475,27 @@ Timeline template 有幾個 field，填法有明確規定：
 
 #### Step 4: Generate（Two-Phase）
 
-**Pre-step（必須做）：** 計完每個 cut delivery 嘅 target date 之後，**先 run Cut Delivery Saturation Check**（見 Calendar Integration section）。如果撞 saturation → 唔好直接 generate，先 propose date push + 等用戶 confirm。Confirm 之後再繼續落面 step。
+**Pre-step A（必須做）：Enumerate milestone list**
+
+跟 **Milestone Completeness Rule** section 嘅 Standard Milestone Set，逐個列出 timeline 入面所有 milestones（pre-pro 5 個、shooting、post-pro cuts、delivery）。每個 milestone 有獨立日期、獨立 colorId、獨立 row。**唔可以揈做 date range，唔可以默默 drop pre-pro。**
+
+**Pre-step B（必須做）：Cut Delivery Saturation Check**
+
+計完每個 cut delivery 嘅 target date 之後，run **Cut Delivery Saturation Check**（見 Calendar Integration section）。如果撞 saturation → 唔好直接 generate，先 propose date push + 等用戶 confirm。
+
+**Pre-step C（必須做）：Self-Check 5 個 ☐**
+
+對住 Milestone Completeness Rule 入面嘅 Pre-flight Self-Check 5 條 checklist 內心 run 一次。任何一個 no → 補返。**全 yes 先 proceed。**
+
+---
 
 1. Search `Templates` folder → find `Timeline_Template`
 2. `files.copy` → rename 用命名規則
-3. **Phase 1（Write）：** `BatchUpdateDocument` 一次過 fill 所有 fields + milestone dates
-4. **Phase 2（Delete）：** 處理 optional rows（詳見 Table Row Deletion section）
+3. **Phase 1（Write）：** `BatchUpdateDocument` 一次過 fill 所有 fields + **每個 milestone 一行**（包括 pre-pro 5 個、shoot、post cuts、delivery）
+4. **Phase 2（Delete）：** 處理 optional rows（VO row、3rd Cut + FB3 如 Option B、Style Frame 如冇 graphics——詳見 Table Row Deletion section）
 5. File 放 dof.internal Drive root
 6. Return Drive web link
+7. **Calendar push list 一定要同 doc 入面嘅 milestones 1:1**——如果 doc 有 5 個 pre-pro events，Calendar 都要有 5 個（colorId 跟 Standard Milestone Set table）
 
 #### Step 5: Director Discussion（唔好 skip）
 
