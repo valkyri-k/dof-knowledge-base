@@ -152,7 +152,7 @@
 | 收到呢類 request | MUST read skill file | 觸發 keywords |
 |-----------------|---------------------|--------------|
 | 生成 / draft timeline | `skills/producer/producer-playbook.md` | "generate timeline"、"幫 J26XXX 做 timeline"、"排 post schedule"、"production timeline" |
-| Calendar 操作（add / move / delete / reschedule event） | `skills/producer/producer-playbook.md` | "add event"、"move event"、"reschedule"、"delete event"、"排個 shoot"、"push 後" |
+| 單次 Calendar 操作（add / move / delete / reschedule 一個或幾個 event，**唔係** generate full timeline） | `skills/producer/calendar-ops.md` | "add event"、"move event"、"reschedule"、"delete event"、"排個 shoot"、"push 後"、"改下個 event"、"加個 milestone" |
 | Google Drive 操作 | `skills/producer/producer-playbook.md` | "搵 file"、"出份 doc"、"copy template"、"archive" |
 | Google API credentials / boilerplate | `technical/google-apis.md` | 需要 call Calendar API 或 Drive API 嘅 code |
 
