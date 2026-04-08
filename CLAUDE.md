@@ -240,17 +240,47 @@
 
 ## User Activity Tracking
 
-每次收到 Discord 用戶 request 時，更新 `activity/<username>.md`：
+Activity log 嘅核心 purpose 係**俾將來嘅 Mugi（clear session 之後）有個長期記憶**，等可以低成本 rebuild context，唔需要 reload 成個 conversation。
 
-- **路徑（重要）：** Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面，會 sync 上 GitHub）。Mugi 寫嘅時候**永遠用 absolute path** `/home/node/kb/activity/<file>`，唔好用 bare relative path `activity/<file>`——`/home/node/activity` 而家係 symlink 指返 `kb/activity`，但係將來如果 setup 又出錯，bare path 可能 silent 寫去 wrong folder 而 push 唔到 GitHub。同樣 apply 落 `gap-log.md`、`kary-dev-log.md` 同任何將來新 activity file。
-- **新用戶**：建立新 file，填入 Discord ID、Role（如知道）、Notes
-- **每次 request**：喺 Request Log table 加一行（Date、Request summary、Outcome）
-- **Profile updates**：如果發現用戶常見 request pattern，更新 Common requests 同 Notes
-- Session 開始時讀取 `/home/node/kb/activity/` 入面嘅 files 了解返用戶背景
+### 路徑（重要）
 
-File format：
-```
+Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面，會 sync 上 GitHub）。Mugi 寫嘅時候**永遠用 absolute path** `/home/node/kb/activity/<file>`，唔好用 bare relative path `activity/<file>`——`/home/node/activity` 而家係 symlink 指返 `kb/activity`，但係將來如果 setup 又出錯，bare path 可能 silent 寫去 wrong folder 而 push 唔到 GitHub。同樣 apply 落 `gap-log.md`、`kary-dev-log.md` 同任何將來新 activity file。
+
+### File 結構（3-section hybrid schema）
+
+每個 user activity file 有 **3 個 section**，各有用途：
+
+1. **Profile**（top） — 靜態資訊
+2. **Open Threads** — 未 resolved 嘅 pending items（incremental update，resolved 就刪）
+3. **Recent Session Summaries** — Narrative form 嘅 session 紀錄，每次 clear session 前寫一段
+4. **Request Log** — Table form 嘅 scan ledger（每件事一行）
+
+### 點維護
+
+| 時機 | 做咩 |
+|------|------|
+| **新用戶** | 建立 file，填入 Profile（Discord ID、Role、Notes）+ 起 4 個 section heading |
+| **每件事完成** | Append 一行入 **Request Log** table（Date / Request / Outcome）——automatic，唔等用戶叫 |
+| **遇到 pending item**（blocked / waiting for / 等用戶決定） | Append 入 **Open Threads** section，標注日期 + cross-ref 去相關 gap-log / dev-log entry |
+| **Open thread resolved** | 即時刪走嗰行（keep section 短） |
+| **Session 自然結束 / clear 之前** | 寫一段 **Session Summary**（2-5 句 narrative，capture 今日做咗咩 + decision + 學到咩） |
+| **Session 開始** | Read `/home/node/kb/activity/<username>.md`——先掃 Open Threads，再睇最近 1-2 段 Session Summary，最後睇 Request Log table 揾具體日期 |
+| **Profile updates** | 發現用戶常見 request pattern → update Common requests 同 Notes |
+
+**Session Summary 點寫：**
+
+唔係淨係 list 做過咩（嗰啲喺 Request Log 已經有），而係**講 context / 點解 / decision / 學到咩**。例：
+
+> ### 2026-04-08 evening session
+> 主力 stress test calendar ops + instruction infra。新 0a58a4c no-confirm rule 過 happy path test。Surface 咗 Planyway/Trello Timeline integration capability gap → logged 落 gap-log。發現 setup-level bug（`/home/node/activity` 唔係 symlink → Mugi 之前寫 activity 寫去 raw folder 唔入 repo），fix 咗（symlink + CLAUDE.md 明文化），完整 root cause 入 dev-log。Decision: long-term 用 absolute path 寫 activity，bare relative path 太危險。
+
+呢個 narrative form 容納 table row 容唔落嘅 nuance。
+
+### File format（template）
+
+```markdown
 # <username>
+
 - **Discord ID:** <id>
 - **Role:** <role or Unknown>
 - **Common requests:** <patterns>
@@ -258,10 +288,32 @@ File format：
 
 ---
 
+## Open Threads
+（pending items，resolved 即時刪）
+
+- [YYYY-MM-DD] <thread description> — <blocked on / waiting for / next action>（cross-ref: gap-log / dev-log entry 如有）
+
+---
+
+## Recent Session Summaries
+（每次 clear 前寫一段 narrative，新嘅放底）
+
+### YYYY-MM-DD <morning/afternoon/evening> session
+<2-5 句 narrative — context、decision、學到咩>
+
+---
+
 ## Request Log
 | Date | Request | Outcome |
 |------|---------|---------|
+| YYYY-MM-DD | ... | ... |
 ```
+
+### 點解呢個 schema work（cost angle）
+
+Conversation context 越長，每 turn 嘅成本 scale 緊 O(N²)——reload + re-cache 都貴。Auto-compact 係 lossy summary 但仍然要每 turn re-read，冇真正 saving。**最有效嘅 cost control：定期 clear session，靠 activity log 做長期記憶。** Activity log 喺 disk 上，read 嘅 cost 係幾百 token vs conversation 幾萬 token。
+
+Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完之後返嚟睇呢段，夠唔夠 rebuild context？**」 唔夠 → 加多啲 narrative；夠 → 唔好為咗詳細而塞 noise。
 
 ---
 

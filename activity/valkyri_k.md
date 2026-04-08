@@ -2,8 +2,22 @@
 
 - **Discord ID:** 1328602029303791646
 - **Role:** Director / Creative & AI Lead / Bot Admin
-- **Common requests:** Calendar queries, shoot schedules, timeline generation, system setup, bot configuration
-- **Notes:** Primary bot admin, Cantonese speaker, DM whitelisted user
+- **Common requests:** Calendar queries, shoot schedules, timeline generation, system setup, bot configuration, infra debugging
+- **Notes:** Primary bot admin, Cantonese speaker, DM whitelisted user. Cost-conscious — prefer Mugi 用 absolute paths + 定期 clear session 控制 token usage
+
+---
+
+## Open Threads
+
+- **[2026-04-08] Planyway / Trello Timeline integration 方向** — 等 Kary 揀 3 條 propose 嘅方向（Trello 主控 / 雙向 push / on-demand mirror）；揀完先 set up Trello credentials + 寫 integration logic。Cross-ref: `activity/gap-log.md` 2026-04-08 entry
+- **[2026-04-08] `/home/node/activity.bak/` 刪除** — symlink fix 嘅 backup folder，留低等 Kary confirm 一切 stable 後刪。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 entry「activity/ path 雙位置 bug」
+
+---
+
+## Recent Session Summaries
+
+### 2026-04-08 evening session
+主力 stress test 新 instruction infra + 解決 setup-level bug。先 verify 咗新 `0a58a4c` no-confirm calendar-ops rule 喺 happy path（add `1st Cut - Test Video` Apr 27 直接執行）+ saturation guard path（add `2nd Cut - Test 2 Video` Apr 27 → 撞 4 條 → 提議 push Apr 28）work 到。然後 Kary surface 咗 Planyway/Trello Timeline integration 嘅 capability gap（post team 嘅 Planyway Timeline view 接駁唔到 Mugi push 嘅 Calendar events，因為 Timeline view 係 read Trello cards），logged 入 gap-log。Push gap-log 嗰陣發現第二個 issue：`/home/node/activity` 係 raw folder 唔係 symlink，而 CLAUDE.md 用 bare `activity/...` path → Mugi 之前寫 activity 全部 silent 寫去 raw folder push 唔到 GitHub，fix 咗（symlink + CLAUDE.md 明文 absolute-path rule），完整 root cause + lessons learned 入 dev-log。最後 Kary raise 咗 long-term cost concern：DM session 越長越貴（O(N²) replay）+ 1h cache TTL miss penalty，**decision**：行 hybrid memory 策略——manual clear session at natural break + 靠 activity log 嘅 3-section schema（Open Threads / Session Summaries / Request Log）做 cross-session 長期記憶。Schema 定義落咗 CLAUDE.md `User Activity Tracking` section，呢個 file 係第一個 reference implementation。
 
 ---
 
