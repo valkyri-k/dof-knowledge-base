@@ -56,6 +56,41 @@ meta = fetch_board_meta()
 
 ## Operations
 
+### ⚠️ List 操作黃金規則：先搵，後建
+
+**任何時候都唔可以直接 create 新 list，必須先 check board 上面係咪已有同名 list。**
+
+```python
+def find_or_create_list(job_number: str, project_title: str) -> dict:
+    """
+    ALWAYS call this instead of directly creating a list.
+    Searches existing lists for one containing the job number.
+    Returns existing list if found; only creates new one if truly absent.
+
+    job_number    : e.g. 'J26054'
+    project_title : e.g. 'EMSD QA'
+    """
+    lists = requests.get(f'{BASE}/boards/{BOARD_ID}/lists',
+                         params={**AUTH, 'fields': 'id,name'}).json()
+
+    # Search by job number (case-insensitive) — title may differ slightly
+    for lst in lists:
+        if job_number.lower() in lst['name'].lower():
+            return {'list': lst, 'created': False}
+
+    # Not found → create new
+    new_list = requests.post(f'{BASE}/lists',
+                             params={**AUTH, 'name': f'{job_number} {project_title}',
+                                     'idBoard': BOARD_ID}).json()
+    return {'list': new_list, 'created': True}
+```
+
+**回覆格式：**
+- 找到現有 list → 「找到現有 list『J26054 EMSD QA』，append 落去。」
+- 新建 list → 「Board 上冇呢個 job，建立新 list『J26054 EMSD QA』。」
+
+---
+
 ### 1. List Projects（所有 active lists）
 
 ```python
