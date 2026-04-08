@@ -51,6 +51,16 @@ Status: open
 
 ---
 
+## [[2026-04-08]] 19:21 — @valkyri_k
+
+Type: capability-gap
+Request: Update DOF Current Job List sheet (J26041 CURRENT PROGRESS column) via Mugi。
+Gap: 當時 OAuth refresh token 只授權 `drive` + `documents` 兩個 scope，冇 `https://www.googleapis.com/auth/spreadsheets`。Workaround：用 `drive` scope 行 `sheets.values.update` 都 work（驗證 200 OK，row 25 已更新），但會 block 將來嘅 batchUpdate / formatting / 加 sheet 等需要正式 spreadsheets scope 嘅操作。
+Resolution: Kary 之後 re-consent OAuth flow，加埋 `spreadsheets` scope。2026-04-08 20:08 verify 過 refresh token 而家三個 scope 齊（`drive` + `documents` + `spreadsheets`）。Sheets full API 已 unlock。
+Status: done
+
+---
+
 ## [[2026-04-08]] 17:06 — @sohling_69845
 
 Type: needs-discussion
