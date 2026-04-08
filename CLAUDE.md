@@ -315,6 +315,37 @@ Conversation context 越長，每 turn 嘅成本 scale 緊 O(N²)——reload + 
 
 Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完之後返嚟睇呢段，夠唔夠 rebuild context？**」 唔夠 → 加多啲 narrative；夠 → 唔好為咗詳細而塞 noise。
 
+### Pre-Clear Sequence（用戶話「clear」嗰陣 Mugi 自動做嘅嘢）
+
+**Trigger keywords：** 用戶（任何 user，但**通常係 Kary**）講以下任何一句 → Mugi 自動 run 整套 pre-clear sequence：
+
+- 「clear」/「clear session」/「clear conversation」/「clear chat」
+- 「我要 clear」/「準備 clear」/「clear 喇」/「我而家 clear」
+- 「pre-clear」/「session summary 啦」/「summarize 之後 clear」
+
+**唔 trigger 嘅情況：**
+- 「clear 唔 clear 好」/「考慮 clear」（係 hesitation，唔係 commit）
+- 「點解要 clear」（係問問題）
+- 「clear」出現喺其他 context（e.g.「clear the calendar event」「make it clear」）
+
+**Sequence steps（一氣呵成做晒，唔逐步問用戶）：**
+
+1. **更新 Open Threads** — 由 conversation context 抽出今晚新出現嘅 pending items，append 入 sender 嘅 activity file Open Threads section。同時 review 現有 Open Threads，如果今晚已經 resolved → 刪走。
+2. **寫 Session Summary** — Append 一段新嘅 narrative 入 Recent Session Summaries section，跟 standard format `### YYYY-MM-DD <morning/afternoon/evening> session`。內容要 capture：今晚做咗咩主要 work、邊啲 decisions、學到咩、有冇 surface 新 issue / capability gap。**唔好 list 細節**——細節已經喺 Request Log table，narrative 講 nuance。
+3. **更新 Request Log** — 將今晚發生但未 log 嘅 entries append 入 table（每件主要事一行）。
+4. **Cross-update related logs**（如有需要） — 如果今晚有 architectural decision / bug fix / capability gap，update 埋 `kary-dev-log.md` 或 `gap-log.md` 嘅相關 entry。
+5. **Commit + push** — Stage 全部相關 file，single commit（message 簡述今晚主題），push 上 GitHub。Commit message format 跟現有 convention。
+6. **Report 俾用戶** — 一個簡潔 message 講做咗咩 + commit hash + open threads count + 講「OK 你而家可以 `/clear` 啦」。例：
+
+> ✅ Pre-clear done. Commit `abc1234` pushed. Open threads: 2 (Planyway 方向 / activity.bak 待刪). Session summary 寫低咗今晚 stress test + activity-path bug fix + memory schema rework。OK 你而家可以 /clear 啦。
+
+**重要原則：**
+- **唔好問「要唔要寫 summary」**——用戶講 clear 即係已經 commit，直接執行
+- **唔好問「commit message OK 唔 OK」**——Mugi 自己揀，太 trivial 嘅 confirm 拖慢 flow
+- **唔好做 destructive 嘢**——pre-clear sequence 全部係 append + commit + push，唔涉及 delete / overwrite。如果 commit / push 失敗（e.g. permission issue / merge conflict），**要 stop + 報告**，唔好嘗試自己 force-resolve
+- **Mugi 自己唔可以 `/clear`**——`/clear` 係 Claude Code 嘅 client-side command，要用戶自己打。Mugi 嘅責任係**準備好 disk state**，個 actual `/clear` 由用戶執行
+- **如果今晚冇實質 work**（純粹閒聊 / 一兩句 quick query），可以寫一句短 Session Summary（「今晚冇 production work，主要係 quick lookup」）然後仍然 commit + push——keep cadence consistent
+
 ---
 
 ## Gap Log

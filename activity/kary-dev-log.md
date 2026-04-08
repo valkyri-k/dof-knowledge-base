@@ -299,3 +299,49 @@ Profile + Request Log table（Date | Request | Outcome）
    - Activity log（`kb/activity/`）= work history / open threads / session narrative（**工作層面**嘅 persistent narrative）
    - KB repo（CLAUDE.md / context / skills）= instruction + domain knowledge（**rule 層面**）
    - 唔好將 auto-memory 用嚟記 work history，亦唔好將 activity log 用嚟記 user profile
+
+---
+
+## 2026-04-08 — Pre-Clear Sequence（自動化 clear 前嘅 housekeeping）
+
+- **Type:** `feature-idea` + `decision`
+- **Status:** `done` ✅
+- **Raised by:** Kary，緊接住前一條 memory schema 決定
+
+---
+
+### Trigger
+
+Kary 發現 hybrid memory schema 仲係要佢手動講「寫 summary」 / 「commit」 / 「push」先 trigger Mugi 做 housekeeping。佢提議：直接定一條 instruction，**用戶講「clear」就 Mugi 自動做晒成套**，唔需要逐步 prompt。
+
+### Decision
+
+CLAUDE.md `User Activity Tracking` section 加咗一個新 sub-section **Pre-Clear Sequence**，定義：
+
+- **Trigger keywords**：`clear` / `clear session` / `clear chat` / `我要 clear` / `pre-clear` 等明確 commit 嘅 phrasing
+- **唔 trigger 嘅情況**：「考慮 clear」/「點解要 clear」/ 其他 context 用「clear」字
+- **Sequence**（一氣呵成，唔逐步問）：
+  1. 更新 Open Threads（add new + remove resolved）
+  2. 寫 Session Summary（narrative form）
+  3. 更新 Request Log（補晒未 log entries）
+  4. Cross-update `kary-dev-log.md` / `gap-log.md` 如有需要
+  5. Commit + push（single commit，Mugi 自己揀 message）
+  6. Report 俾用戶 + 講「OK 你可以 /clear」
+
+### Key constraints
+
+- **Mugi 自己唔可以 `/clear`**——`/clear` 係 client-side command，要用戶打。Mugi 嘅責任係 prep disk state
+- **唔做 destructive 操作**——全部係 append + commit + push
+- **唔問瑣碎 confirm**——「要唔要寫 summary」/「commit message OK 嗎」呢類 friction 全部 skip
+- **失敗就 stop + 報告**——commit / push 撞 permission / conflict → 唔好 force-resolve，等用戶 intervention
+
+### Why this matters
+
+冇呢條 instruction：每次 clear 之前用戶要 issue 5-6 條 command（write summary / update threads / git add / commit / push / `/clear`）。有咗呢條：用戶只要講一句「clear」，Mugi 自動跑 5 步然後等用戶 type `/clear`。Friction 由 5-6 步降到 2 步（用戶嘅句子 + 最後嘅 `/clear`）。
+
+呢個 design 配合 cost-control 策略——令 manual clear 變到夠平易近人，用戶先肯**真係定期 clear**，schema 嘅 cost saving 先 realize 到。如果 housekeeping 麻煩，用戶就會懶 clear，long session 又再積埋。
+
+### Lessons Learned
+
+- **Schema 唔夠，要配 workflow automation**：有結構但每次都要手動觸發 = 等於冇——用戶會 skip。**Schema + auto-trigger** 先係完整 solution
+- **Trigger keyword 設計要有邊界**：「clear」係常用字，要 disambiguate「我要 clear」（commit）vs「clear the calendar event」（其他意思）。寫 instruction 嗰陣明確 list 出 hesitation phrasing 同其他 context，避免 false trigger
