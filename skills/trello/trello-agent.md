@@ -300,6 +300,24 @@ Member 身份直接決定 label，唔理 task 名入面有冇 "cut" 字：
 MOGRAPH_MEMBERS      = {'max', 'keith'}        # → 'mograph'（無論 task 係咩）
 STYLE_FRAME_MEMBERS  = {'kay'}                 # → 先睇 style frame kw，否則 'mograph'
 EDITOR_MEMBERS       = {'yik', 'katy'}         # → 'cut'
+DIRECTOR_MEMBERS     = {'kary', 'benjy'}       # → 視乎 task kw：Pre-Pro / Shooting / from client / VO recording / final
+```
+
+**Director member 邏輯：** Kary / Benjy 係 project 負責導演，負責前期、拍攝、客戶溝通、VO、final 嘅監督。呢幾個 label 預設歸佢哋，同後期同事預設係 `cut` / `mograph` / `style frame` 係同一個邏輯。
+
+```python
+# 如果 assigned member 係 Kary 或 Benjy → 用 task keyword 揀 label：
+DIRECTOR_LABEL_MAP = [
+    (['ppm', 'pre-pro', 'pre pro', 'preproduction', 'pre-production',
+      'call sheet', 'callsheet', 'storyboard', 'recce', 'site recce', 'script'],  'Pre-Pro'),
+    (['shoot', 'shooting', 'filming', 'd1', 'd2', 'd3'],                           'Shooting'),
+    (['comment from client', 'feedback from client', 'client comment',
+      'client feedback', 'from client', 'fb1', 'fb2', 'fb3'],                     'from client'),
+    (['vo recording', 'vo ', 'voiceover', 'voice over', 'voice-over'],             'VO recording'),
+    (['final output', 'final delivery', 'final'],                                  'final'),
+]
+# 逐個 keyword group 對比 task name → 第一個 match 嘅 label 勝出
+# 如果 task name 唔 match 任何 group → 唔加 label，回覆提示用戶手動指定
 ```
 
 例：「Keith 做 1st cut 嘅 motion」→ Keith = mograph member → label: `mograph`（唔雙標 `cut`）
@@ -394,9 +412,13 @@ def infer_labels(task_name: str, assigned_member_name: str = '') -> list[str]:
 | "Kay 做 EMSD 嘅 style frame" | `style frame` | style frame keyword 優先 |
 | "Kay 做 HKTB 嘅 name tag design" | `mograph` | Kay + design/name tag keyword |
 | "Submit style frame 俾客（Max 做）" | `style frame` | style frame keyword 優先，唔加 mograph |
-| "Comment from client on HKTB 2nd cut" | `from client` | from client keyword |
-| "Shoot D2 EMSD Railway" | `Shooting` | shoot keyword |
-| "Final output J26002" | `final` | final output keyword |
+| "Kary 負責 HKTB PPM" | `Pre-Pro` | Kary = director member + PPM keyword |
+| "Benjy 做 EMSD 嘅 Shooting D1" | `Shooting` | Benjy = director member + shoot keyword |
+| "Kary — comment from client HSUHK" | `from client` | Kary = director member + from client keyword |
+| "Benjy 做 Final Output J26002" | `final` | Benjy = director member + final keyword |
+| "Kary 做 VO Recording" | `VO recording` | Kary = director member + VO keyword |
+| "Comment from client on HKTB 2nd cut"（冇指定 member） | `from client` | keyword fallback |
+| "Shoot D2 EMSD Railway"（冇指定 member） | `Shooting` | keyword fallback |
 
 ---
 
