@@ -156,6 +156,7 @@
 | Google Drive 操作 | `skills/producer/producer-playbook.md` | "搵 file"、"出份 doc"、"copy template"、"archive" |
 | Google API credentials / boilerplate | `technical/google-apis.md` | 需要 call Calendar API 或 Drive API 嘅 code |
 | Trello 操作（create card、assign、dates、labels、checklists、move） | `skills/trello/trello-agent.md` | "Trello"、"card"、"Planyway"、"assign"、"checklist"、"J26XXX 入面"、"postpro board"、"加張 card"、"改 due date"、"move 去"、"mark complete" |
+| Calendar → Trello sync（將 calendar events 批量轉成 Trello cards） | `skills/trello/trello-agent.md` | "sync calendar to trello"、"calendar 入 trello"、"將 calendar events create cards"、"extract calendar for J26XXX" |
 
 **嚴格 routing rule：** 收到以上 keywords 嘅 request，**唔可以靠記憶答，必須先 read 對應 skill file**。Quick Reference 入面有的就直接答，Quick Reference 搵唔到就先 read context files，context files 搵唔到就 read skill files。
 

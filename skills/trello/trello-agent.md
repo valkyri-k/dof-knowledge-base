@@ -455,6 +455,170 @@ def infer_labels(task_name: str, assigned_member_name: str = '') -> list[str]:
 
 ---
 
+## Compound Operation — Sync Calendar → Trello
+
+### 觸發條件
+
+用戶講類似：
+- "sync calendar to trello for J26054 EMSD QA"
+- "幫 J26016 HSUHK 將 calendar 入 trello"
+- "extract calendar events for J26041 HKTB and create trello cards"
+
+必須包含：**Job number**（J2XXXX 格式）+ **Job title / project name**
+
+---
+
+### 完整流程
+
+```
+Step 1  讀 Google Calendar → 搵呢個 job 嘅 events
+Step 2  搵或建立 Trello list（find_or_create_list）
+Step 3  每個 event → 建立 Trello card（名、start、due、label）
+Step 4  Member 分配（見下）
+Step 5  Summary 回覆
+```
+
+---
+
+### Step 1 — 搵 Calendar Events
+
+**必須先 read `technical/google-apis.md` 取得 Calendar boilerplate。**
+
+```python
+# 用 project title keywords 搜尋 calendar events
+# calendarId = 'dof.internal@gmail.com'
+# 搜尋範圍：今日 - 60 天 to 今日 + 365 天（涵蓋進行中 + 未來 projects）
+# q parameter = job title 關鍵字（e.g. 'EMSD QA' 或 'J26054'）
+
+results = service.events().list(
+    calendarId='dof.internal@gmail.com',
+    timeMin=(datetime.utcnow() - timedelta(days=60)).isoformat() + 'Z',
+    timeMax=(datetime.utcnow() + timedelta(days=365)).isoformat() + 'Z',
+    q=project_title,          # search by title keyword
+    singleEvents=True,
+    orderBy='startTime',
+).execute()
+events = results.get('items', [])
+```
+
+**如果搜尋結果係空：**
+→ 用 job number 再試一次（`q=job_number`）
+→ 仍係空 → 回覆：「Calendar 搵唔到 [Job Number] [Title] 相關 events，可能 project 未有 calendar entries，或者 title 唔同。你可以 check 下 calendar 用咩名？」
+
+---
+
+### Step 2 — 搵或建立 Trello List
+
+```python
+result = find_or_create_list(job_number, project_title)
+# 處理 found / created / mismatch（見 List 操作黃金規則）
+list_id = result['list']['id']
+```
+
+---
+
+### Step 3 — Event → Card Mapping
+
+**Card 名：** 去掉 event title 入面嘅 project shorthand suffix（` - [Shorthand]`），只保留 milestone 名。
+
+```python
+import re
+
+def event_to_card_name(event_title: str, project_title: str) -> str:
+    """
+    '1st Cut - HSUHK Student Excellence' → '1st Cut'
+    '1st Cut' (no suffix) → '1st Cut'
+    """
+    # Try to strip known suffix patterns: ' - <anything>'
+    cleaned = re.sub(r'\s*-\s*.+$', '', event_title).strip()
+    return cleaned if cleaned else event_title
+
+def event_to_dates(event: dict) -> tuple:
+    """Returns (start_iso, due_iso) in Trello format (UTC midnight)."""
+    start = event['start'].get('date') or event['start'].get('dateTime', '')[:10]
+    end   = event['end'].get('date')   or event['end'].get('dateTime', '')[:10]
+
+    # Calendar end date for all-day events is exclusive (e.g. Apr 9 = ends Apr 8)
+    # Trello due = last working day of the event → subtract 1 day for all-day events
+    if event['start'].get('date'):  # all-day event
+        from datetime import date, timedelta
+        end_dt = date.fromisoformat(end) - timedelta(days=1)
+        end = end_dt.isoformat()
+
+    start_iso = f'{start}T00:00:00.000Z'
+    due_iso   = f'{end}T00:00:00.000Z'
+    return start_iso, due_iso
+```
+
+**Label：** 用 `infer_labels(card_name)` — 不傳 member（member 係 Step 4 先決定）。
+
+---
+
+### Step 4 — Member 分配
+
+**兩種模式：**
+
+**Mode A — 用戶喺 command 入面已指定 member**
+
+例：「sync calendar to trello for J26054 EMSD QA, director: Benjy, editor: Katy, mograph: Max」
+
+→ 直接按呢個 mapping assign：
+```python
+ROLE_OVERRIDE = {
+    'director': 'benjy',   # → Pre-Pro / Shooting / from client / VO recording / final cards
+    'editor':   'katy',    # → cut cards
+    'mograph':  'max',     # → mograph cards
+    'design':   'kay',     # → style frame cards（如唔指定 default Kay）
+}
+```
+
+**Mode B — 用戶冇指定 member**
+
+→ 建立全部 cards（有 label 冇 member）→ **建完之後問一次：**
+
+> 「已建立 X 張 cards for [Job]。請問呢個 project 嘅人員分配：
+> - `cut` cards（X 張）→ Yik 定 Katy？
+> - `mograph` cards（X 張）→ Max 定 Keith？
+> - `style frame` cards（X 張）→ Kay（如唔係請話我知）
+> - `Pre-Pro` / `Shooting` / `final` cards（X 張）→ Kary 定 Benjy？
+>
+> 你可以直接話我：editor: Katy, mograph: Max, director: Kary，我幫你 batch assign。」
+
+**Style frame default：** 如果冇特別指定，style frame cards 預設 assign 俾 **Kay**，唔需要問。
+
+---
+
+### Step 5 — Summary 回覆格式
+
+```
+已將 [Job Number] [Job Title] 嘅 Calendar events 同步去 Trello：
+
+List：[found existing / created new] — [List Name]
+
+| Card | Start | Due | Label |
+|------|-------|-----|-------|
+| 1st Cut | 4月8日 | 4月16日 | cut |
+| 2nd Cut | 4月17日 | 4月23日 | cut |
+| Final Output | 4月25日 | 4月29日 | final |
+...
+
+共 X 張 cards。[Member assigned / 請確認人員分配（見上）]
+```
+
+---
+
+### 特殊情況處理
+
+| 情況 | 處理 |
+|------|------|
+| Event 係 multi-day（e.g. Shoot D1/D2）| 建兩張獨立 card（唔合併），各自有獨立 start/due |
+| Event title 解析唔到 label | 建 card 但不加 label，summary 標示「⚠️ 未能辨別 label」|
+| Calendar event 係 TBC（title 有 TBC）| 建 card，card 名加 "(TBC)"，due 日期照用但喺 summary 提示 |
+| List mismatch（find_or_create_list 返回 mismatch）| 停低，唔建 cards，先問用戶（見 List 操作黃金規則）|
+| 搵到嘅 events 超過 20 個 | 先列 event 清單問用戶確認，唔好盲目全建 |
+
+---
+
 ## Date Format
 
 Trello API 用 **ISO 8601 UTC**：`'2026-04-15T00:00:00.000Z'`
