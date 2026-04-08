@@ -75,6 +75,7 @@ creds = Credentials(
     scopes=[
         "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/documents",
+        "https://www.googleapis.com/auth/spreadsheets",
     ],
 )
 
