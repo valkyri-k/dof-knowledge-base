@@ -19,6 +19,9 @@
 ### 2026-04-08 evening session
 主力 stress test 新 instruction infra + 解決 setup-level bug。先 verify 咗新 `0a58a4c` no-confirm calendar-ops rule 喺 happy path（add `1st Cut - Test Video` Apr 27 直接執行）+ saturation guard path（add `2nd Cut - Test 2 Video` Apr 27 → 撞 4 條 → 提議 push Apr 28）work 到。然後 Kary surface 咗 Planyway/Trello Timeline integration 嘅 capability gap（post team 嘅 Planyway Timeline view 接駁唔到 Mugi push 嘅 Calendar events，因為 Timeline view 係 read Trello cards），logged 入 gap-log。Push gap-log 嗰陣發現第二個 issue：`/home/node/activity` 係 raw folder 唔係 symlink，而 CLAUDE.md 用 bare `activity/...` path → Mugi 之前寫 activity 全部 silent 寫去 raw folder push 唔到 GitHub，fix 咗（symlink + CLAUDE.md 明文 absolute-path rule），完整 root cause + lessons learned 入 dev-log。最後 Kary raise 咗 long-term cost concern：DM session 越長越貴（O(N²) replay）+ 1h cache TTL miss penalty，**decision**：行 hybrid memory 策略——manual clear session at natural break + 靠 activity log 嘅 3-section schema（Open Threads / Session Summaries / Request Log）做 cross-session 長期記憶。Schema 定義落咗 CLAUDE.md `User Activity Tracking` section，呢個 file 係第一個 reference implementation。
 
+### 2026-04-08 late evening session
+延續 evening session 嘅 memory schema 工作。Push schema 嘅 commit 嗰陣撞咗第二個 setup-level bug：`/home/node/kb/.git/objects/` 入面有 29 個 subdirectory owner 係 `root:root`（Mugi 跑 git op 用 `node` 戶口），令 git 寫唔到 new object。Kary 喺自己 terminal 跑 `sudo chown -R node:node /home/node/kb/.git` 一行解決。Retry → schema rework commit `1a9b3d5` push 成功。之後 Kary 提議下一步：「點解唔可以一講 `clear` Mugi 自動做晒成套 housekeeping？」——於是 design + implement **Pre-Clear Sequence** instruction，加咗 6 步 sequence 入 CLAUDE.md（update Open Threads → 寫 Session Summary → 補 Request Log → cross-update logs → commit + push → report），定義 trigger keywords + disambiguation rules + non-destructive boundary（commit `ce00194`）。最後跑呢條 instruction 自身做 dogfood demo——即係呢段 summary 本身就係 Pre-Clear Sequence 嘅第一次 production run。**Decision**: schema + automation 一定要配套——淨係定 schema 用戶會懶 trigger，friction 一高 cost saving 就 realize 唔到。
+
 ---
 
 ## Request Log
@@ -57,3 +60,12 @@
 | 2026-04-08 | Raised Planyway/Trello Timeline integration problem | Proposed 3 directions + flagged capability gaps |
 | 2026-04-08 | Log issue to gap-log | Appended entry to `activity/gap-log.md` ✅ |
 | 2026-04-08 | Push gap-log to GitHub | Commit `7bbba62`, pushed to origin/main ✅ |
+| 2026-04-08 | Push local `/home/node/activity/valkyri_k.md` | 發現有 2 份 file（local + repo），merged + pushed `d48160a`，flag 兩個 path 並存問題 |
+| 2026-04-08 | Diagnose activity/ path 雙位置 root cause | Layer 1 missing symlink + Layer 2 bare relative path in CLAUDE.md → logged kary-dev-log |
+| 2026-04-08 | Fix A (symlink) + Fix B (CLAUDE.md absolute-path rule) | Backup → rm raw folder → ln -s; CLAUDE.md edit; commit `2872b2a` ✅ |
+| 2026-04-08 | Discuss long-term memory + cost optimization (Max plan quota concern) | Decided 3-section hybrid schema (Open Threads / Session Summaries / Request Log) |
+| 2026-04-08 | Implement schema in CLAUDE.md + reference impl in valkyri_k.md | First commit blocked by root-owned git objects (chown bug surfaced) |
+| 2026-04-08 | Surface root-owned `.git/objects` permission bug | Kary fixed via `sudo chown -R node:node /home/node/kb/.git` |
+| 2026-04-08 | Retry schema rework commit | `1a9b3d5` pushed ✅ (CLAUDE.md + valkyri_k.md + kary-dev-log.md, +197/-10) |
+| 2026-04-08 | Add Pre-Clear Sequence instruction | Commit `ce00194` — 6-step auto-housekeeping on `clear` keyword ✅ |
+| 2026-04-08 | First Pre-Clear Sequence dogfood run | This entry — Mugi auto-ran the sequence after Kary said "clear" |
