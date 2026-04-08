@@ -345,3 +345,25 @@ CLAUDE.md `User Activity Tracking` section 加咗一個新 sub-section **Pre-Cle
 
 - **Schema 唔夠，要配 workflow automation**：有結構但每次都要手動觸發 = 等於冇——用戶會 skip。**Schema + auto-trigger** 先係完整 solution
 - **Trigger keyword 設計要有邊界**：「clear」係常用字，要 disambiguate「我要 clear」（commit）vs「clear the calendar event」（其他意思）。寫 instruction 嗰陣明確 list 出 hesitation phrasing 同其他 context，避免 false trigger
+
+---
+
+## [[2026-04-08]] 20:32
+Type: bug
+Context: 今晚 push gap-log entry 上 GitHub 嗰陣，連環撞咗多個 git/credential setup bug。Kary 第一次幫 Mugi setup HTTPS push credentials，行咗 PAT (Option B) flow。
+Note: 三個獨立 bug stack 埋一齊，diagnose 用咗多個 round：
+
+1. **Remote URL 有 embedded empty password** — `origin` URL 係 `https://valkyri-k:@github.com/valkyri-k/dof-knowledge-base.git`（注意 `valkyri-k` 後面個 `:` 緊接 `@`，password 部分係空白）。Git parse 呢個 URL 之後會用「username=valkyri-k, password=空」嘅組合直接 send 俾 server，**完全 bypass credential helper**。即係就算 `~/.git-credentials` 有正確 token，都唔會被讀取——server 收到空 password → reject → 「Invalid username or token」。Fix：`git remote set-url origin https://github.com/valkyri-k/dof-knowledge-base.git`（剝走 username 部分，等 git 真正向 helper 攞 cred）。Root cause 估計：呢個 repo 最初 clone 嘅時候用咗 placeholder URL，cred 部分後來冇填好。
+
+2. **`credential.helper=store` 嘅 auto-erase 副作用** — 當 `git push` auth 失敗，store helper 會 default 將「失敗嗰條 entry」由 `~/.git-credentials` file 度刪走（防止 cache 壞 cred）。呢個行為令 diagnose 變超級難：第一次 push 失敗 → file 被清空 → 第二次 push 連 token 都冇 send → 同一個 error message → 睇落好似 token 由始至終都未被接受。中段我撞咗呢個 trap，要 cat file 先發現變咗 0 byte。Mitigation：知道之後可以 use credential.helper=store --file=... 隔離，或者 switch 去 SSH。長遠：fine-grained PAT + SSH deploy key 二揀一，唔好兩邊都靠 helper memory。
+
+3. **Local main 同 remote main divergent** — Kary 喺另一個 session 已經 push 咗 `93dc756 Add spreadsheets scope to Drive OAuth2 boilerplate`，本地未 fetch，所以 push 即使 auth 通都會 reject「fetch first」。Fix：`git pull --rebase origin main`，將 local `a7d2996` rebase 上去變 `3fe752c`。提醒自己：每次 push 前可以先 `git fetch` check divergence，特別係 multi-session setup。
+
+**Diagnosis path（記錄低，下次會快好多）：**
+- 用 `git push <full-url-with-token> main` 直接 bypass 所有 credential layer 嚟 isolate 「token 啱唔啱」 vs 「helper / remote URL config 啱唔啱」。呢一步 unblock 咗 — 證明 token 本身 valid，問題喺 git config side。
+- 用 `curl -u user:token https://api.github.com/user` verify token 對應嘅 GitHub identity 同 token effective scopes（`x-accepted-github-permissions` header 顯示 `metadata=read` 等）。
+- `git remote -v` 應該係第一個 check 嘅嘢，唔係最後——之前因為 assume URL 啱所以拖慢咗。
+
+**Final state:** Push working，commit `3fe752c` on remote，credential file restored，remote URL cleaned。`git push` 而家可以無痛跑（直至 PAT expire 為止，記得一年內 rotate）。
+Status: done
+
