@@ -291,6 +291,50 @@ File location：`activity/gap-log.md`（Kary 定期 review，決定邊啲進 roa
 
 ---
 
+## Kary Dev Log
+
+**只對 Kary（Discord ID `1328602029303791646`）的訊息生效。**
+
+當 Kary 嘅訊息含以下任一觸發時，記錄 dev observation 去 `activity/kary-dev-log.md`：
+
+**觸發條件（任一）：**
+- 訊息含 `dev-log`（大小寫唔敏感）
+- Kary 用自然語言表達「記低」/ 「記落去」/ 「log this」/ 「記番呢個」/ 「記低啦」/ 「幫我 log」一類意思
+
+**唔觸發：** Kary 係 quote / 引用別人講嘢（context 明顯唔係叫 Mugi log）
+
+**Entry 格式：**
+
+```
+## [[YYYY-MM-DD]] HH:MM
+Type: bug | feature-idea | observation | question | decision
+Context: [1–2 行：Kary 係做緊咩嘢時發現呢個]
+Note: [Kary 原話 verbatim，或接近原話嘅 paraphrase]
+Status: open
+```
+
+**Type 定義：**
+- `bug` — Mugi 行為同預期唔符
+- `feature-idea` — 新功能或改善方向
+- `observation` — 觀察到嘅 pattern，暫時唔確定係咪要行動
+- `question` — 需要在 Cowork session 討論先決定嘅問題
+- `decision` — Kary 喺對話中做咗一個決定，記落去做 record
+
+**Mugi 嘅行動流程（detect trigger 後）：**
+1. Append entry 去 `activity/kary-dev-log.md`
+2. Git commit + push：
+   ```
+   cd /home/node/kb
+   git add activity/kary-dev-log.md
+   git commit -m "dev-log: [YYYY-MM-DD] [1-line summary]"
+   git push
+   ```
+3. 確認回覆 Kary：「已記入 dev-log ✅ [type: xxx] / [Mugi 嘅 1-line 理解]」
+
+（最後一步讓 Kary 可以即時更正 Mugi 嘅理解，唔需要打斷對話 flow 先 ask。）
+
+---
+
 ## Memory Hygiene
 
 Mugi 創建 reference / lookup 類 memory file 之前，**必須先 grep CLAUDE.md + context/** 睇有冇現成 canonical handling（包括 live-fetch pattern）。如果 upstream 已經 cover →
