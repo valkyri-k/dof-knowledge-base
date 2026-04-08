@@ -14,6 +14,8 @@
 - **[2026-04-08] Trello checklist member assignment（Storyboard card）** — board 冇 Advanced Checklists power-up，目前用 `@mention` fallback；等 Kary 揀 plan upgrade 定 default 轉做 split-cards approach。Cross-ref: `activity/gap-log.md` 14:23 entry
 - **[2026-04-08] Discord reply routing bug** — 答 trello rules question 嘅長 reply 寫咗喺 terminal 冇 send 出 Discord，user 等於收唔到。已 update memory `feedback_always_reply.md` 加 Rule 2「Discord in → Discord reply tool out, no exceptions」
 - **[2026-04-08] J26053 BOC Trendy BTS mograph 未 assign** — 1st Cut BTS (4/23) + Final BTS (5/15) 兩張只 assign 咗 Yik 做 cut，graphics 邊個負責等 Kary x Sohling discussion 結果。BTS editor 都 default 咗 Yik 未確認
+- **[2026-04-08] J26016 HSUHK Student Excellence Batch 2 shoot date 等客 confirm** — 3 條 TBC shoot events 已落 Apr 21 (Tue) / Apr 24 (Fri) / Apr 27 (Mon)，客會揀其中 2 日拍攝（Cam: Jer）。客 confirm 後要：刪走未用嗰一條 + remove 留低兩條嘅 (TBC) prefix。Batch 2 post-pro schedule 暫時未排（現有 J26016 post-pro 全部係 Batch 1，唔郁）
+- **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
 
 ---
 
@@ -24,6 +26,15 @@
 
 ### 2026-04-08 late evening session
 延續 evening session 嘅 memory schema 工作。Push schema 嘅 commit 嗰陣撞咗第二個 setup-level bug：`/home/node/kb/.git/objects/` 入面有 29 個 subdirectory owner 係 `root:root`（Mugi 跑 git op 用 `node` 戶口），令 git 寫唔到 new object。Kary 喺自己 terminal 跑 `sudo chown -R node:node /home/node/kb/.git` 一行解決。Retry → schema rework commit `1a9b3d5` push 成功。之後 Kary 提議下一步：「點解唔可以一講 `clear` Mugi 自動做晒成套 housekeeping？」——於是 design + implement **Pre-Clear Sequence** instruction，加咗 6 步 sequence 入 CLAUDE.md（update Open Threads → 寫 Session Summary → 補 Request Log → cross-update logs → commit + push → report），定義 trigger keywords + disambiguation rules + non-destructive boundary（commit `ce00194`）。最後跑呢條 instruction 自身做 dogfood demo——即係呢段 summary 本身就係 Pre-Clear Sequence 嘅第一次 production run。**Decision**: schema + automation 一定要配套——淨係定 schema 用戶會懶 trigger，friction 一高 cost saving 就 realize 唔到。
+
+### 2026-04-08 night session
+今晚兩件事：(1) Sheets API 全面 unblock + GitHub push setup 修返 + (2) J26016 Batch 2 shoot date update。
+
+第一件事 stack 咗一連串 setup-level bug。Kary 朝早 OAuth re-consent 加咗 `spreadsheets` scope，今晚 verify 過 refresh token 而家三個 scope 齊（drive + documents + spreadsheets），先前 J26041 update DOF Current Job List 嗰陣靠 `drive` scope hack 通 `sheets.values.update` 嘅 workaround 已唔使再用——logged 入 gap-log 做 done。Kary 跟住叫我 push gap-log，呢度撞咗 3 個 stacked bugs：(a) `origin` URL 係 `https://valkyri-k:@github.com/...` — username 後跟 `:` 然後空 password，git 用呢個空 password 蓋過 helper，全部 push 一律「Invalid username or token」；(b) `credential.helper=store` 嘅 auto-erase 副作用——push fail 即清走 credential file 入面嗰行，令同一個 error 重複 surface 但 root cause 走樣（diagnose 到中段先 cat file 發現變 0 byte）；(c) local main 同 remote main divergent，Kary 喺另一 session 已 push 咗 spreadsheets boilerplate。Diagnosis breakthrough：用 `git push <full-url-with-token> main` direct call bypass 所有 credential layer，先 isolate 到「token valid，問題喺 git config side」。Fix：set-url 清走 embedded username + 重寫 credentials file + rebase pull。Final state：commit `bf80ca6` 上 GitHub，credential helper + clean remote URL 全 work，dev-log entry 詳細記低咗 3 個 bug + diagnosis path。
+
+**Decision (debugging methodology)**：將來撞 git auth issue，**第一步永遠 check `git remote -v`**——今晚拖長咗 diagnose time 就係因為 assume URL 啱所以走最後先睇。第二，credential.helper=store 嘅 auto-erase behaviour 一定要記住，下次見「same error twice in a row」就要立即 verify file 仲未 wipe。
+
+第二件事乾淨好多。Kary 要 update J26016 HSUHK Student Excellence Batch 2 shoot date：刪走舊 `(TBC) 2 Days - HSUHK Student Excellence` (Apr 25-May 01 window)，加 3 條 TBC shoot 落 Apr 21/24/27 等客揀其中 2 日。我先 list + flag 3 個候選日撞 J26016 已有 post-pro milestone，Kary clarify 嗰啲係 Batch 1 唔郁、新嘢係 Batch 2，title suffix 加 `- Batch 2`、description 加 `Cam: Jer`。執行：1 delete + 3 create 一氣呵成，全部成功。**Lesson**：J26016 而家有 multi-batch 拍攝結構，將來搵 events 要記住分 Batch 1 / Batch 2，唔可以一概而論——好彩呢次 Kary 主動 clarify。
 
 ---
 
@@ -82,3 +93,10 @@
 | 2026-04-08 | Trello: archive 4 完成 project lists (J26035 / J26036 / J26027 / J26034) | All closed ✅ |
 | 2026-04-08 | Drive: cleanup root, keep Archive/Templates/OLD Drive Files + DOF Current Job List, move 其他舊 files 入 OLD Drive Files | Listed 54 candidates (incl. flagged 2 recent timeline test docs) → Kary confirm → moved 54/54 ✅ |
 | 2026-04-08 | Calendar: confirm BOC Trendy Too shoot Apr-15 | Found `[TBC] (1 day) BOC Trendy Too IG Reel` already on 4/15 → renamed to `Shoot - BOC Trendy Too`, colorId 11, J26053 desc ✅ |
+| 2026-04-08 | Verify OAuth refresh token spreadsheets scope (post re-consent) | Tested live — 3 scopes confirmed: drive + documents + spreadsheets ✅ |
+| 2026-04-08 | Log J26041 sheets-scope workaround → gap-log (status done) | Appended entry; commit `a7d2996` (later rebased to `3fe752c`) |
+| 2026-04-08 | Push gap-log → GitHub | Failed initially — diagnosed 3 stacked bugs (embedded empty pwd in remote URL, helper auto-erase, divergent main); fixed all + pushed `3fe752c` ✅ |
+| 2026-04-08 | Walk Kary through Option A (deploy key) vs Option B (PAT) for git auth | Kary chose Option B; provided fine-grained PAT setup steps |
+| 2026-04-08 | Set up PAT credential helper + fix remote URL | `git remote set-url` cleaned `valkyri-k:@`, re-stored `~/.git-credentials`, validated push ✅ |
+| 2026-04-08 | Log GitHub push setup bugs → kary-dev-log | Commit `bf80ca6` pushed (validates new git setup end-to-end) ✅ |
+| 2026-04-08 | J26016 HSUHK Student Excellence Batch 2 shoot update | Deleted `(TBC) 2 Days` event; created 3 TBC shoots Apr 21/24/27 with `- Batch 2` suffix + `Cam: Jer` desc; Batch 1 post-pro untouched ✅ |
