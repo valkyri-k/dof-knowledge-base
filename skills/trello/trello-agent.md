@@ -23,8 +23,11 @@ BASE = 'https://api.trello.com/1'
 ## Board Constants
 
 ```python
-BOARD_ID = 'gThmFbyu'  # DOF Postpro Job List
+BOARD_ID       = '682c30d662d5a52cc721cb04'  # full id, required by POST /lists
+BOARD_SHORT_ID = 'gThmFbyu'                  # short id, accepted by GET endpoints only
 ```
+
+⚠️ `POST /lists` 必須用 **full board id**——short id 會 return `400 invalid value for idBoard`。Read endpoints (`GET /boards/{id}/lists` etc.) 兩個 id 都收。Default 一律用 full id 唔好混用。
 
 ---
 
@@ -64,8 +67,11 @@ meta = fetch_board_meta()
 def find_or_create_list(job_number: str, project_title: str) -> dict:
     """
     ALWAYS call this instead of directly creating a list.
-    Searches existing lists for one containing the job number.
-    Returns existing list if found; only creates new one if truly absent.
+
+    Returns one of three statuses:
+      {'status': 'found',    'list': lst}                     — exact-or-overlap match, OK to append
+      {'status': 'mismatch', 'list': lst, 'reason': str}      — job# matches but title 對唔上 → STOP, surface to user
+      {'status': 'created',  'list': new_lst}                 — no existing match, fresh list created
 
     job_number    : e.g. 'J26054'
     project_title : e.g. 'EMSD QA'
@@ -73,21 +79,48 @@ def find_or_create_list(job_number: str, project_title: str) -> dict:
     lists = requests.get(f'{BASE}/boards/{BOARD_ID}/lists',
                          params={**AUTH, 'fields': 'id,name'}).json()
 
-    # Search by job number (case-insensitive) — title may differ slightly
-    for lst in lists:
-        if job_number.lower() in lst['name'].lower():
-            return {'list': lst, 'created': False}
+    job_lower   = job_number.lower()
+    title_lower = project_title.lower().strip()
+    title_tokens = {t for t in title_lower.split() if len(t) > 1}
 
-    # Not found → create new
+    for lst in lists:
+        name_lower = lst['name'].lower()
+        if job_lower not in name_lower:
+            continue
+
+        # Job number hit — verify title also overlaps before appending
+        existing_title  = name_lower.replace(job_lower, '').strip()
+        existing_tokens = {t for t in existing_title.split() if len(t) > 1}
+
+        if not title_tokens or (title_tokens & existing_tokens):
+            return {'status': 'found', 'list': lst}
+
+        # Job number matches but title 完全唔 overlap → likely user typo'd job#
+        return {
+            'status': 'mismatch',
+            'list': lst,
+            'reason': (f"{job_number} 已存在但 title 係 '{lst['name']}'，"
+                       f"同你講嘅 '{project_title}' 對唔上——可能係 job number typo。"),
+        }
+
+    # No existing list with this job number → create fresh
     new_list = requests.post(f'{BASE}/lists',
                              params={**AUTH, 'name': f'{job_number} {project_title}',
                                      'idBoard': BOARD_ID}).json()
-    return {'list': new_list, 'created': True}
+    return {'status': 'created', 'list': new_list}
 ```
 
-**回覆格式：**
-- 找到現有 list → 「找到現有 list『J26054 EMSD QA』，append 落去。」
-- 新建 list → 「Board 上冇呢個 job，建立新 list『J26054 EMSD QA』。」
+**回覆格式（強制——唔可以 silently append / silently create）：**
+- `found` → 「找到現有 list『J26054 EMSD QA』，append 落去。」
+- `created` → 「Board 上冇呢個 job，建立新 list『J26054 EMSD QA』。」
+- `mismatch` → **停低，唔好 append 唔好 create。** 回覆：
+  > 「⚠️ J26054 已存在但 title 係『J26054 EMSD QA』，同你講嘅『EMSD CSC』對唔上——可能 job number typo？
+  > Options：
+  > (a) Append 入現有 J26054 EMSD QA list（如果係同一個 project）
+  > (b) 我用另一個 job number 起新 list（你話我知正確 number）
+  > (c) Rename 現有 list」
+
+**Rationale：** 純粹 by-job-number find 喺 user typo 場景下會 silently append cards 入錯 list。Title overlap check 係 safety net；mismatch 一定要 surface 等用戶決定，唔好猜。
 
 ---
 
