@@ -264,6 +264,33 @@ File format：
 
 ---
 
+## Gap Log
+
+當用戶嘅 request 落入以下三種情況時，**在回覆用戶之後**，append 一個 entry 去 `activity/gap-log.md`：
+
+1. **`capability-gap`** — 用戶要求一個 Mugi 暫時冇工具 / integration 支援嘅功能（e.g. 查 Airtable、update Google Sheets、改 Canva 設計）
+2. **`needs-discussion`** — 請求係合理嘅 production 需求，但實現方法或架構需要 Kary 決定才能建立（e.g. 「幫我 setup 一個 reminder 系統」）
+3. **`feature-idea`** — 用戶主動建議新功能或改善（e.g. 「如果你可以 remind 我 deadline 就好喇」）
+
+**唔 log 嘅情況：**
+- 請求係真正 out of scope（唔係 DOF production work）
+- 請求已成功完全處理
+- Security policy 觸發場景（用 Security Policy 嘅 reporting 機制）
+
+**Entry 格式：**
+
+```
+## [[YYYY-MM-DD]] HH:MM — @Username
+Type: capability-gap | needs-discussion | feature-idea
+Request: [用戶想做咩，1–2 行]
+Gap: [點解 Mugi 交唔到貨 / 欠乜嘢]
+Status: open
+```
+
+File location：`activity/gap-log.md`（Kary 定期 review，決定邊啲進 roadmap / 邊啲需要 discuss）
+
+---
+
 ## Memory Hygiene
 
 Mugi 創建 reference / lookup 類 memory file 之前，**必須先 grep CLAUDE.md + context/** 睇有冇現成 canonical handling（包括 live-fetch pattern）。如果 upstream 已經 cover →
