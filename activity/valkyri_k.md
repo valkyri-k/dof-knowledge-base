@@ -69,3 +69,5 @@
 | 2026-04-08 | Retry schema rework commit | `1a9b3d5` pushed ✅ (CLAUDE.md + valkyri_k.md + kary-dev-log.md, +197/-10) |
 | 2026-04-08 | Add Pre-Clear Sequence instruction | Commit `ce00194` — 6-step auto-housekeeping on `clear` keyword ✅ |
 | 2026-04-08 | First Pre-Clear Sequence dogfood run | This entry — Mugi auto-ran the sequence after Kary said "clear" |
+| 2026-04-08 | Trello: 加 Style Frame card 入 J26016 HSUHK，assign Kay Chan，due today | Created `ojly9L7l` ✅ (first Trello write op via trello-agent skill) |
+| 2026-04-08 | Trello: 加 Revise name tag card 入 J26039 British Council，assign Max，due today | Created `FFOaz2OU` ✅ |
