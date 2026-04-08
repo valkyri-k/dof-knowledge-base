@@ -242,10 +242,11 @@
 
 每次收到 Discord 用戶 request 時，更新 `activity/<username>.md`：
 
+- **路徑（重要）：** Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面，會 sync 上 GitHub）。Mugi 寫嘅時候**永遠用 absolute path** `/home/node/kb/activity/<file>`，唔好用 bare relative path `activity/<file>`——`/home/node/activity` 而家係 symlink 指返 `kb/activity`，但係將來如果 setup 又出錯，bare path 可能 silent 寫去 wrong folder 而 push 唔到 GitHub。同樣 apply 落 `gap-log.md`、`kary-dev-log.md` 同任何將來新 activity file。
 - **新用戶**：建立新 file，填入 Discord ID、Role（如知道）、Notes
 - **每次 request**：喺 Request Log table 加一行（Date、Request summary、Outcome）
 - **Profile updates**：如果發現用戶常見 request pattern，更新 Common requests 同 Notes
-- Session 開始時讀取 activity/ files 了解返用戶背景
+- Session 開始時讀取 `/home/node/kb/activity/` 入面嘅 files 了解返用戶背景
 
 File format：
 ```
