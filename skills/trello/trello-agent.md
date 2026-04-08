@@ -233,6 +233,138 @@ def get_checklists(card_id):
 
 ---
 
+## Label Auto-Detection（收到 create card request 時必須執行）
+
+收到 card 相關 request，**先跑呢個邏輯**，自動 infer label，唔好等用戶明確指定。
+
+### Label 定義
+
+| Label | 意思 | 負責人 |
+|-------|------|--------|
+| `cut` | Editor 做嘅所有 task：任何版次 cut（1st / 2nd / 3rd / picture lock）、color grading、sound mixing、subtitle | Yik、Katy（editor 同事） |
+| `mograph` | Motion graphics 同事做嘅所有 task：motion、animation、name tag / card、design、graphic、collage、lower third | Max、Keith（mograph 同事）、Kay（部分 design task） |
+| `style frame` | Style frame 相關（Submit / Confirm / Reference）。**獨立 label，唔同時加 `mograph`。** | Kay（主責）、Max |
+| `Pre-Pro` | 前期製作 task：PPM、call sheet、storyboard、script、site recce | Kary、KT |
+| `Shooting` | 拍攝日相關 task | — |
+| `from client` | 來自客戶嘅 feedback / comment / material | — |
+| `VO recording` | VO、voiceover 錄音 | — |
+| `final` | Final output / final delivery | — |
+| `waiting comment/material` | 等緊客戶 feedback 或素材 | — |
+| `RIP` | Dead / cancelled / archived project | — |
+
+---
+
+### Label Detection Rules（按優先順序）
+
+**Rule 1 — Member 身份 → 最高優先**
+
+Member 身份直接決定 label，唔理 task 名入面有冇 "cut" 字：
+
+```python
+# Member → label mapping
+MOGRAPH_MEMBERS      = {'max', 'keith'}        # → 'mograph'（無論 task 係咩）
+STYLE_FRAME_MEMBERS  = {'kay'}                 # → 先睇 style frame kw，否則 'mograph'
+EDITOR_MEMBERS       = {'yik', 'katy'}         # → 'cut'
+```
+
+例：「Keith 做 1st cut 嘅 motion」→ Keith = mograph member → label: `mograph`（唔雙標 `cut`）
+
+**Rule 2 — Style frame keyword → 獨立 label，唔疊加 `mograph`**
+
+`style frame` 係獨立類別。一旦 task 名有 style frame 相關字眼，**只加 `style frame`，唔同時加 `mograph`**，就算 assigned 俾 Max / Kay 都係。
+
+**Rule 3 — Task keyword（member 唔係 mograph/editor 時才 fallback 用）**
+
+```python
+def infer_labels(task_name: str, assigned_member_name: str = '') -> list[str]:
+    """
+    Priority:
+      1. style frame keywords → 'style frame' only (exclusive)
+      2. member identity      → mograph / cut by person
+      3. task keywords        → fallback if member unknown
+    """
+    name_lower   = task_name.lower()
+    member_lower = assigned_member_name.lower()
+    labels = []
+
+    # --- Priority 1: Style frame (exclusive label) ---
+    style_frame_kw = ['style frame', 'styleframe', 'style ref', 'style reference']
+    if any(kw in name_lower for kw in style_frame_kw):
+        labels.append('style frame')
+        # stop here — style frame doesn't stack with mograph
+        # still check other non-mograph labels below
+    else:
+        # --- Priority 2: Member identity ---
+        if any(m in member_lower for m in ['max', 'keith']):
+            labels.append('mograph')
+        elif 'kay' in member_lower:
+            # Kay: design / mograph tasks
+            mograph_kw = ['motion', 'mograph', 'animation', 'name tag', 'name card',
+                          'lower third', 'graphic', 'design', 'collage', 'animate']
+            labels.append('mograph' if any(kw in name_lower for kw in mograph_kw) else 'mograph')
+            # Kay defaults to mograph unless style frame (handled above)
+        elif any(m in member_lower for m in ['yik', 'katy']):
+            labels.append('cut')
+        else:
+            # --- Priority 3: Task keyword fallback ---
+            mograph_kw = ['motion', 'mograph', 'motion graphic', 'animation', 'animate',
+                          'name tag', 'name card', 'lower third', 'graphic', 'design', 'collage']
+            cut_kw     = ['1st cut', '2nd cut', '3rd cut', '4th cut', 'first cut', 'second cut',
+                          'third cut', 'fourth cut', 'picture lock', 'pic lock', 'editing',
+                          'color grading', 'colour grading', 'sound mixing', 'subtitle']
+            if any(kw in name_lower for kw in mograph_kw):
+                labels.append('mograph')
+            elif any(kw in name_lower for kw in cut_kw):
+                labels.append('cut')
+
+    # --- Always check these (independent of mograph/cut) ---
+    prepro_kw      = ['ppm', 'pre-pro', 'pre pro', 'preproduction', 'pre-production',
+                      'call sheet', 'callsheet', 'storyboard', 'recce', 'site recce', 'script']
+    shoot_kw       = ['shoot', 'shooting', 'filming', 'd1/', 'd2/', 'd3/']
+    from_client_kw = ['comment from client', 'feedback from client', 'client comment',
+                      'client feedback', 'from client', 'fb1', 'fb2', 'fb3']
+    vo_kw          = ['vo recording', 'voiceover', 'voice over', 'voice-over']
+    final_kw       = ['final output', 'final delivery']
+    waiting_kw     = ['waiting', 'wait for', 'pending comment', 'pending material']
+
+    if any(kw in name_lower for kw in prepro_kw):      labels.append('Pre-Pro')
+    if any(kw in name_lower for kw in shoot_kw):       labels.append('Shooting')
+    if any(kw in name_lower for kw in from_client_kw): labels.append('from client')
+    if any(kw in name_lower for kw in vo_kw):          labels.append('VO recording')
+    if any(kw in name_lower for kw in final_kw):       labels.append('final')
+    if any(kw in name_lower for kw in waiting_kw):     labels.append('waiting comment/material')
+
+    return list(dict.fromkeys(labels))  # deduplicate, preserve order
+```
+
+**Rule 4 — 唔確定（infer 唔到）→ 建 card 但唔加 label，回覆時提一句**
+
+```
+「已喺 J26039 British Council 建立 card「Revise Name Tag」，assign: Max，label: mograph。」
+# 如果搵唔到 label：
+「已建立 card，唔確定 label 類別，請你手動加。」
+```
+
+**唔需要 confirm 先 create。直接建，有錯等用戶糾正。**
+
+---
+
+### 例子
+
+| 用戶講 | Label | 原因 |
+|--------|-------|------|
+| "Max今日要改British Council comment, need to revise name tag" | `mograph` | Max = mograph member |
+| "Keith 做 HSUHK 嘅 motion for 1st cut" | `mograph` | Keith = mograph member，唔雙標 cut |
+| "Yik 做 J26047 嘅 2nd cut editing" | `cut` | Yik = editor member |
+| "Kay 做 EMSD 嘅 style frame" | `style frame` | style frame keyword 優先 |
+| "Kay 做 HKTB 嘅 name tag design" | `mograph` | Kay + design/name tag keyword |
+| "Submit style frame 俾客（Max 做）" | `style frame` | style frame keyword 優先，唔加 mograph |
+| "Comment from client on HKTB 2nd cut" | `from client` | from client keyword |
+| "Shoot D2 EMSD Railway" | `Shooting` | shoot keyword |
+| "Final output J26002" | `final` | final output keyword |
+
+---
+
 ## Date Format
 
 Trello API 用 **ISO 8601 UTC**：`'2026-04-15T00:00:00.000Z'`
