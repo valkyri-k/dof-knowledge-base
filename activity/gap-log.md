@@ -39,3 +39,21 @@ Post team 用 Planyway 管理工作。Planyway 有 Calendar sync 功能，但 sy
 - 想唔想 Mugi 先 verify Planyway 架構假設（搵文檔）先傾，定直接攞個方向落實？
 
 **Next action：** 等 Kary review + 揀方向。揀完之後 capability-gap 部分要 set up Trello credentials + 寫 integration logic（可能要新增 `skills/producer/trello-ops.md`）。
+
+---
+
+## [[2026-04-08]] 14:23 — @valkyri_k
+
+Type: capability-gap
+Request: Storyboard card 加 checklist，items `Video 1` assign Max / `Video 2` assign Keith
+Gap: Trello 嘅 checklist item member assignment 係 Advanced Checklists feature（Standard+ plan power-up），呢個 board 而家冇 enable。試過 `PUT /cards/{id}/checkItem/{iid}` 加 `idMember` param —— API return 200 但 silent ignore（GET 返嚟 `idMember: null`）。Verify 過 board `premiumFeatures` 冇相關 flag。Fallback 用咗 `@username` mention 加落 item 個名度（Trello auto-link 但唔算 formal assignment，唔入 Workload view）。可能 fix：upgrade Trello workspace plan，或者 default 將「assign 到 checklist item」嘅 request 自動轉做 split-cards approach（card-level member assignment 係 free）。
+Status: open
+
+---
+
+## [[2026-04-08]] 17:06 — @sohling_69845
+
+Type: needs-discussion
+Request: Assign team member by name to Trello card (Sohling 講「assign 俾 Yik」)
+Gap: Trello board members 嘅 username / display name 同 CLAUDE.md Quick Reference 嘅 DOF team names 對唔上。e.g. Trello 上面有 `ylx176 | YL` 但 CLAUDE.md 講 Yik。Mugi 要靠估（YL = 估係 Yik），有機會 mismatch 入錯人。建議：喺 `skills/trello/trello-agent.md` 或者新 context file 加一個 mapping table（DOF name → Trello member id + username + display name），等 Mugi 唔使每次 fuzzy match。已知 mapping（從今晚 fetch 抽出嚟）：Benjy `benjy77`, Kary `karyto5`, Katy `katylau6`, Kay `kaychan37`, Keith `keith46552115`, Max `maximiliandof`, Sohling `sohling5`, Yik `ylx176`（implicitly confirmed — Sohling 後續無糾正），DOF AI bot `dreamoffishai`.
+Status: open

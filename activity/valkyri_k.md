@@ -11,6 +11,7 @@
 
 - **[2026-04-08] Planyway / Trello Timeline integration 方向** — 等 Kary 揀 3 條 propose 嘅方向（Trello 主控 / 雙向 push / on-demand mirror）；揀完先 set up Trello credentials + 寫 integration logic。Cross-ref: `activity/gap-log.md` 2026-04-08 entry
 - **[2026-04-08] `/home/node/activity.bak/` 刪除** — symlink fix 嘅 backup folder，留低等 Kary confirm 一切 stable 後刪。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 entry「activity/ path 雙位置 bug」
+- **[2026-04-08] Trello checklist member assignment（Storyboard card）** — board 冇 Advanced Checklists power-up，目前用 `@mention` fallback；等 Kary 揀 plan upgrade 定 default 轉做 split-cards approach。Cross-ref: `activity/gap-log.md` 14:23 entry
 
 ---
 
@@ -71,3 +72,11 @@
 | 2026-04-08 | First Pre-Clear Sequence dogfood run | This entry — Mugi auto-ran the sequence after Kary said "clear" |
 | 2026-04-08 | Trello: 加 Style Frame card 入 J26016 HSUHK，assign Kay Chan，due today | Created `ojly9L7l` ✅ (first Trello write op via trello-agent skill) |
 | 2026-04-08 | Trello: 加 Revise name tag card 入 J26039 British Council，assign Max，due today | Created `FFOaz2OU` ✅ |
+| 2026-04-08 | Trello: Kary manual delete `FFOaz2OU` 後 request recreate | Recreated as `eJRu5PSD` ✅ (in project channel) |
+| 2026-04-08 | Trello: Kary 提示要 assign label，re-fetched labels list (10 labels), applied `mograph` to BC card; HSUHK card 404 (Kary deleted) | Learned label IDs, BC card label set ✅ |
+| 2026-04-08 | Trello: delete BC card `eJRu5PSD` for fresh test | Deleted ✅ |
+| 2026-04-08 | Trello: copy all 10 cards from `[Pre-Pro] Template` → J26053 BOC Trendy Too IG Reels, assign Kary | All 10 copied via idCardSource + post-add member ✅ |
+| 2026-04-08 | Trello: 加 checklist 落 Storyboard card，Video 1 assign Max / Video 2 assign Keith | Checklist created; member assignment silent-ignored (board 冇 Advanced Checklists power-up) → fallback 用 @mention in item name; logged gap-log |
+| 2026-04-08 | Trello: archive 4 完成 project lists (J26035 / J26036 / J26027 / J26034) | All closed ✅ |
+| 2026-04-08 | Drive: cleanup root, keep Archive/Templates/OLD Drive Files + DOF Current Job List, move 其他舊 files 入 OLD Drive Files | Listed 54 candidates (incl. flagged 2 recent timeline test docs) → Kary confirm → moved 54/54 ✅ |
+| 2026-04-08 | Calendar: confirm BOC Trendy Too shoot Apr-15 | Found `[TBC] (1 day) BOC Trendy Too IG Reel` already on 4/15 → renamed to `Shoot - BOC Trendy Too`, colorId 11, J26053 desc ✅ |
