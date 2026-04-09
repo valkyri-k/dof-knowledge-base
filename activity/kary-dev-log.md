@@ -367,3 +367,11 @@ Note: 三個獨立 bug stack 埋一齊，diagnose 用咗多個 round：
 **Final state:** Push working，commit `3fe752c` on remote，credential file restored，remote URL cleaned。`git push` 而家可以無痛跑（直至 PAT expire 為止，記得一年內 rotate）。
 Status: done
 
+
+---
+
+## [2026-04-09] 08:11
+Type: decision
+Context: Kary 問到 activity log 每次 push 係咪 token 貴，然後決定改變 push 策略
+Note: 改 push 策略為：activity log write 仍然 per-interaction，但 git push 只係 pre-clear 同 daily cron（23:47）才做。唔再每次 append 後都 push。已更新 CLAUDE.md 加 explicit note。Daily cron job ID: a252f344，7-day auto-expire。
+Status: done
