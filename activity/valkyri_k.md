@@ -101,3 +101,6 @@
 | 2026-04-08 | Log GitHub push setup bugs → kary-dev-log | Commit `bf80ca6` pushed (validates new git setup end-to-end) ✅ |
 | 2026-04-08 | J26016 HSUHK Student Excellence Batch 2 shoot update | Deleted `(TBC) 2 Days` event; created 3 TBC shoots Apr 21/24/27 with `- Batch 2` suffix + `Cam: Jer` desc; Batch 1 post-pro untouched ✅ |
 | 2026-04-09 | Trello: sync Calendar → Trello for J26016 HSUHK（Director: Kary, Post-pro: Yik & Max） | Found existing list + 15 existing cards; created 8 new cards (Client FB 1st/2nd Cut, 2nd/3rd Cut x3, Shoot Batch 2 D1/D2/D3, Final output) ✅ |
+| 2026-04-10 | Calendar: add Meeting - Orbis Campaign, Apr 13 Mon 2pm, Kary & Ki attend | Created ✅ (no job number) |
+| 2026-04-10 | Calendar: delete (TBC) Meeting - Orbis Campaign Apr 10 | Deleted ✅ |
+| 2026-04-10 | HSUHK Batch 2 shoot update: Apr 22 Isaac, Apr 27 Formica & Teddy, cancel Apr 24 | Calendar + Trello updated (D1→Apr22, D2 archived, D3→D2 Apr27) ✅ |
