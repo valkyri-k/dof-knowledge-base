@@ -14,7 +14,7 @@
 - **[2026-04-08] Trello checklist member assignment（Storyboard card）** — board 冇 Advanced Checklists power-up，目前用 `@mention` fallback；等 Kary 揀 plan upgrade 定 default 轉做 split-cards approach。Cross-ref: `activity/gap-log.md` 14:23 entry
 - **[2026-04-08] Discord reply routing bug** — 答 trello rules question 嘅長 reply 寫咗喺 terminal 冇 send 出 Discord，user 等於收唔到。已 update memory `feedback_always_reply.md` 加 Rule 2「Discord in → Discord reply tool out, no exceptions」
 - **[2026-04-08] J26053 BOC Trendy BTS mograph 未 assign** — 1st Cut BTS (4/23) + Final BTS (5/15) 兩張只 assign 咗 Yik 做 cut，graphics 邊個負責等 Kary x Sohling discussion 結果。BTS editor 都 default 咗 Yik 未確認
-- **[2026-04-08] J26016 HSUHK Student Excellence Batch 2 shoot date 等客 confirm** — 3 條 TBC shoot events 已落 Apr 21 (Tue) / Apr 24 (Fri) / Apr 27 (Mon)，客會揀其中 2 日拍攝（Cam: Jer）。客 confirm 後要：刪走未用嗰一條 + remove 留低兩條嘅 (TBC) prefix。Batch 2 post-pro schedule 暫時未排（現有 J26016 post-pro 全部係 Batch 1，唔郁）
+- **[2026-04-12] J26016 HSUHK Batch 1 TBC removal + Batch 2 post-pro plan** — Batch 1：4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 2：proposed May 8 1st Cut → May 12 Client FB → May 19 2nd Cut → May 21 Client FB → May 26 3rd Cut → May 29 Client FB 3 → Jun 2 Final Output。Kary 確認間距後即入 Calendar。Session clear 前未收到 final confirm——下次 resume 先問。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
 
 ---
@@ -35,6 +35,9 @@
 **Decision (debugging methodology)**：將來撞 git auth issue，**第一步永遠 check `git remote -v`**——今晚拖長咗 diagnose time 就係因為 assume URL 啱所以走最後先睇。第二，credential.helper=store 嘅 auto-erase behaviour 一定要記住，下次見「same error twice in a row」就要立即 verify file 仲未 wipe。
 
 第二件事乾淨好多。Kary 要 update J26016 HSUHK Student Excellence Batch 2 shoot date：刪走舊 `(TBC) 2 Days - HSUHK Student Excellence` (Apr 25-May 01 window)，加 3 條 TBC shoot 落 Apr 21/24/27 等客揀其中 2 日。我先 list + flag 3 個候選日撞 J26016 已有 post-pro milestone，Kary clarify 嗰啲係 Batch 1 唔郁、新嘢係 Batch 2，title suffix 加 `- Batch 2`、description 加 `Cam: Jer`。執行：1 delete + 3 create 一氣呵成，全部成功。**Lesson**：J26016 而家有 multi-batch 拍攝結構，將來搵 events 要記住分 Batch 1 / Batch 2，唔可以一概而論——好彩呢次 Kary 主動 clarify。
+
+### 2026-04-12 afternoon session
+今日主要係 calendar timeline 查詢 + J26016 schedule 整理。Kary 要求列出 J26053 BOC Trendy Too 同 J26016 HSUHK Student Excellence 嘅 project timeline 文字版——兩個都搵到（BOC 17 events，HSUHK 12 events），順帶發現 HSUHK Final Output Apr 27 同 Batch 2 Shoot D2 撞日。跟住 Kary 要求：(1) 移除 Batch 1 post-pro 所有 (TBC)、(2) 按 Batch 1 間距規劃 Batch 2 post-pro。Plan 出咗但 Kary 喺 confirm 間距前 clear，所以執行部分留到下次 session。**Key decision**：HSUHK Final Output Apr 27 係 Batch 1 專屬；Batch 2 post-pro 需要包含 Client FB on 3rd Cut 先出 Final（Batch 1 呢步係 skip 咗），呢個係 Kary 明確糾正嘅 scheduling principle。
 
 ---
 
@@ -104,3 +107,6 @@
 | 2026-04-10 | Calendar: add Meeting - Orbis Campaign, Apr 13 Mon 2pm, Kary & Ki attend | Created ✅ (no job number) |
 | 2026-04-10 | Calendar: delete (TBC) Meeting - Orbis Campaign Apr 10 | Deleted ✅ |
 | 2026-04-10 | HSUHK Batch 2 shoot update: Apr 22 Isaac, Apr 27 Formica & Teddy, cancel Apr 24 | Calendar + Trello updated (D1→Apr22, D2 archived, D3→D2 Apr27) ✅ |
+| 2026-04-12 | Calendar timeline query: J26053 BOC Trendy Too | Listed 17 events, text timeline 回覆 ✅ |
+| 2026-04-12 | Calendar timeline query: J26016 HSUHK Student Excellence | Listed 12 events, text timeline 回覆；flagged Final output 同 Batch 2 D2 shoot 撞日 + Batch 2 post-pro 未入 calendar ✅ |
+| 2026-04-12 | J26016 HSUHK Batch 1 TBC removal + Batch 2 post-pro planning | Plan proposed (May 8 → Jun 2)，Kary clear 前未最終 confirm，留待下次 session 執行 |
