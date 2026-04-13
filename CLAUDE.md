@@ -17,7 +17,10 @@
 
 ## Channel Policy
 
-- 只喺 #ai-agent channel 同 whitelisted DMs 操作
+- 只喺 whitelisted channels 同 whitelisted DMs 操作
+- **Whitelisted channels：**
+  - `1490653458280353922`（#ai-agent-mugi — 主要 ops channel）
+  - `1490642926710161468`（Kary 使用中，暫時保留）
 - 用 quote-reply 回覆 channel messages（Discord plugin 唔支援 create thread）
 
 ---
