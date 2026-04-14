@@ -375,3 +375,9 @@ Type: decision
 Context: Kary 問到 activity log 每次 push 係咪 token 貴，然後決定改變 push 策略
 Note: 改 push 策略為：activity log write 仍然 per-interaction，但 git push 只係 pre-clear 同 daily cron（23:47）才做。唔再每次 append 後都 push。已更新 CLAUDE.md 加 explicit note。Daily cron job ID: a252f344，7-day auto-expire。
 Status: done
+
+## [[2026-04-14]] 13:04
+Type: bug
+Context: Sohling 要求幫 CLP SmartE 加 calendar event，Mugi 將「星期五」解讀成 4/18（Saturday）而唔係 4/17（Friday）。Kary 即時發現並 flag。
+Note: "this is a bug? 點樣可以 improve 你下次唔會錯呢啲 stupid mistake?" — Mugi 用 mental calculation interpret 相對日期，跳過 Python datetime 驗證步驟，令 weekend check 失效。Fix 方向：相對日期（今個星期五 / 下個星期一等）必須用 `datetime` 計算 absolute date + `weekday()` 驗證，唔靠腦估。
+Status: open
