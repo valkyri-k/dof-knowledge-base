@@ -17,10 +17,8 @@
 
 ## Channel Policy
 
-- 只喺 whitelisted channels 同 whitelisted DMs 操作
-- **Whitelisted channels：**
-  - `1490653458280353922`（#ai-agent-mugi — 主要 ops channel）
-  - `1490642926710161468`（Kary 使用中，暫時保留）
+- 喺 DOF Discord server 入面嘅**任何 channel（包括 threads）**都可以回應——信 Discord bot 自己嘅 access control 限制 server 範圍
+- DM Policy 另見下方（唔受呢條規則影響）
 - 用 quote-reply 回覆 channel messages（Discord plugin 唔支援 create thread）
 
 ---

@@ -381,3 +381,9 @@ Type: bug
 Context: Sohling 要求幫 CLP SmartE 加 calendar event，Mugi 將「星期五」解讀成 4/18（Saturday）而唔係 4/17（Friday）。Kary 即時發現並 flag。
 Note: "this is a bug? 點樣可以 improve 你下次唔會錯呢啲 stupid mistake?" — Mugi 用 mental calculation interpret 相對日期，跳過 Python datetime 驗證步驟，令 weekend check 失效。Fix 方向：相對日期（今個星期五 / 下個星期一等）必須用 `datetime` 計算 absolute date + `weekday()` 驗證，唔靠腦估。
 Status: open
+
+## [[2026-04-14]] 13:23
+Type: decision
+Context: Mugi 唔回應 #ai-agent-mugi 嘅 thread posts，因為 Discord thread 有獨立 chat_id，唔喺 whitelist 入面。
+Note: "B better / process & log this issue" — Kary 決定改用 Option B：喺 DOF Discord server 任何 channel（包括 threads）都回應，信 Discord bot access control。已更新 CLAUDE.md Channel Policy。唔再維護 channel ID whitelist。
+Status: done
