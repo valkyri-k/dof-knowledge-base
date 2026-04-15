@@ -10,7 +10,7 @@
 ## Open Threads
 （pending items，resolved 即時刪）
 
-（冇 open thread）
+- [2026-04-14] CLP SmartE Trello sync pending — 等 Sohling 回覆 Job Number 先可以 create/find Trello list
 
 ---
 
@@ -31,3 +31,4 @@ First-ever Sohling interaction. Request: 喺 Calendar 4月內 search EMSD QA eve
 | 2026-04-08 | Job number correction: J26054 是 EMSD CSC, EMSD QA 應該係 J26048 | Renamed existing QA list `J26054 → J26048`; created new `J26054 EMSD CSC` + 7 cards (Yik+Keith) ✅ |
 | 2026-04-08 | J26054 CSC: Comment cards unassign Yik+Keith, assign Benjy | Done on Client Feedback 1 + 2 ✅ |
 | 2026-04-08 | Calendar 4月 HKTB HKCA → add to existing J26041 list, comment→Kary, others→Yik+Keith | Added 6 cards; flagged judgment call on 4/9 "Confirmed by Client" (treated as Kary) ✅ |
+| 2026-04-14 | Add Calendar + Trello for CLP SmartE animation: 1st cut today, final cut Fri, director Sohling | Calendar created (1st Cut 4/14, Final Output 4/18) ✅; Trello pending job number |
