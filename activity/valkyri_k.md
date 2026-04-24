@@ -15,7 +15,6 @@
 - **[2026-04-08] Discord reply routing bug** — 答 trello rules question 嘅長 reply 寫咗喺 terminal 冇 send 出 Discord，user 等於收唔到。已 update memory `feedback_always_reply.md` 加 Rule 2「Discord in → Discord reply tool out, no exceptions」
 - **[2026-04-08] J26053 BOC Trendy BTS mograph 未 assign** — 1st Cut BTS (4/23) + Final BTS (5/15) 兩張只 assign 咗 Yik 做 cut，graphics 邊個負責等 Kary x Sohling discussion 結果。BTS editor 都 default 咗 Yik 未確認
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
-- **[2026-04-24] J26016 HSUHK Batch 2 Calendar push** — Corrected schedule sent (佛誕 May 25 Mon confirmed，Kary off May 22+26-27)：May 12 1st Cut → May 15 FB1 → May 22 2nd Cut → May 28 FB2 → Jun 4 3rd Cut → Jun 9 FB3/PicLock → Jun 10 C/S/S → Jun 11 FO。待 Kary confirm OK → Calendar push。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
 
 ---
@@ -114,4 +113,4 @@
 | 2026-04-12 | Calendar timeline query: J26053 BOC Trendy Too | Listed 17 events, text timeline 回覆 ✅ |
 | 2026-04-12 | Calendar timeline query: J26016 HSUHK Student Excellence | Listed 12 events, text timeline 回覆；flagged Final output 同 Batch 2 D2 shoot 撞日 + Batch 2 post-pro 未入 calendar ✅ |
 | 2026-04-12 | J26016 HSUHK Batch 1 TBC removal + Batch 2 post-pro planning | Plan proposed (May 8 → Jun 2)，Kary clear 前未最終 confirm，留待下次 session 執行 |
-| 2026-04-24 | HSUHK Batch 2 post-pro schedule (new dates: 1st Cut May 12, FO Jun 11, no VO) | First proposal sent；Kary corrected day-of-week (Apr 24 = Fri, not Thu)；corrected schedule resent；佛誕 = May 25 Mon confirmed；J26016；pending Calendar push confirm |
+| 2026-04-24 | HSUHK Batch 2 post-pro schedule (1st Cut May 12, FO Jun 11, no VO, x3 cuts) | 9 events pushed to J26016 Calendar ✅ (after day-of-week correction + Kary adjusting FB1→May14, 2nd Cut→May21) |
