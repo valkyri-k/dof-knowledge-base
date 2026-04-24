@@ -224,16 +224,15 @@ Fetch HK public holidays for the planning range（用 calendar-operations-guide.
 **Mandatory asks**（如 request / Calendar 冇明確提供）：
 
 **一次過問晒，唔好一條一條問：**
-> 「Generate timeline 之前要知三樣：
+> 「Generate timeline 之前要知兩樣：
 > 1. 咩類型嘅片？Corporate / Event / Social Media / Pure Post（純後期）/ Animation？
-> 2. Delivery：總共幾多條片、片長大概幾耐、幾多個 version？（e.g. 1 video, ~3 min, 1 version English 就夠）
-> 3. 有冇 VO recording？」
+> 2. 有冇 VO recording？」
 
 **關於 VO 嘅問法（重要）：** 問「有冇 **VO recording**」，**唔好**問「有冇 VO」。
 - Traditional voice talent → 有 recording session → 排 VO Recording window（multi-day，colorId 1）
 - AI VO → 冇 recording → skip VO Recording window，Final Output 可提前
 
-如果 Genre + Delivery + VO 用戶已經清楚提到 → 呢步 skip，直接 generate。
+如果 Genre + VO 用戶已經清楚提到 → 呢步 skip，直接 generate。
 
 ### Step 4: Generate（Two-Phase Document）
 
@@ -286,7 +285,7 @@ Fetch HK public holidays for the planning range（用 calendar-operations-guide.
 
 1. Search `Templates` folder → find `[DocType]_Template`（exact match by name）
 2. `files.copy` → rename 用命名規則：`[DocType]_[Job Number]_[Project Title]_[YYYY-MM-DD]`
-3. **Phase 1（Write）：** `BatchUpdateDocument` 一次過 fill 所有 placeholders（`{{Date_VideoFlow}}`、`{{Day_VideoFlow}}`、`{{Job_Num}}`、`{{Project_Name}}`、`{{Client_Name}}`、`{{Director}}`、`{{Delivery}}`、`{{Current_Date}}` footer）
+3. **Phase 1（Write）：** `BatchUpdateDocument` 一次過 fill 所有 placeholders（`{{Date_XXX}}`、`{{Day_XXX}}`、`{{Job_Num}}`、`{{Project_Name}}`、`{{Director}}`、`{{Current_Date}}` footer）
 4. **Phase 2（Delete）：** 處理 optional rows（見 Table Row Deletion）。**Color/Sound/Subtitle row 唔好 delete**
 5. File 放 dof.internal Drive root
 6. Return Drive web link
@@ -306,7 +305,7 @@ Return link 之後主動 review timeline + flag 需要留意嘅嘢。Mugi 扮演
 如果用戶想 propose dates → 跟下面 **Calendar Integration → Shoot Date Planning** flow。
 
 **Pattern C — 缺嘢未填：**
-> 「Client contact 同 Delivery 我留空咗（唔夠 context），你睇完 doc 自己填返。」
+> 「Director 我留空咗（唔夠 context），你睇完 doc 自己填返。」
 
 **Pattern D — 觀察到 tight buffer：**
 > 「Pre-pro 至 shoot 之間得 [N] wd，如果要做 style frame iteration 可能唔夠。要唔要 push 後一個禮拜？」
@@ -559,13 +558,9 @@ docs_service.documents().batchUpdate(
 **Template Field Semantics：**
 | Field | 點 fill | 例子 ✅ | 反例 ❌ |
 |-------|---------|--------|---------|
-| Client | Contact person 嘅名（唔係 brand） | `Sarah Chan` / `Mr. Wong` | `EMSD` / `HSUHK` |
-| Delivery | 幾多條片 + 片長 + 幾多個 version | `1 video, ~3 min, 1 version (English)` | 留空 / `—` |
 | Director | DOF director 名——**由 sender Discord ID 自動 detect**（見 Step 3 Director Auto-detection） | `Kary` / `Benjy` | 留空 |
 | Job Number | J-number | `J26015` | `26015` |
 | Project Name | Project shorthand | `HSUHK Student` | `Recruitment Video` |
-
-`Client` = contact person，唔係 brand。如果用戶冇提供，generate 完喺 director discussion 嗰度 remind 佢填返。
 
 ---
 
