@@ -286,9 +286,14 @@ Fetch HK public holidays for the planning range（用 calendar-operations-guide.
 1. Search `Templates` folder → find `[DocType]_Template`（exact match by name）
 2. `files.copy` → rename 用命名規則：`[DocType]_[Job Number]_[Project Title]_[YYYY-MM-DD]`
 3. **Phase 1（Write）：** `BatchUpdateDocument` 一次過 fill 所有 placeholders（`{{Date_XXX}}`、`{{Day_XXX}}`、`{{Job_Num}}`、`{{Project_Name}}`、`{{Director}}`、`{{Current_Date}}` footer）
+
+   **`{{Day_XXX}}` 格式（嚴格）：3-letter uppercase only — `MON`、`TUE`、`WED`、`THU`、`FRI`、`SAT`、`SUN`。絕對唔可以出 `Monday`、`Tuesday`、`Wed` 等其他格式。**
 4. **Phase 2（Delete）：** 處理 optional rows（見 Table Row Deletion）。**Color/Sound/Subtitle row 唔好 delete**
 5. File 放 dof.internal Drive root
-6. Return Drive web link
+6. Return Drive web link，**同時必須附上以下提示**：
+   > 「📄 [Doc link]
+   >
+   > ⚠️ 請 double check 所有日期及 Remarks，AI 生成可能有誤，確認無誤再 share 俾客人。」
 7. **Calendar push list 必須同 doc 入面嘅 milestones 1:1**（Color/Sound/Subtitle 例外：doc only，Calendar 唔 push）
 
 ### Step 5: Director Discussion（唔好 skip）
@@ -474,7 +479,7 @@ Standard logic resolve 唔到 → **stop generation，直接 escalate**。唔好
 3. Generate **新 file，唔好 overwrite 原本**（加 version suffix）
 4. Fill 新 dates 到 template（同樣 two-phase write-then-delete）
 5. Update Calendar events 配合新 dates
-6. Return new doc link + confirm Calendar 已 sync
+6. Return new doc link + confirm Calendar 已 sync，附同樣嘅 double check 提示
 
 **Version suffix：**
 - Original: `Timeline_J26015_HSUHK Student_2026-04-07`
