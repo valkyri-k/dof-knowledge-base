@@ -6,6 +6,38 @@
 
 ---
 
+## 0. Workflow Phases（開工前必讀）
+
+Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-proceed 落下一 phase。**
+
+### Phase 1 — Draft text preview
+**Trigger：** 用戶第一次提 timeline（「幫 J26XXX draft timeline」、「排個 post schedule」、「generate timeline」）。
+**做：** 跟 §3 Step 1–5 + Pre-step A–G。Output 文字版 markdown table + 適用嘅 Pattern A–J flags。
+**Gate：** 停低等用戶 confirm 文字版。**唔 auto-push Calendar。**
+
+### Phase 2 — Push to Calendar
+**Trigger：** 用戶 confirm Phase 1 個文字版（「OK」/「push 啦」/「可以」）。
+**做：** Create events on dof.internal Calendar（`dof.internal@gmail.com`）。**唔重做 holiday / saturation check**——Phase 1 啱啱驗過，dates 已 locked。
+**Output：** 一句 summary + 問 Phase 3：
+
+> ✅ [N] events pushed 到 Calendar。要唔要埋份 for-client Google Doc？（唔使就 done）
+
+**Gate：** 用戶答要 / 唔要 / 唔答 → stop at Phase 2。
+
+### Phase 3 — Doc generation（opt-in only）
+**Trigger：** 用戶答「要」/「好」/「出埋」——或後來話「出 timeline doc for J26XXX」/「幫我出埋份 doc」。
+**做：** **跳過 Step 1–5 + Pre-step A–G。** Search Calendar by J-number 攞 committed dates，直接跟 §6 Row Deletion + §7 Doc Naming 寫入 Timeline_Template。
+**Gate：** 冇 gate——doc 寫完 return Drive link 就算。
+
+### Anti-patterns（嚴格禁止）
+
+- ❌ Phase 1 完 auto-push Calendar（一定要 confirm 先 push）
+- ❌ Phase 2 完 auto-gen doc（問先，冇得假設）
+- ❌ Phase 3 時重跑 Pre-step A–G（dates 已 committed，重跑係 wasted token）
+- ❌ Phase 3 時再 flag Pattern A–J（dates 已 lock，flag 無 actionable value）
+
+---
+
 ## 1. High-Level Milestone Shape（Quick Recap）
 
 > **Authoritative source（含 colorId mapping + 每個 milestone 嘅日期計算規則）：`context/calendar-operations-guide.md` Standard Milestone Set section。**

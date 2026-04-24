@@ -152,9 +152,10 @@
 
 | 收到呢類 request | MUST read skill file | 觸發 keywords |
 |-----------------|---------------------|--------------|
-| 生成 / draft timeline | `skills/producer/producer-playbook.md` | "generate timeline"、"幫 J26XXX 做 timeline"、"排 post schedule"、"production timeline" |
+| **Phase 1+2**：Draft timeline（文字版 → Calendar push，停喺 push 完） | `skills/producer/producer-playbook.md`（full） | "draft timeline"、"幫 J26XXX 排 post schedule"、"generate timeline"、"排個 post schedule"、"production timeline" |
+| **Phase 3**：For-client doc gen（Calendar 已 push，transcribe 入 template） | `skills/producer/producer-playbook.md` §6 + §7 only | "出份 doc for J26XXX"、"出 timeline doc"、"將 Calendar 寫入 template"、"幫我出埋份 doc" |
 | 單次 Calendar 操作（add / move / delete / reschedule 一個或幾個 event，**唔係** generate full timeline） | `skills/producer/calendar-ops.md` | "add event"、"move event"、"reschedule"、"delete event"、"排個 shoot"、"push 後"、"改下個 event"、"加個 milestone" |
-| Google Drive 操作 | `skills/producer/producer-playbook.md` | "搵 file"、"出份 doc"、"copy template"、"archive" |
+| Drive 純操作（search / read / copy / archive，冇 timeline 邏輯） | 直接執行，唔 load playbook | "搵 file"、"copy template"、"archive" |
 | Google API credentials / boilerplate | `technical/google-apis.md` | 需要 call Calendar API 或 Drive API 嘅 code |
 | Trello 操作（create card、assign、dates、labels、checklists、move） | `skills/trello/trello-agent.md` | "Trello"、"card"、"Planyway"、"assign"、"checklist"、"J26XXX 入面"、"postpro board"、"加張 card"、"改 due date"、"move 去"、"mark complete" |
 | Calendar → Trello sync（將 calendar events 批量轉成 Trello cards） | `skills/trello/trello-agent.md` | "sync calendar to trello"、"calendar 入 trello"、"將 calendar events create cards"、"extract calendar for J26XXX" |
@@ -457,6 +458,19 @@ datetime.strptime("2026-05-22", "%Y-%m-%d").strftime("%A")  # "Friday"
 2. **Secondary（optional）**：gov.hk ICS feed，只做 verify / update cache
 3. **禁止**：靠 LLM 記憶判斷
 
+### Scope（幾時做咩 check）
+
+唔係所有情境都要 load holiday JSON + run 完整 self-check。跟下表 scope：
+
+| 情境 | Python weekday | Load holiday JSON | Run self-check snippet |
+|------|---------------|-------------------|------------------------|
+| Phase 1 Drafting new dates（producer-playbook §3） | ✅ | ✅ | ✅ |
+| Phase 2 Pushing confirmed dates to Calendar | ✅ | ❌（Phase 1 啱啱做過） | ❌ |
+| Phase 3 Doc transcribe（Calendar 已 committed dates） | ✅（淨 Date↔Day consistency） | ❌ | ❌ |
+| Standalone calendar op（add / move / reschedule） | ✅ | ✅ | ✅ |
+
+**原則**：dates 已 committed 過 check（Phase 2/3）→ 唔重跑，慳 token；proposing NEW dates（Phase 1 / standalone ops）→ 全套 check。
+
 ### Schedule output self-check（強制）
 
 喺 output 任何有日期 table（schedule、timeline、calendar proposal）**之前**，必須 run Python self-check：
@@ -471,8 +485,10 @@ for row in schedule:
 
 # 2. Verify 無 milestone 撞 HK public holiday 或 Sunday
 import json
-holidays = json.load(open("/home/node/kb/context/holidays/hk-2026.json"))
-holiday_dates = {h["date"] for h in holidays["holidays"]}
+holiday_dates = set()
+for year in {row["date"][:4] for row in schedule}:
+    with open(f"/home/node/kb/context/holidays/hk-{year}.json") as f:
+        holiday_dates.update(h["date"] for h in json.load(f)["holidays"])
 for row in schedule:
     d = datetime.strptime(row["date"], "%Y-%m-%d")
     assert row["date"] not in holiday_dates, f"{row['date']} is HK holiday"
