@@ -284,12 +284,12 @@ Fetch HK public holidays for the planning range（用 calendar-operations-guide.
 **Document Generation Flow（Template → Drive）：**
 
 1. Search `Templates` folder → find `[DocType]_Template`（exact match by name）
-2. `files.copy` → rename 用命名規則：`[DocType]_[Job Number]_[Project Title]_[YYYY-MM-DD]`
+2. `files.copy`，**request body 必須包含 `parents: [env.GOOGLE_DRIVE_DOCGEN_FOLDER_ID]`**，name 用命名規則：`[DocType]_[Job Number]_[Project Title]_[YYYY-MM-DD]`
 3. **Phase 1（Write）：** `BatchUpdateDocument` 一次過 fill 所有 placeholders（`{{Date_XXX}}`、`{{Day_XXX}}`、`{{Job_Num}}`、`{{Project_Name}}`、`{{Director}}`、`{{Current_Date}}` footer）
 
    **`{{Day_XXX}}` 格式（嚴格）：3-letter uppercase only — `MON`、`TUE`、`WED`、`THU`、`FRI`、`SAT`、`SUN`。絕對唔可以出 `Monday`、`Tuesday`、`Wed` 等其他格式。**
 4. **Phase 2（Delete）：** 處理 optional rows（見 Table Row Deletion）。**Color/Sound/Subtitle row 唔好 delete**
-5. File 放 dof.internal Drive root
+5. File 一定要喺 `doc-generation/` folder（唔好放 Drive root，唔好放 `Templates/`）。如果 `GOOGLE_DRIVE_DOCGEN_FOLDER_ID` env var 未 set → 停低唔執行，tag Kary 問
 6. Return Drive web link，**同時必須附上以下提示**：
    > 「📄 [Doc link]
    >

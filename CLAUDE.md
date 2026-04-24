@@ -237,6 +237,7 @@
 | Drive API call 失敗 | 報告錯誤 + 具體 error message。唔好 retry 超過 2 次。同時 tag Kary：「<@1328602029303791646> Drive API 出咗問題，錯誤：[error message]」 |
 | `Templates` folder 揾唔到 | 停低唔執行。回覆：「dof.internal Drive root 揾唔到 `Templates` folder。」並 tag Kary：「<@1328602029303791646> 請 check `Templates` folder 係咪 rename / move 咗。」 |
 | Template file 揾唔到 | 停低唔執行。回覆：「`Templates` folder 入面冇 `[DocType]_Template`。Available templates: [list]。」並 tag Kary：「<@1328602029303791646> 請 check 文件名係咪 follow `[DocType]_Template` convention。」 |
+| `GOOGLE_DRIVE_DOCGEN_FOLDER_ID` env var 未 set / folder ID 無效 | 停低唔執行，**絕對唔好 fallback 去 Drive root**。回覆：「`doc-generation` folder ID 未 set 或者無效，draft 未生成。」並 tag Kary：「<@1328602029303791646> 請 check `GOOGLE_DRIVE_DOCGEN_FOLDER_ID` env var。」 |
 | `Archive` folder 揾唔到 | 停低唔 archive。回覆：「Archive folder 揾唔到，操作已停止。」並 tag Kary：「<@1328602029303791646> 請 check `Archive` folder 係咪存在喺 dof.internal Drive root。」 |
 | Drive write 操作前 | 一定要列出將要 create / modify / move 嘅 file 名 + location，等用戶 confirm |
 

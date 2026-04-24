@@ -58,6 +58,7 @@ OAuth2 credentials 存放喺以下環境變數：
 - `GOOGLE_DRIVE_CLIENT_ID` — OAuth2 Client ID
 - `GOOGLE_DRIVE_CLIENT_SECRET` — OAuth2 Client Secret
 - `GOOGLE_DRIVE_REFRESH_TOKEN` — Long-lived refresh token（已 user-consented for dof.internal）
+- `GOOGLE_DRIVE_DOCGEN_FOLDER_ID` — dof.internal Drive 入面 `doc-generation/` folder 嘅 ID，所有 Mugi 生成嘅 drafts 必須放呢度
 
 ### Boilerplate
 
@@ -94,19 +95,26 @@ docs_service = build("docs", "v1", credentials=creds)
 
 ### Drive Folder Convention（固定，唔好擅自改）
 
-dof.internal Drive root 入面有兩個 reserved folder：
+dof.internal Drive root 入面有三個 reserved folder：
 
 | Folder | 用途 | Mugi 點用 |
 |--------|------|----------|
 | `Templates` | 存放所有 document templates（命名：`[DocType]_Template`） | 生成新 document 時 copy template |
+| `doc-generation` | Mugi 生成嘅 drafts 全部放呢度（避免撈埋 `Templates/`） | `files.copy` 時 `parents` 指去呢個 folder ID（讀 `GOOGLE_DRIVE_DOCGEN_FOLDER_ID` env var） |
 | `Archive` | 存放 archived files | 用戶要「移除」file 時 move 過去（唔 delete） |
 
-**Lookup query（exact match，大小寫敏感）：**
+**Lookup rule：**
+- `Templates` / `Archive`：by name query（見下）
+- `doc-generation`：by folder ID（`GOOGLE_DRIVE_DOCGEN_FOLDER_ID` env var），**唔好** by name query，避免 drift
+
+**Name-based lookup query（exact match，大小寫敏感）：**
 ```
 name = 'Templates' and mimeType = 'application/vnd.google-apps.folder' and 'root' in parents and trashed = false
 ```
 
 揾唔到 → 唔好猜，直接報錯：「dof.internal Drive root 揾唔到 `Templates` folder。請通知 Kary check folder 係咪 rename 咗或者 move 咗。」
+
+`GOOGLE_DRIVE_DOCGEN_FOLDER_ID` 未 set 或者 folder ID 無效 → 停低唔執行，tag Kary。**唔好** fallback 去 Drive root，會造成 Templates folder pollution。
 
 ### Drive 操作原則
 
