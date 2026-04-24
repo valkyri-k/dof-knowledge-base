@@ -435,6 +435,59 @@ Mugi 創建 reference / lookup 類 memory file 之前，**必須先 grep CLAUDE.
 
 ---
 
+## Date, Weekday & Holiday Handling（Hard Rule）
+
+> 呢條 rule 因應 [[2026-04-24]] HSUHK Batch 2 schedule 嘅 weekday off-by-one bug 加入。Root cause：HK holiday API fetch 失敗後 fallback 用 LLM reasoning 計 weekday，整個 schedule 偏一日。
+
+### 絕對禁止
+- ❌ **唔可以用記憶講「某某日期係星期幾」**——無論幾肯定都唔得
+- ❌ **唔可以用記憶講「某某日期係咪公眾假期」**——佛誕、端午、中秋等 lunar calendar 日期 LLM 記憶唔可靠
+- ❌ **API 失敗時 fallback 去 LLM reasoning 計日期**——寧願問 Kary confirm，唔好猜
+
+### 強制使用
+
+**Weekday lookup（任何日期 → 星期幾）必須用 Python**：
+```python
+from datetime import datetime
+datetime.strptime("2026-05-22", "%Y-%m-%d").strftime("%A")  # "Friday"
+```
+
+**HK public holiday lookup 次序**：
+1. **Primary source**：`/home/node/kb/context/holidays/hk-YYYY.json`（local cache，source of truth）
+2. **Secondary（optional）**：gov.hk ICS feed，只做 verify / update cache
+3. **禁止**：靠 LLM 記憶判斷
+
+### Schedule output self-check（強制）
+
+喺 output 任何有日期 table（schedule、timeline、calendar proposal）**之前**，必須 run Python self-check：
+
+```python
+from datetime import datetime
+
+# 1. Verify 每一 row 嘅 Date ↔ Day 一致
+for row in schedule:
+    expected_day = datetime.strptime(row["date"], "%Y-%m-%d").strftime("%A")
+    assert row["day"] == expected_day, f"Day mismatch at {row['date']}"
+
+# 2. Verify 無 milestone 撞 HK public holiday 或 Sunday
+import json
+holidays = json.load(open("/home/node/kb/context/holidays/hk-2026.json"))
+holiday_dates = {h["date"] for h in holidays["holidays"]}
+for row in schedule:
+    d = datetime.strptime(row["date"], "%Y-%m-%d")
+    assert row["date"] not in holiday_dates, f"{row['date']} is HK holiday"
+    assert d.weekday() != 6, f"{row['date']} is Sunday"  # 6 = Sunday
+```
+
+Fail → **唔好 output schedule，regenerate 或報告 Kary**。
+
+### Holiday cache 維護
+- 每年年底更新下一年嘅 JSON（`hk-2026.json` → `hk-2027.json`）
+- Source：gov.hk 官方 ICS feed / HTML page
+- 格式見 `context/holidays/hk-YYYY.json` 內 schema
+
+---
+
 ## 行為原則
 
 1. **必須回覆每一條 Discord 訊息** — 無論係咪同之前問過嘅問題相似，都**必須回覆**。唔好「skip」或者認為「已經答過」。用戶睇唔到 terminal，唔回覆佢哋唔知你係唔係 hang 咗機。

@@ -1,0 +1,123 @@
+{
+  "$schema_version": "1.0",
+  "region": "HK",
+  "year": 2026,
+  "source": {
+    "authority": "Government of Hong Kong SAR",
+    "url": "https://www.gov.hk/en/about/abouthk/holiday/2026.htm",
+    "type": "general_holidays",
+    "fetched_date": "2026-04-24",
+    "fetched_by": "Kary / agent-Mugi knowledge base maintenance"
+  },
+  "notes": [
+    "Source = HK General Holidays（公眾假期）, applies to banks / schools / post offices / government.",
+    "DOF treats these as non-working days for production scheduling.",
+    "Every Sunday in 2026 is also a general holiday (not enumerated below — use datetime.weekday() == 6 check).",
+    "When a holiday falls on Sunday, the following Monday is typically gazetted separately as 'Day following X' — those are included below as their own entry on the Monday date.",
+    "For lookup: load this file, build set of date strings, check membership. Do NOT rely on LLM memory for weekday or holiday determination (see CLAUDE.md Date, Weekday & Holiday Handling rule)."
+  ],
+  "holidays": [
+    {
+      "date": "2026-01-01",
+      "weekday": "Thursday",
+      "name_en": "New Year's Day",
+      "name_zh": "一月一日"
+    },
+    {
+      "date": "2026-02-17",
+      "weekday": "Tuesday",
+      "name_en": "Lunar New Year's Day",
+      "name_zh": "農曆年初一"
+    },
+    {
+      "date": "2026-02-18",
+      "weekday": "Wednesday",
+      "name_en": "Second day of Lunar New Year",
+      "name_zh": "農曆年初二"
+    },
+    {
+      "date": "2026-02-19",
+      "weekday": "Thursday",
+      "name_en": "Third day of Lunar New Year",
+      "name_zh": "農曆年初三"
+    },
+    {
+      "date": "2026-04-03",
+      "weekday": "Friday",
+      "name_en": "Good Friday",
+      "name_zh": "耶穌受難節"
+    },
+    {
+      "date": "2026-04-04",
+      "weekday": "Saturday",
+      "name_en": "Day following Good Friday",
+      "name_zh": "耶穌受難節翌日"
+    },
+    {
+      "date": "2026-04-06",
+      "weekday": "Monday",
+      "name_en": "Day following Ching Ming Festival",
+      "name_zh": "清明節翌日"
+    },
+    {
+      "date": "2026-04-07",
+      "weekday": "Tuesday",
+      "name_en": "Day following Easter Monday",
+      "name_zh": "復活節星期一翌日"
+    },
+    {
+      "date": "2026-05-01",
+      "weekday": "Friday",
+      "name_en": "Labour Day",
+      "name_zh": "勞動節"
+    },
+    {
+      "date": "2026-05-25",
+      "weekday": "Monday",
+      "name_en": "Day following Birthday of the Buddha",
+      "name_zh": "佛誕翌日"
+    },
+    {
+      "date": "2026-06-19",
+      "weekday": "Friday",
+      "name_en": "Tuen Ng Festival",
+      "name_zh": "端午節"
+    },
+    {
+      "date": "2026-07-01",
+      "weekday": "Wednesday",
+      "name_en": "Hong Kong Special Administrative Region Establishment Day",
+      "name_zh": "香港特別行政區成立紀念日"
+    },
+    {
+      "date": "2026-09-26",
+      "weekday": "Saturday",
+      "name_en": "Day following Chinese Mid-Autumn Festival",
+      "name_zh": "中秋節翌日"
+    },
+    {
+      "date": "2026-10-01",
+      "weekday": "Thursday",
+      "name_en": "National Day",
+      "name_zh": "國慶日"
+    },
+    {
+      "date": "2026-10-19",
+      "weekday": "Monday",
+      "name_en": "Day following Chung Yeung Festival",
+      "name_zh": "重陽節翌日"
+    },
+    {
+      "date": "2026-12-25",
+      "weekday": "Friday",
+      "name_en": "Christmas Day",
+      "name_zh": "聖誕節"
+    },
+    {
+      "date": "2026-12-26",
+      "weekday": "Saturday",
+      "name_en": "First weekday after Christmas Day",
+      "name_zh": "聖誕節後第一個周日"
+    }
+  ]
+}
