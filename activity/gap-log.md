@@ -67,3 +67,21 @@ Type: needs-discussion
 Request: Assign team member by name to Trello card (Sohling 講「assign 俾 Yik」)
 Gap: Trello board members 嘅 username / display name 同 CLAUDE.md Quick Reference 嘅 DOF team names 對唔上。e.g. Trello 上面有 `ylx176 | YL` 但 CLAUDE.md 講 Yik。Mugi 要靠估（YL = 估係 Yik），有機會 mismatch 入錯人。建議：喺 `skills/trello/trello-agent.md` 或者新 context file 加一個 mapping table（DOF name → Trello member id + username + display name），等 Mugi 唔使每次 fuzzy match。已知 mapping（從今晚 fetch 抽出嚟）：Benjy `benjy77`, Kary `karyto5`, Katy `katylau6`, Kay `kaychan37`, Keith `keith46552115`, Max `maximiliandof`, Sohling `sohling5`, Yik `ylx176`（implicitly confirmed — Sohling 後續無糾正），DOF AI bot `dreamoffishai`.
 Status: open
+
+---
+
+## [[2026-04-26]] — @valkyri_k
+
+Type: bug（behavioral）
+Request: Discord message 處理（任何 message — 今次具體係 BOC Trendy Together 排 schedule）
+Gap: Mugi internal 處理咗個 request（terminal 觀察到 process 咗 tool calls、創建咗 Calendar events），但**冇 send Discord reply 俾 Kary**。Kary 喺 Discord 等覆，container terminal 先見到 Mugi 跑緊。即係 reply step 被 silent skip。Kary 後尾再 prompt Mugi 先得到 acknowledgement（valkyri_k.md 2026-04-26 entry 有 Mugi 自己 ack「missed Apr 25 reply」）。
+
+Root cause hypothesis：CLAUDE.md「必須回覆」rule 之前埋葬咗喺第 510 行（`行為原則` 第 1 條），attention weight 太低；亦只 cover 一個 failure mode（重複 question）。冇 cover：side-effect-only completion（events 已 create）、tool 跑完無 explicit verbal report、long task 無 ack-first。
+
+Mitigation deployed [[2026-04-26]]（commit `766cbc2`）：
+- 將 rule 升到 CLAUDE.md 最頂 `## 最高優先 Rule：絕對唔可以 silent` section
+- 擴展至 10 個 silent failure modes（包括 side effect、tool fail、internal-reasoning-only）
+- Ack-first pattern：>1 tool call 嘅 task 要先 ack
+- End-of-turn self-check：每 turn 結束前驗證有無 send Discord message
+
+Status: open（mitigation deployed，等 follow-up incident 數據驗證）— 同步 logged 落 [007-agent-mugi backlog](file:///Users/kary/Library/Mobile%20Documents/iCloud~md~obsidian/Documents/DOF_Build/projects/007-agent-mugi/backlog/bugs/silent-no-discord-reply.md) bug file 做 vault-side tracking
