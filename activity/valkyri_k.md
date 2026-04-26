@@ -114,4 +114,6 @@
 | 2026-04-12 | Calendar timeline query: J26016 HSUHK Student Excellence | Listed 12 events, text timeline 回覆；flagged Final output 同 Batch 2 D2 shoot 撞日 + Batch 2 post-pro 未入 calendar ✅ |
 | 2026-04-12 | J26016 HSUHK Batch 1 TBC removal + Batch 2 post-pro planning | Plan proposed (May 8 → Jun 2)，Kary clear 前未最終 confirm，留待下次 session 執行 |
 | 2026-04-24 | HSUHK Batch 2 post-pro schedule (1st Cut May 12, FO Jun 11, no VO, x3 cuts) | 9 events pushed to J26016 Calendar ✅ (after day-of-week correction + Kary adjusting FB1→May14, 2nd Cut→May21) |
-| 2026-04-24 | Phase 3 doc gen: Timeline doc for J26016 HSUHK Batch 2 | Generated `Timeline_J26016_HSUHK Batch 2_2026-04-24` in Drive root ✅; removed Client & Delivery rows per Kary instruction |
+| 2026-04-24 | Phase 3 doc gen: Timeline doc for J26016 HSUHK Batch 2 | Generated `Timeline_J26016_HSUHK Batch 2_2026-04-24` + `_r2` (new template) in Drive root ✅; removed Client & Delivery rows per Kary |
+| 2026-04-24 | BOC Trendy Together post-pro schedule check + propose 10 missing events | Listed BTS/#1/#2 status; proposed 10 events (standard 3wd intervals); awaiting confirm |
+| 2026-04-26 | BOC Trendy Together: Final (#2) → May 28 + create 10 missing events | Updated Final (#2) May 26→28; created all 10 FB/cut events ✅ (missed Apr 25 reply — acknowledged) |
