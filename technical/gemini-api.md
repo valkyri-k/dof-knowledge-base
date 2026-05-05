@@ -50,7 +50,7 @@ Example:
 """
 
 response = client.models.generate_content(
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     contents=[img, prompt],
     config=types.GenerateContentConfig(
         response_mime_type="application/json",
@@ -61,9 +61,9 @@ data = json.loads(response.text)
 ```
 
 ### Model choice
-- `gemini-2.0-flash` — default for OCR / structured extraction（fast、cheap、JSON mode 支援好）
-- `gemini-2.5-flash` — 升一格，reasoning 更強，仍然快；`gemini-2.0-flash` 唔夠用先升
-- `gemini-2.5-pro` — 用喺需要 deep reasoning 嘅 vision task（e.g. layout analysis、chart understanding）
+- **`gemini-2.5-flash`** — **DEFAULT** for OCR / structured extraction（fast、cheap、JSON mode 支援好）
+- `gemini-2.5-pro` — escalate 用：2.5-flash quality 唔夠（e.g. 手寫太花、layout 太複雜、reasoning 唔夠深）
+- ⚠️ **`gemini-2.0-flash` 已 sunset** — 官方 2026-06-01 停用，`gemini-2.0-flash-001` 已 404 NOT_FOUND。新 code 一律用 2.5-flash
 
 ### Temperature
 - `0.1` for structured extraction（OCR、JSON output）
@@ -83,7 +83,7 @@ from google import genai
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 response = client.models.generate_content(
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     contents="Your prompt here",
 )
 print(response.text)
@@ -96,13 +96,13 @@ print(response.text)
 常見 error：
 - `429` — rate limit 或 quota exceeded → 等 30s retry，超過 3 次 fail tag Kary
 - `400` — prompt 或 image invalid → 報錯，唔好 silent retry
-- `404` — model ID 唔 available（e.g. `gemini-2.0-flash-001` 係舊 ID）→ 用 `gemini-2.0-flash`（唔帶版本後綴）
+- `404` — model ID 唔 available（e.g. `gemini-2.0-flash` 系列 2026-06-01 起停用）→ 用 `gemini-2.5-flash`
 - JSON parse fail → 即係 model output 唔係 valid JSON，先 log raw `response.text` 再 fail
 
 ```python
 try:
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=[img, prompt],
         config=types.GenerateContentConfig(
             response_mime_type="application/json",

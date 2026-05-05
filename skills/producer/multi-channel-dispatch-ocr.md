@@ -99,7 +99,7 @@ Example:
 }
 ```
 
-Use `gemini-2.0-flash`、temperature `0.1`、`response_mime_type: "application/json"`.
+Use `gemini-2.5-flash`、temperature `0.1`、`response_mime_type: "application/json"`.（Default per `technical/gemini-api.md`；2.0-flash 已 sunset 2026-06-01）
 
 ### 3. Merge with caption（if present）
 
