@@ -14,6 +14,8 @@
 - **[2026-04-08] Trello checklist member assignment（Storyboard card）** — board 冇 Advanced Checklists power-up，目前用 `@mention` fallback；等 Kary 揀 plan upgrade 定 default 轉做 split-cards approach。Cross-ref: `activity/gap-log.md` 14:23 entry
 - **[2026-04-08] Discord reply routing bug** — 答 trello rules question 嘅長 reply 寫咗喺 terminal 冇 send 出 Discord，user 等於收唔到。已 update memory `feedback_always_reply.md` 加 Rule 2「Discord in → Discord reply tool out, no exceptions」
 - **[2026-05-05] 好醫工大賽 cut milestones** — Calendar 只有 Shoot (Apr 27) + Final (May 11)，冇 1st Cut / 2nd Cut。Kary 被問係咪要補，未回應。待 Kary confirm 是否加入 milestones。（J26067）
+- **[2026-05-05] Smart E job status 未 clarify** — Kary 問 Smart E status，Mugi resolve 到 J26060 (CLP Smart E animation) + J26065 (CLP HKMA Smart E Living) 兩個 candidates，問 Kary 揀邊個，未回應。
+- **[2026-05-05] OCR dispatch dry-run pending（未 confirm）** — 圖片有 2 block：快問快答/J26066→Katy（Style frame / Title x1 / Name tag x3）+ 好E工/J26067→Sohling（Style frame / Title x1 / Divider x2）。Dry-run 已 send，Kary 喺 confirm 前 clear。下次 session 如要 dispatch 請重發圖或打字 trigger。
 - **[2026-04-08] J26053 BOC Trendy BTS mograph 未 assign** — 1st Cut BTS (4/23) + Final BTS (5/15) 兩張只 assign 咗 Yik 做 cut，graphics 邊個負責等 Kary x Sohling discussion 結果。BTS editor 都 default 咗 Yik 未確認
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
@@ -39,6 +41,9 @@
 
 ### 2026-04-24 morning session
 主力做 HSUHK Batch 2 post-pro schedule。Kary 提供 1st Cut May 12, Final Output Jun 11, no VO。Mugi 讀完 producer-playbook + calendar-operations-guide，fetch DOF Calendar（Holiday API failed），做 saturation check（all clear），計出 8-milestone schedule。第一版 reply 錯誤：誤以為 Apr 24 = Thursday（實際係 Friday），導致所有 day-of-week 錯。Kary 糾正：May 22 係星期五，May 25 係佛誕，May 26-27 係二/三。重新計算後 corrected schedule 完全 fit Jun 11（Thu）。**Lesson：唔好靠自己計 day-of-week，應先 verify；Calendar API fetch 係 ground truth。** Job Number = J26016，待 Kary confirm → Calendar push。
+
+### 2026-05-05 evening session
+今晚主力測試 multi-channel dispatch（text v1 + OCR v2）。Text dispatch 兩輪跑得順（Orbis + BOC channel 各 tag 正確 assignees）。OCR v2 首次觸發：Kary post 手寫 note 圖，有 2 個 job block（快問快答 + 好E工）。Mugi 按舊版 skill file 拒絕（"1 image = 1 job" constraint），Kary 指出 skill file 已更新，constraint 已移除——Mugi re-read 後跑出 dry-run preview（2 block 全 resolve，快問快答→J26066/Katy，好E工→J26067/Sohling）。Kary 喺 confirm 前 clear，dispatch 未執行，留 open thread。另外：J26067 加咗 alias「好E工」（commit `3b3ddcd`）；Smart E status query 仍 ambiguous（J26060 vs J26065）未解。**Key lesson**：skill file 更新後 Mugi 必須 re-read，唔好 assume 記憶係最新版本。
 
 ### 2026-05-05 afternoon session
 今日主要係兩個 status queries + bot infra 擴展。Kary 查 好醫工大賽（J26067）同快問快答（J26066）status，兩個都搵到。好醫工大賽 Calendar 只有 Shoot + Final，中間缺 cut milestones，Mugi 主動 surface 問係咪要補，Kary 未回應——留 open thread。快問快答確認係 J26066 quiz component，Final Output Quiz 後天（May 7）交。
@@ -130,3 +135,8 @@
 | 2026-05-05 | Multi-channel dispatch test: post to channel 1489235328442302604 | First attempt failed (not allowlisted); Kary ran `/discord:access group add`; retry succeeded ✅ |
 | 2026-05-05 | Discord access: bulk add 14 project channels | All 14 job-list channels added to allowlist; Mugi can now dispatch to all Current jobs ✅ |
 | 2026-05-05 | Dispatch reminder to Sohling in J26065 CLP HKMA channel | Sent to 1497160276196327424 ✅; end-to-end dispatch pipeline confirmed |
+| 2026-05-05 | Smart E job status query | Ambiguous — resolved 2 candidates (J26060 CLP Smart E animation / J26065 CLP HKMA Smart E Living); asked Kary clarify |
+| 2026-05-05 | Multi-channel dispatch: Orbis remind Sohling + BOC assign Kary & Sohling (dispatch test) | Sent to J26062 (#j26062) + J26053 (#j26053) ✅ |
+| 2026-05-05 | Multi-channel dispatch round 2: Orbis remind Sohling find Kary + BOC assign Kary find Sohling | Sent to J26062 + J26053 ✅ |
+| 2026-05-05 | OCR dispatch v2 triggered (2-job image, 快問快答 + 好E工) | Declined x2 (old constraint) → Kary corrected skill file update → re-read → dry-run preview sent; pending confirm before clear |
+| 2026-05-05 | J26067 alias 「好E工」added to job-list.md | Commit 3b3ddcd ✅ |
