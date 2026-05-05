@@ -249,6 +249,8 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 | 單次 Calendar 操作（add / move / delete / reschedule 一個或幾個 event，**唔係** generate full timeline） | `skills/producer/calendar-ops.md` | "add event"、"move event"、"reschedule"、"delete event"、"排個 shoot"、"push 後"、"改下個 event"、"加個 milestone" |
 | Drive 純操作（search / read / copy / archive，冇 timeline 邏輯） | 直接執行，唔 load playbook | "搵 file"、"copy template"、"archive" |
 | Google API credentials / boilerplate | `technical/google-apis.md` | 需要 call Calendar API 或 Drive API 嘅 code |
+| Gemini API credentials / boilerplate（Vision、text gen） | `technical/gemini-api.md` | 需要 call Gemini Vision 或 Gemini text gen |
+| **Multi-channel dispatch v2 — image + tag**（OCR flow）| `skills/producer/multi-channel-dispatch-ocr.md` | user post **image + tag `@agent-Mugi`** 喺 home base（有冇 caption 都 trigger）、"派任務 from 呢張圖"、"睇張圖派落 channel" |
 | Trello 操作（create card、assign、dates、labels、checklists、move） | `skills/trello/trello-agent.md` | "Trello"、"card"、"Planyway"、"assign"、"checklist"、"J26XXX 入面"、"postpro board"、"加張 card"、"改 due date"、"move 去"、"mark complete" |
 | Calendar → Trello sync（將 calendar events 批量轉成 Trello cards） | `skills/trello/trello-agent.md` | "sync calendar to trello"、"calendar 入 trello"、"將 calendar events create cards"、"extract calendar for J26XXX" |
 
