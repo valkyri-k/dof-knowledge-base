@@ -203,9 +203,27 @@
 4. **Discord Channel Name reverse-transliteration** — channel name 撐唔到中文時被迫 transliterate（e.g.「best_ce_award_competition_video」←「好醫工大賽 video」），Mugi 識 reason 返
 5. **Ambiguity handling** — 以上任何 layer match 到多過一條 row，**一律 reply 列出 candidates 問 user clarify，唔好估**
 
-### ⚠️ Boundary：Dispatch decision 唔用 fuzzy resolution
+### ⚠️ Session entity carry-over（唔可以 silent assume）
 
-呢套 Resolution Rules **唔 apply 喺 dispatch decision**（即派 message 去 Discord channel）。派錯 channel cost 太高，dispatch MVP 一律 require user 寫明 J#。Fuzzy resolution 只服務一般 conversation / Calendar ops / document generation 等讀 query。
+如果 user 唔寫 J#，而 current session 之前已 resolve 過某個 J#，**唔可以 silently carry over**：
+
+- Prior J# entity **唔自動 apply** 去新 request
+- 必須任選其一：
+  - Explicit disclose：「我 carry 住 [J# + Project Name] from earlier，係咪係呢個？」
+  - 重新行 5-layer resolution + Layer 5 ambiguity check，同 fresh session 一樣
+- **禁止**：用 prior session entity 跳過 Layer 5 ambiguity check——即使感覺係同一個 job，都要確認
+
+### Dispatch decision：用 fuzzy resolution，但 ambiguity 一律 clarify（updated [[2026-05-05]]）
+
+Resolution Rules **同樣 apply 喺 dispatch decision**（即派 message 去 Discord channel）—— Multi-channel dispatch v1 deploy 之後實測 user 講「CLP HKMA」Mugi 經 layer 1/2 resolve 到 J26065 直接派 message，flow 順暢。
+
+但因為派錯 channel cost 高，dispatch 比一般 read query 多兩重保險：
+
+- **Layer 1–4 unique match → 直接 dispatch**。Dispatch 完必須 reply confirm「✅ 已 tag [user] 喺 #[channel]」俾 trigger 嗰個 user，俾佢一眼睇到派咗去邊，錯就即刻 retract / 補 message。
+- **Layer 5 ambiguity（match 到多過一條 row）→ 一律 reply 列 candidates 問 clarify，唔可以揀其中一個就 dispatch**。
+- **Resolve 唔到任何 row → 唔好 dispatch**，reply 問 J#（同 stale alias section 一致）。
+
+⚠️ 之前版本（[[2026-05-04]]）寫「dispatch MVP 一律 require user 寫明 J#」已 supersede。
 
 ### Stale alias / 認唔到嘅情況
 
