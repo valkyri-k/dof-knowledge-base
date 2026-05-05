@@ -18,11 +18,14 @@ User 喺 Mugi home base channel（`#ai-agent-mugi`）post **image + tag `@agent-
 
 ## Output rule（重要）
 
-每個 target channel **只 send 一條 message**，message 入面 tag 該 channel 對應 job 嘅所有 assignees + 列晒所有 task。
-- ❌ 唔好 spam：唔好同一個 channel 一個 task 一條 message
-- ✅ 一個 channel = 一個 message，內含 multi-user tag + multi-task list
+每個 target channel **只 send 一條 message**，內部要清楚講邊個 task 邊個負責：
 
-呢條 rule 同 v1 一致，純 text input 都跟。
+- ❌ 唔好 spam：唔好同一個 channel 一個 task 一條 message
+- ❌ 唔好 multi-user 時將 user tag 喺頂、task flat list（睇唔出邊個負責邊樣）
+- ✅ Single-assignee → header `@user` + flat bullet
+- ✅ Multi-assignee → 每 task `— @assignee(s)` 後綴
+
+詳細 format 見 step 6。呢條 rule 同 v1 一致（CLAUDE.md `Outbound message rule` section），純 text input 都跟。
 
 ---
 
@@ -137,21 +140,33 @@ Caption 通常會 cover 全圖（e.g.「呢張 note 係今日 design task」）�
 
 ### 6. Compose dispatch message（per block）
 
-每個 ready block compose **真正派出去 target channel** 嘅 message。Format：
+每個 ready block compose **真正派出去 target channel** 嘅 message。睇個 block 入面 task↔assignee mapping 揀 format：
+
+**Single-assignee block**（所有 task 都同一個 user）：
 
 ```
-@user1 @user2
+@user1
 
 • <task 1>
 • <task 2>
-• <task 3>
+
+(from @<trigger user>'s image @ <timestamp>)
+```
+
+**Multi-assignee block**（task 分配俾唔同 user）：
+
+```
+• <task A> — @user1
+• <task B> — @user1 @user2
+• <task C> — @user2
 
 (from @<trigger user>'s image @ <timestamp>)
 ```
 
 規則：
-- 第一行淨係 `@mention`（真 Discord mention，會 ping）
-- 隔一行先列 task（用 bullet list，唔重複 user name 喺 task 前）
+- Single-assignee：第一行 `@user`（真 Discord mention，會 ping），隔一行 bullet list，bullet 唔重複 user name
+- Multi-assignee：每 bullet `<task> — @assignee(s)`，多人共做同一 task 用 space 分開多個 @mention
+- Multi-assignee 唔用 header mention line（bullet 入面 @mention 已經 ping）
 - 1 個 task 都用 bullet（一致）
 - 末行 attribution（trigger user 嘅 image timestamp）
 

@@ -228,6 +228,44 @@ Resolution Rules **同樣 apply 喺 dispatch decision**（即派 message 去 Dis
 
 ⚠️ 之前版本（[[2026-05-04]]）寫「dispatch MVP 一律 require user 寫明 J#」已 supersede。
 
+### Outbound message rule（v1 + v2 共用，updated [[2026-05-05]]）
+
+派去 target channel 嘅 message，**1 channel = 1 message**——多 task / 多 user 都合併一條，但內部要清楚講邊個 task 邊個負責：
+
+- ❌ 唔好 spam：唔好同一個 channel 一個 task 一條 message
+- ❌ 唔好將 user 全部 tag 喺頂、task flat list（multi-user 時睇唔出邊個負責邊樣）
+- ✅ 跟以下兩種 format 之一
+
+**Single-assignee channel**（所有 task 都同一個 user 負責）— header mention + flat bullet：
+
+```
+@user1
+
+• <task 1>
+• <task 2>
+
+(from @<trigger user> @ <timestamp>)
+```
+
+**Multi-assignee channel**（task 分配俾唔同 user）— 每 task 後綴 `— @assignee(s)`：
+
+```
+• <task A> — @user1
+• <task B> — @user1 @user2
+• <task C> — @user2
+
+(from @<trigger user> @ <timestamp>)
+```
+
+規則：
+- Single-assignee：第一行 `@user`（會 ping），隔一行 bullet list，bullet 唔重複 user name
+- Multi-assignee：每 bullet `<task> — @assignee(s)`，多人共做同一 task 用 space 分開多個 @mention（全部會 ping）
+- Multi-assignee 唔用 header mention line（每個 bullet 嘅 @mention 已經 ping 對應 user）
+- 1 個 task 都用 bullet（保持 format 一致）
+- 末行 attribution（trigger user + timestamp；v2 OCR 加「's image」）
+
+詳細 v2 OCR pipeline、dry-run preview、multi-job per image → `skills/producer/multi-channel-dispatch-ocr.md`。
+
 ### Stale alias / 認唔到嘅情況
 
 如果 user 嘅 spoken reference 5 layers 都 resolve 唔到（特別係新 job 或者 cross-vocabulary descriptor），reply：「我喺 job-list 認唔到呢個 reference。係 J26XXX 邊條？如果呢個 spoken alias 之後仲會用，請喺 Master Job Log Aliases column 補返。」
