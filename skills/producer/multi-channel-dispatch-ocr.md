@@ -137,55 +137,60 @@ Caption 通常會 cover 全圖（e.g.「呢張 note 係今日 design task」）�
 
 ### 6. Compose dispatch message（per block）
 
-每個 ready block compose 一條 message。Format：
+每個 ready block compose **真正派出去 target channel** 嘅 message。Format：
 
 ```
-@user1 @user2 — <task summary>
+@user1 @user2
+
+• <task 1>
+• <task 2>
+• <task 3>
 
 (from @<trigger user>'s image @ <timestamp>)
 ```
 
-Task summary 規則：
-- 1–2 個 task → inline，逗號分隔（e.g.「Style frame, Title x1」）
-- 3+ 個 task → bullet list
+規則：
+- 第一行淨係 `@mention`（真 Discord mention，會 ping）
+- 隔一行先列 task（用 bullet list，唔重複 user name 喺 task 前）
+- 1 個 task 都用 bullet（一致）
+- 末行 attribution（trigger user 嘅 image timestamp）
 
 ### 7. Dry-run preview（home base reply）
 
-列晒所有 block，ready 嘅 + 有問題嘅都列。Format：
+**核心原則**：preview 係俾 trigger user 對 OCR result 啱唔啱，唔係 render 完整 message。
+- ❌ 唔好出真 `@mention`（preview render 出嚟會 ping 同事，誤會係真 dispatch）
+- ❌ 唔好 quote 完整 dispatch message（霸位 + 重複資訊）
+- ❌ 唔好顯示 self-verify 過程（e.g. "Layer 2 client cross-language match"）
+- ✅ 純文字 user name（"Katy" 唔好寫 `@Katy`）
+- ✅ 一個 block 兩行：第一行 = OCR 攞到嘅 job hint → resolved channel + assignee；第二行 = task list
+
+Compact format：
 
 ```
-🛑 Dry-run preview — OCR 攞到 N 個 job block，confirm 落 send
+🛑 Dry-run — OCR 攞到 N 個 block，confirm 落 send
 
-[1] ✅ Ready
-Target: #j26065-clp-hkma-smart-e-living
-Tag: @Sohling
-Message:
-> @Sohling — Style frame, Title x1, Divider x2
->
-> (from @kary's image @ 2026-05-05 14:32)
-OCR: "好E I" → resolved J26065 (Layer 2 client cross-language)
+[1] 快問快答 → #j26066-emsd-quiz-of-farewell-party (Katy)
+    Style frame, Title x1, Name tag x3
 
-[2] ⚠️ Ambiguous
-OCR: "快問快答" → match 到 2 個 job：
-  - J26063 快問快答 EP1
-  - J26068 快問快答 EP2
-Reply 邊個（block 2: J26063 / J26068）
+[2] 好E工 → #j26067-emsd-best-ce-award-competition-video (Sohling)
+    Style frame, Title x1, Divider x2
 
-[3] ✅ Ready
-Target: #j26064-megaworks-...
-Tag: @Kay
-Message:
-> @Kay — Style frame
->
-> (from @kary's image @ 2026-05-05 14:32)
+「all」/「send」send 全部 ・「send 1, 2」揀指定 ・「cancel」abort
+```
 
-[caption notes，如有]
+問題 block format（保持 compact）：
 
-Confirm 點？
-- 「all」/「send」/「OK」 → send 全部 ready 嘅 block，跳過有問題嘅
-- 「send 1, 3」 → 揀指定 block send
-- 「block 2: J26063」 → resolve 緊 ambiguous
-- 「cancel」 → 全部 abort
+```
+[3] ⚠️ Ambiguous: 「快問快答」→ J26063 / J26068，覆「block 3: J26063」揀
+[4] ❓ Unresolved: 「Smart X」搵唔到 match，覆 J# 或「block 4: skip」
+[5] 🚫 No channel: 「Cartier still shooting」(J26010) 冇 Discord channel，會 skip
+[6] ⚠️ Assignee 「Tom」搵唔到 Discord ID，會 plain text mention 唔 ping
+```
+
+Caption note（如有）一行擺最尾：
+```
+ℹ️ Caption「今日 design task」已 apply 做 framing
+ℹ️ Caption override block 2 job → J26064（OCR 出 "好E工" 但 caption 寫 J26064）
 ```
 
 ### 8. Wait for confirm
