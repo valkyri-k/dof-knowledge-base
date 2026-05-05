@@ -13,6 +13,7 @@
 - **[2026-04-08] `/home/node/activity.bak/` 刪除** — symlink fix 嘅 backup folder，留低等 Kary confirm 一切 stable 後刪。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 entry「activity/ path 雙位置 bug」
 - **[2026-04-08] Trello checklist member assignment（Storyboard card）** — board 冇 Advanced Checklists power-up，目前用 `@mention` fallback；等 Kary 揀 plan upgrade 定 default 轉做 split-cards approach。Cross-ref: `activity/gap-log.md` 14:23 entry
 - **[2026-04-08] Discord reply routing bug** — 答 trello rules question 嘅長 reply 寫咗喺 terminal 冇 send 出 Discord，user 等於收唔到。已 update memory `feedback_always_reply.md` 加 Rule 2「Discord in → Discord reply tool out, no exceptions」
+- **[2026-05-05] 好醫工大賽 cut milestones** — Calendar 只有 Shoot (Apr 27) + Final (May 11)，冇 1st Cut / 2nd Cut。Kary 被問係咪要補，未回應。待 Kary confirm 是否加入 milestones。（J26067）
 - **[2026-04-08] J26053 BOC Trendy BTS mograph 未 assign** — 1st Cut BTS (4/23) + Final BTS (5/15) 兩張只 assign 咗 Yik 做 cut，graphics 邊個負責等 Kary x Sohling discussion 結果。BTS editor 都 default 咗 Yik 未確認
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
@@ -38,6 +39,13 @@
 
 ### 2026-04-24 morning session
 主力做 HSUHK Batch 2 post-pro schedule。Kary 提供 1st Cut May 12, Final Output Jun 11, no VO。Mugi 讀完 producer-playbook + calendar-operations-guide，fetch DOF Calendar（Holiday API failed），做 saturation check（all clear），計出 8-milestone schedule。第一版 reply 錯誤：誤以為 Apr 24 = Thursday（實際係 Friday），導致所有 day-of-week 錯。Kary 糾正：May 22 係星期五，May 25 係佛誕，May 26-27 係二/三。重新計算後 corrected schedule 完全 fit Jun 11（Thu）。**Lesson：唔好靠自己計 day-of-week，應先 verify；Calendar API fetch 係 ground truth。** Job Number = J26016，待 Kary confirm → Calendar push。
+
+### 2026-05-05 afternoon session
+今日主要係兩個 status queries + bot infra 擴展。Kary 查 好醫工大賽（J26067）同快問快答（J26066）status，兩個都搵到。好醫工大賽 Calendar 只有 Shoot + Final，中間缺 cut milestones，Mugi 主動 surface 問係咪要補，Kary 未回應——留 open thread。快問快答確認係 J26066 quiz component，Final Output Quiz 後天（May 7）交。
+
+主要 infra work：Kary 做 multi-channel dispatch test，先發現 channel 1489235328442302604 未 allowlist，Mugi 指示 Kary run `/discord:access group add`，加完即時 test 成功。之後 Kary 一次過 bulk add 14 條 channel（全部係 job-list 入面嘅 project channels），呢個係 production dispatch 功能嘅重要 milestone——Mugi 而家可以 push message 去任何 Current job 嘅 Discord channel。最後 Kary 叫 Mugi dispatch 提示去 J26065 CLP HKMA channel，confirm dispatch pipeline 端到端 work。
+
+**Decision**：Multi-channel dispatch 係今日嘅重要里程碑，job-list.md 入面所有有 channel ID 嘅 job 而家全部可以 dispatch。Bot 基礎設施由「單一 #ai-agent channel」擴展到「全 project channels 覆蓋」。
 
 ### 2026-04-12 afternoon session
 今日主要係 calendar timeline 查詢 + J26016 schedule 整理。Kary 要求列出 J26053 BOC Trendy Too 同 J26016 HSUHK Student Excellence 嘅 project timeline 文字版——兩個都搵到（BOC 17 events，HSUHK 12 events），順帶發現 HSUHK Final Output Apr 27 同 Batch 2 Shoot D2 撞日。跟住 Kary 要求：(1) 移除 Batch 1 post-pro 所有 (TBC)、(2) 按 Batch 1 間距規劃 Batch 2 post-pro。Plan 出咗但 Kary 喺 confirm 間距前 clear，所以執行部分留到下次 session。**Key decision**：HSUHK Final Output Apr 27 係 Batch 1 專屬；Batch 2 post-pro 需要包含 Client FB on 3rd Cut 先出 Final（Batch 1 呢步係 skip 咗），呢個係 Kary 明確糾正嘅 scheduling principle。
@@ -117,3 +125,8 @@
 | 2026-04-24 | Phase 3 doc gen: Timeline doc for J26016 HSUHK Batch 2 | Generated `Timeline_J26016_HSUHK Batch 2_2026-04-24` + `_r2` (new template) in Drive root ✅; removed Client & Delivery rows per Kary |
 | 2026-04-24 | BOC Trendy Together post-pro schedule check + propose 10 missing events | Listed BTS/#1/#2 status; proposed 10 events (standard 3wd intervals); awaiting confirm |
 | 2026-04-26 | BOC Trendy Together: Final (#2) → May 28 + create 10 missing events | Updated Final (#2) May 26→28; created all 10 FB/cut events ✅ (missed Apr 25 reply — acknowledged) |
+| 2026-05-05 | J26067 好醫工大賽 status query | Found Shoot Apr 27 + Final May 11; flagged missing cut milestones; Kary 未回應，留 open thread |
+| 2026-05-05 | J26066 快問快答 status query | Confirmed quiz component: Shoot Quiz Apr 28 (done), Final Output Quiz May 7 (Thu), Farewell Party Shoot May 8 |
+| 2026-05-05 | Multi-channel dispatch test: post to channel 1489235328442302604 | First attempt failed (not allowlisted); Kary ran `/discord:access group add`; retry succeeded ✅ |
+| 2026-05-05 | Discord access: bulk add 14 project channels | All 14 job-list channels added to allowlist; Mugi can now dispatch to all Current jobs ✅ |
+| 2026-05-05 | Dispatch reminder to Sohling in J26065 CLP HKMA channel | Sent to 1497160276196327424 ✅; end-to-end dispatch pipeline confirmed |

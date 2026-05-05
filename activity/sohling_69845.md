@@ -10,7 +10,7 @@
 ## Open Threads
 （pending items，resolved 即時刪）
 
-- [2026-04-14] CLP SmartE Trello sync pending — 等 Sohling 回覆 Job Number 先可以 create/find Trello list
+（no open threads）
 
 ---
 
@@ -32,3 +32,7 @@ First-ever Sohling interaction. Request: 喺 Calendar 4月內 search EMSD QA eve
 | 2026-04-08 | J26054 CSC: Comment cards unassign Yik+Keith, assign Benjy | Done on Client Feedback 1 + 2 ✅ |
 | 2026-04-08 | Calendar 4月 HKTB HKCA → add to existing J26041 list, comment→Kary, others→Yik+Keith | Added 6 cards; flagged judgment call on 4/9 "Confirmed by Client" (treated as Kary) ✅ |
 | 2026-04-14 | Add Calendar + Trello for CLP SmartE animation: 1st cut today, final cut Fri, director Sohling | Calendar created (1st Cut 4/14, Final Output 4/18) ✅; Trello pending job number |
+| 2026-04-28 | J26057 HKTB Playbook: add Calendar + Trello (5 events, 1st Cut→Final May 13) | Done ✅; Katy→cut cards, Keith→final assigned on May 3 follow-up |
+| 2026-05-03 | J26069 CLP Speech: 8 events Calendar + Trello (Shoot May 5 → Final Output Short May 28) | Done ✅; Hall of Fame card created then archived per Sohling request |
+| 2026-05-03 | J26065 CLP HKMA: 6 events Calendar + Trello (Tentative, Apr 29–May 8, May 2 Sat kept per Sohling) | Done ✅; all cards assigned to Sohling |
+| 2026-05-03 | J26066 EMSD Farewell Party: sync Calendar → Trello, assign Keith + Katy | Found 3 Calendar events; created list + 3 cards ✅ |
