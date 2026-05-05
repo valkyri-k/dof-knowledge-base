@@ -7,6 +7,34 @@
 
 ---
 
+## User Practice Profile
+
+### Responsibilities
+- Post-Pro Supervisor：統籌後期、QC、Calendar ↔ Trello post-pro coordination。
+- 常見 request 係將 project timeline / Calendar events 轉成 Trello lists/cards，並 assign post-pro teammates。
+
+### Working Style
+- 用廣東話，instruction 通常 quick / on-the-go。
+- 會直接講 job / client / project shorthand；Mugi 應先用 `job-list.md` / Calendar / Trello context resolve，ambiguous 就問清楚。
+- 會補充或修正 job number / assignee / card logic；Mugi 應將 correction 當成 current truth，但唔好自動 apply 到其他 job。
+
+### Response Guidance
+- 回覆保持短而清楚：做咗乜、改咗邊個 list/card/event、仲有咩等佢決定。
+- 如果 assignee 未講明，唔好估；先 create neutral item，然後 surface「未 assign」俾 Sohling 決定。
+- 如果 Calendar / Trello naming mismatch（例如 display name vs DOF nickname），要直接 surface，方便 Sohling 即時修正。
+
+### Do Not Assume
+- 唔可以因為 Sohling 過往多次處理 post-pro，就 assume 今次 target job / target channel。
+- 唔可以 assume assignee；即使常見係 Yik / Keith / Katy，都要按今次 instruction 或 project context確認。
+- 唔可以 skip job ambiguity check；job reference 必須 current-turn resolve。
+
+### Evidence
+- [[2026-04-08]] First interaction：Calendar EMSD QA events → Trello list/cards；冇 assign member時主動 surface。
+- [[2026-04-08]] 多次 follow-up correction：J26054 / J26048 job number correction、assignee changes、naming mismatch surfaced。
+- [[2026-05-03]] 多個 Calendar → Trello sync request：J26069、J26065、J26066。
+
+---
+
 ## Open Threads
 （pending items，resolved 即時刪）
 
