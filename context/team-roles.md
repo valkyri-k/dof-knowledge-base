@@ -13,6 +13,12 @@
 |----|------|------|
 | Kary | Director / Creative & AI Lead | 前後期、client management、AI workflow 及 tools 推行。Process-oriented，對 graphics + design 都熟 |
 | Benjy | Director / 導演組 Supervisor | 拍攝執行、現場統籌。強項：執生型導演，現場能力極強 |
+| Atlas | Assistant Director | 2026-05-04 onboard。以前主要做 videographer，one-man-band 會剪片 |
+
+### Creative Production（獨立位置）
+| 人 | 角色 | 職責 |
+|----|------|------|
+| Nookei（aka Angela） | Associate Creative Producer | 2026-05-05 onboard。Email 用 angela@dreamoffish.com，但 Calendar / Discord / 日常稱呼一律用 **Nookei**。暫時唔屬於導演組 / 後期組，由 Kary 負責 onboarding。之前主要做副導演——搵 reference、art direction、搵道具同搵景 |
 
 ### 後期組（Post-Production）
 | 人 | 角色 | 專長 |
@@ -25,9 +31,9 @@
 | Kay | Post-Pro（Temporary） | Graphic Design — 可能短期內離開 |
 
 ### 即將加入
-| 角色 | 預計 Onboard |
-|------|-------------|
-| 導演組（AD / Producer Assistant）× 2 人 | 2026 年 4 月尾–5 月頭 |
+| 人 | 角色 | 預計 Onboard | 備註 |
+|----|------|-------------|------|
+| Kyle | 導演組（Director） | 2026 年 6 月頭 | 有導演經驗，唔熟悉 Graphics 和 Project Management |
 
 ---
 

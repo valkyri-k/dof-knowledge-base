@@ -158,17 +158,20 @@
 | VO end → Final Output | ≥ 2 wd | — |
 
 ### Team（快速查找）
-| 人       | 角色                            | Discord ID            |
-| ------- | ----------------------------- | --------------------- |
-| Ki      | MD / 老闆（Quotation、Client 關係）  | `1077509958452645950` |
-| Kary    | Director / Creative & AI Lead | `1328602029303791646` |
-| Benjy   | Director / 導演組 Supervisor     | `1221464062085562441` |
-| Sohling | Post-Pro Supervisor（統籌後期、QC）  | `1489108444475686943` |
-| Keith   | Motion Graphics               | `1489103782645075979` |
-| Max     | Motion Graphics               | `1489114050838401066` |
-| Yik     | Editor                        | `1489109497938186351` |
-| Katy    | Editor                        | `945518106837680138`  |
-| Queena  | HR                            | _TBD_                 |
+| 人       | 角色                                      | Discord ID            |
+| ------- | --------------------------------------- | --------------------- |
+| Ki      | MD / 老闆（Quotation、Client 關係）            | `1077509958452645950` |
+| Kary    | Director / Head of AI Production System | `1328602029303791646` |
+| Benjy   | Director / 導演組 Supervisor               | `1221464062085562441` |
+| Sohling | Post-Pro Supervisor（統籌後期、QC）            | `1489108444475686943` |
+| Keith   | Motion Graphics                         | `1489103782645075979` |
+| Max     | Motion Graphics                         | `1489114050838401066` |
+| Yik     | Editor                                  | `1489109497938186351` |
+| Katy    | Editor                                  | `945518106837680138`  |
+| Queena  | HR                                      | _TBD_                 |
+| Kay     | Graphic Designer                        | `1489103357485514812` |
+| Atlas   | Asst Director                           | `1284064536424484967` |
+| Nookei  | Creative Producer                       | `1501063558841237645` |
 
 **Discord mention 用法：** 需要 escalate 去某個同事時，用 `<@Discord_ID>` format 做精準 mention（e.g. `<@1489108444475686943>` = Sohling）。Queena 嘅 ID 暫時未填，等 Kary 之後補返。
 
