@@ -24,7 +24,7 @@
 | J26064 | Megaworks | Megaworks Private Birthday Party event video and photo service |  | Current | — (no channel by design) | — (no channel by design) |
 | J26065 | CLP | CLP HKMA Smart E Living |  | Current | 1497160276196327424 | #j26065-clp-hkma-smart-e-living |
 | J26066 | EMSD | EMSD Quiz challenge video for Farewell event | 快問快答 | Current | 1496037652825112657 | #j26066_emsd_quiz_of_farewell_party |
-| J26067 | EMSD | EMSD QUOHSD1KC20060046 好醫工大賽 | Best CE Award | Current | 1500764253181972480 | #j26067_emsd_best_ce_award_competition_video |
+| J26067 | EMSD | EMSD QUOHSD1KC20060046 好醫工大賽 | Best CE Award;好E工 | Current | 1500764253181972480 | #j26067_emsd_best_ce_award_competition_video |
 | J26069 | CLP | CLP MD aand COO speech event |  | Current | 1501043831829954570 | #j26069-clp-md-aand-coo-speech-event |
 | J26070 | EMSD | EMSD CCSD2026-19 Farewell party on May | Farewell event highlight shooting | Current | 1501043894433874120 | #j26070-emsd-ccsd2026-19-farewell-party-on-may |
 
