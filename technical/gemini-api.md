@@ -16,8 +16,10 @@ API key 存放喺環境變數 `GEMINI_API_KEY`（Zeabur env var，已 provisione
 ## Install
 
 ```bash
-pip install google-generativeai pillow
+pip install google-genai pillow
 ```
+
+> ⚠️ **舊 package `google-generativeai` 已 deprecated，唔再更新。** 永遠用 `google-genai`（新 SDK）。
 
 `pillow` 用嚟 load image（Vision use case）。純 text generation 唔需要。
 
@@ -30,20 +32,13 @@ pip install google-generativeai pillow
 ```python
 import os
 import json
-import google.generativeai as genai
-from PIL import Image
+from google import genai
+from google.genai import types
+import PIL.Image
 
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-model = genai.GenerativeModel(
-    "gemini-2.0-flash",
-    generation_config={
-        "response_mime_type": "application/json",
-        "temperature": 0.1,
-    },
-)
-
-img = Image.open("/path/to/image.png")
+img = PIL.Image.open("/path/to/image.png")
 
 prompt = """
 [describe what to extract; specify JSON schema in prompt]
@@ -54,20 +49,28 @@ Example:
 {"field_a": "...", "field_b": [...]}
 """
 
-response = model.generate_content([prompt, img])
+response = client.models.generate_content(
+    model="gemini-2.0-flash",
+    contents=[img, prompt],
+    config=types.GenerateContentConfig(
+        response_mime_type="application/json",
+        temperature=0.1,
+    ),
+)
 data = json.loads(response.text)
 ```
 
 ### Model choice
 - `gemini-2.0-flash` — default for OCR / structured extraction（fast、cheap、JSON mode 支援好）
-- `gemini-2.5-pro` — 用喺需要 deeper reasoning 嘅 vision task（e.g. layout analysis、chart understanding），先確認 fast 唔夠用
+- `gemini-2.5-flash` — 升一格，reasoning 更強，仍然快；`gemini-2.0-flash` 唔夠用先升
+- `gemini-2.5-pro` — 用喺需要 deep reasoning 嘅 vision task（e.g. layout analysis、chart understanding）
 
 ### Temperature
 - `0.1` for structured extraction（OCR、JSON output）
 - 唔好用 default `1.0`，會增加 hallucination risk
 
 ### JSON mode
-`response_mime_type: "application/json"` — 強制 model output 純 JSON，唔會夾雜 prose。`json.loads(response.text)` 直接 parse。
+`response_mime_type="application/json"` — 強制 model output 純 JSON，唔會夾雜 prose。`json.loads(response.text)` 直接 parse。
 
 ---
 
@@ -75,12 +78,14 @@ data = json.loads(response.text)
 
 ```python
 import os
-import google.generativeai as genai
+from google import genai
 
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-2.0-flash")
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-response = model.generate_content("Your prompt here")
+response = client.models.generate_content(
+    model="gemini-2.0-flash",
+    contents="Your prompt here",
+)
 print(response.text)
 ```
 
@@ -91,13 +96,21 @@ print(response.text)
 常見 error：
 - `429` — rate limit 或 quota exceeded → 等 30s retry，超過 3 次 fail tag Kary
 - `400` — prompt 或 image invalid → 報錯，唔好 silent retry
+- `404` — model ID 唔 available（e.g. `gemini-2.0-flash-001` 係舊 ID）→ 用 `gemini-2.0-flash`（唔帶版本後綴）
 - JSON parse fail → 即係 model output 唔係 valid JSON，先 log raw `response.text` 再 fail
 
 ```python
 try:
-    response = model.generate_content([prompt, img])
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=[img, prompt],
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            temperature=0.1,
+        ),
+    )
     data = json.loads(response.text)
-except json.JSONDecodeError as e:
+except json.JSONDecodeError:
     print(f"Gemini returned non-JSON: {response.text}")
     raise
 except Exception as e:
