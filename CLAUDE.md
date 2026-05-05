@@ -187,6 +187,39 @@
 
 ---
 
+## Job Resolution（J# / Job alias lookup）
+
+**Source of truth**：`context/job-list.md` — 所有 active（`status: Current`）DOF jobs 嘅 cache。Columns：Job No、Client、Project Name、Aliases、Status、Discord Channel ID、Discord Channel Name。
+
+**Trigger**：用戶提到 job 但**冇明寫 J number** 嗰陣，由 user 自然語言 resolve 出對應 row。
+
+### Resolution 順序（5-layer fuzzy lookup）
+
+1. **Project Name substring** — input 字眼直接喺 Project Name 出現（e.g.「好醫工」hit `EMSD QUOHSD1KC20060046 好醫工大賽`）
+2. **Client cross-language equivalence** — Mugi 用語言知識做 client name 翻譯（「中銀」=「BOC」=「Bank of China」、「機電工程署」=「EMSD」、「滙豐」=「HSBC」、「旅發局」=「HKTB」），match 去 Client column
+3. **Aliases column** — last-resort fallback，catch Project Name descriptor 同 spoken descriptor 用唔同字嘅 case（e.g. Project Name「Sustainability」、平時嗌「環保」）
+4. **Discord Channel Name reverse-transliteration** — channel name 撐唔到中文時被迫 transliterate（e.g.「best_ce_award_competition_video」←「好醫工大賽 video」），Mugi 識 reason 返
+5. **Ambiguity handling** — 以上任何 layer match 到多過一條 row，**一律 reply 列出 candidates 問 user clarify，唔好估**
+
+### ⚠️ Boundary：Dispatch decision 唔用 fuzzy resolution
+
+呢套 Resolution Rules **唔 apply 喺 dispatch decision**（即派 message 去 Discord channel）。派錯 channel cost 太高，dispatch MVP 一律 require user 寫明 J#。Fuzzy resolution 只服務一般 conversation / Calendar ops / document generation 等讀 query。
+
+### Stale alias / 認唔到嘅情況
+
+如果 user 嘅 spoken reference 5 layers 都 resolve 唔到（特別係新 job 或者 cross-vocabulary descriptor），reply：「我喺 job-list 認唔到呢個 reference。係 J26XXX 邊條？如果呢個 spoken alias 之後仲會用，請喺 Master Job Log Aliases column 補返。」
+
+### ⚠️ No-channel jobs（by design）
+
+DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-team coordination（特別係後期）嘅 job。以下情況 by design 冇 channel：
+
+- 長拍 / 仲喺 shooting 階段、未入後期
+- Shooting only，冇後期 involve
+
+`context/job-list.md` 入面呢類 row Channel ID / Name 顯示 `— (no channel by design)`。Resolution 仍可 work（cache row 完整），但**唔可以 dispatch**。如 user trigger dispatch 到呢類 J#，reply：「呢個 job 冇 Discord channel（[原因]），唔可以 dispatch。」
+
+---
+
 ## Skills Dispatch（收到呢類 request → 必須先 read 對應 skill file）
 
 | 收到呢類 request | MUST read skill file | 觸發 keywords |
@@ -217,6 +250,7 @@
 | Calendar event 命名、milestone、TBC 處理 | `context/naming-conventions.md` |
 | Calendar 操作規則、search/update/batch/add、colorId mapping | `context/calendar-operations-guide.md` |
 | 用咩工具、Discord 規則、Internal tools 關係 | `context/tools.md` |
+| Active job lookup（J#、client、project name、alias、Discord channel mapping）| `context/job-list.md` |
 
 **Context routing rule：** 複雜問題先 check Quick Reference，搵唔到答案先 read 對應 context file。**搵唔到就讀，唔好靠記憶答（記憶會錯）。**
 
