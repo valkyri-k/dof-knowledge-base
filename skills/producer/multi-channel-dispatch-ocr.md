@@ -237,10 +237,21 @@ User reply：
 
 ---
 
-## Open behavior（未定，pilot 期間 surface）
+## OCR fallback behaviour（confirmed [[2026-05-05]]）
 
-- OCR 完全 fail（image 唔係 text、太花、低 res）→ 暫定 reply「OCR 攞唔到任何 block，可以重 post 清晰啲嘅圖，或者直接打字 dispatch？」
-- OCR 攞到 block 但全部 job_hint empty / 全部 unresolved → 暫定一次過 reply 列出 block content + 問 user 逐個 confirm J#
+OCR confidence 低 / 完全讀唔到嗰陣，**reply 返 trigger user**，**唔 dispatch、唔估**：
+
+| 情況 | Reply |
+|---|---|
+| OCR 完全 fail（image 唔係 text、太花、太暗、低 res、太 blur） | 「OCR 攞唔到任何 block — 可能張圖太 blur / 光線不足 / 字太細。可以**直接打字 dispatch**（e.g.「remind Sohling to do style frame for CLP HKMA」），或者**重影一張清楚啲嘅圖**再 tag 我」 |
+| OCR 攞到 block 但全部 `job_hint` empty / unresolved | 一次過 reply 列出每個 block 嘅 OCR content + 問 user 逐個 confirm J#，或者改 text input |
+| OCR 攞到 block 但部分字眼有 `?` uncertainty marker（block partial confidence） | 照行 dry-run，preview 入面保留 `?` marker 等 user 對；user 可以 confirm 或者改 text input |
+
+核心原則：**OCR ≠ trusted input**。寧 ask 唔好估 partial dispatch。Reply 必須講清楚問題（blur / 太暗 / 字辨認唔到）+ 俾 fallback option（text input 或重影）。
+
+## Dry-run preview format
+
+現狀 plain text inline format（step 7）暫用，等 Sohling 實測完 feedback 再 iterate。Pilot 期間如果 user feedback 話冗 / 唔 readable，escalate 改 markdown code block 或者 attachment。
 
 ---
 
