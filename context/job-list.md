@@ -2,7 +2,7 @@
 
 > Source of truth: Airtable Master Job Log (base `appld5YU1iZm3Hx5F`, table `Projects`)
 > Scope: `status = Current` only（active production jobs）
-> Last synced: 2026-05-05（Stage 0 manual bootstrap — Claude Code + Airtable MCP）
+> Last synced: 2026-05-07（Stage 0 manual bootstrap — Claude Code + Airtable MCP）
 > Sync mechanism: Stage 1 (n8n auto-sync) 待實作。期間如有新 Current job，手動 trigger re-sync 或 patch 此 file。
 
 ---
@@ -15,9 +15,10 @@
 | J26007 | DFI | DFI Corporate video 2026 |  | Current | 1500690941638479893 | #j26007-dfi-corporate-video-2026 |
 | J26010 | Cartier | Cartier Prince Building - the making of video |  | Current | — (no channel by design) | — (no channel by design) |
 | J26016 | HSUHK | HSUHK Student Excellence Video Production_Final |  | Current | 1489144435869483059 | #j26016_hsuhk-student-excellence-video-series |
+| J26027 | EMSD | EMSD 15th National Games for CS Outstanding Awards video production | NG15;全運會 | Current | 1501787539642650706 | #j26027_emsd_15th_national_game_for_cs_award |
 | J26047 | CLP | CLP Chat with Joe April 2026 |  | Current | 1491279980447928380 | #j26047-clp-chat-with-joe-apr |
 | J26053 | Buttons_BOC | button BOC Trendy Together 22 IG videos |  | Current | 1489112803397603348 | #j26053_button-boc-trendytogether-ig-reels |
-| J26057 | HKTB | HKTB Incentive Playbook all-in-one Fam video update |  | Current | 1493606268449984642 | #j26057_hktb_incentive_playbook_all-in-one_fam_video_update |
+| J26057 | HKTB | HKTB Incentive Playbook all-in-one Fam video update |  | Current | 1494549516337283154 | #j26057-hktb-incentive-playbook-all-in-one-fam-video-update |
 | J26060 | CLP | CLP Smart E animation |  | Current | 1493155958162198658 | #j26060-clp-smarte_animation |
 | J26062 | Orbis | Orbis Future Vision Leader and From Blur to Clear Campaign |  | Current | 1493117424201891952 | #j26062_orbis-future-vision-leader-and-from-blur-to-clear-campaign |
 | J26063 | EMSD | EMSD HKMA GWIN |  | Current | 1493811545497538560 | #j26063_emsd-hkma-gwin |
@@ -27,6 +28,7 @@
 | J26067 | EMSD | EMSD QUOHSD1KC20060046 好醫工大賽 | Best CE Award;好E工 | Current | 1500764253181972480 | #j26067_emsd_best_ce_award_competition_video |
 | J26069 | CLP | CLP MD aand COO speech event |  | Current | 1501043831829954570 | #j26069-clp-md-aand-coo-speech-event |
 | J26070 | EMSD | EMSD CCSD2026-19 Farewell party on May | Farewell event highlight shooting | Current | 1501043894433874120 | #j26070-emsd-ccsd2026-19-farewell-party-on-may |
+| J26077 | CLP | CLP Chat with Joe June 2026 | Joe Chat | Current | 1500803244144721970 | #j26077_chat_with_joe_ep_june |
 
 ---
 
