@@ -17,7 +17,7 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 
 ### Phase 2 — Push to Calendar
 **Trigger：** 用戶 confirm Phase 1 個文字版（「OK」/「push 啦」/「可以」）。
-**做：** Create events on dof.internal Calendar（`dof.internal@gmail.com`）。**唔重做 holiday / saturation check**——Phase 1 啱啱驗過，dates 已 locked。
+**做：** Phase 2 **開頭先**：對每個 cut delivery date（1st Cut / 2nd Cut / 3rd Cut / Picture Lock / Final Output）query Calendar 嗰日已有幾多 colorId 7+3 events。已有 ≥ 4 → surface warning + 暫停 push 等用戶決定（見 §5 Cut Delivery Saturation Check）；全部 clear → Create events on dof.internal Calendar（`dof.internal@gmail.com`）。
 **Output：** 一句 summary + 問 Phase 3：
 
 > ✅ [N] events pushed 到 Calendar。要唔要埋份 for-client Google Doc？（唔使就 done）
@@ -232,7 +232,7 @@ Shoot 喺 weekend / 假期比較常見（event coverage、wedding、客戶 site 
 - 已有 **≥ 4** → trigger warning + 建議 push 後 1 日（preferred）
 - 詳細 escalation logic 見下面 **Calendar Integration → Cut Delivery Saturation Check**
 
-呢個 check 喺 standalone calendar ops 同 timeline generation 都 mandatory。
+呢個 check 喺 standalone calendar ops 同 **timeline Phase 2** 都 mandatory（timeline Phase 1 唔跑，見 §3 Pre-step E）。
 
 **Saturation threshold reasoning：** Post team 交片嗰日要等導演 review + cross-check 改嘢 + 即時 turnaround client feedback。四條已係邊緣，第五條落去就冇 buffer 走盞。
 
@@ -366,8 +366,8 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 - Calendar event：multi-day all-day event，`end.date` 係 exclusive（length 2 wd → `end.date = start.date + 2 wd + 1 day`）
 - Event title：`(2 Days) VO Recording - [Project]`
 
-**Pre-step E（必須做）：Cut Delivery Saturation Check**
-計完每個 cut delivery 嘅 target date → run Saturation Check（見下面 Calendar Integration section）。撞 saturation → 唔好直接 generate，先 propose date push + 等用戶 confirm。
+**Pre-step E（Phase 1 skip — Phase 2 開頭做）：Cut Delivery Saturation Check**
+Phase 1 只做文字 draft，dates 未 confirm，saturation check 無 actionable value——**唔跑**。Phase 2 用戶 confirm 後、push Calendar 之前先執行（見 §0 Phase 2 Flow + §5 Cut Delivery Saturation Check）。
 
 **Pre-step F（必須做）：Pre-flight Self-Check**
 
@@ -384,7 +384,7 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 ☐ VO Recording 係咪 multi-day window？Window start = PicLock + 1 wd, length = 2 wd, end ≤ Final Output - 2 wd?
 ☐ Submit Video Flow / Submit Graphics Ref 係咪 separate row？Script Lock / Confirm Graphics Ref 同樣？
 ☐ Color/Sound/Subtitle row 喺 doc 入面有冇保留？
-☐ Cut delivery saturation check 我有冇 run？
+☐ Saturation check 留返 Phase 2 做——Phase 1 唔跑（見 Pre-step E）
 ☐ Preview 嘅 milestone list 同 Calendar push list 係咪 1:1？
 ☐ Doc template 嘅 row 同 preview / Calendar 係咪 1:1？
 ☐ 任何 skip 咗嘅 milestone 我有冇喺 director discussion 講明？
@@ -550,7 +550,7 @@ Standard logic resolve 唔到 → **stop generation，直接 escalate**。唔好
 
 **重要：唔好幫用戶 lock date——只係 propose，最終決定喺人。**
 
-### Cut Delivery Saturation Check（每次 generate timeline 都要做，proactive）
+### Cut Delivery Saturation Check（**Phase 2 trigger，唔喺 Phase 1 跑**）
 
 **Saturation threshold：** 任何一日已有 **≥ 4 條片要交**（cut delivery colorId 7 + final output colorId 3 都計），嗰日就 saturated。
 
@@ -583,7 +583,7 @@ Standard logic resolve 唔到 → **stop generation，直接 escalate**。唔好
 
 **重要：**
 - Mugi **唔好擅自 push date**——永遠 propose + 等用戶 confirm
-- 呢個 check **每次都做**——first generation、Pattern F compression、Pattern I 加 cut、regenerate from revised schedule
+- 呢個 check **Phase 2 每次都做**——first generation confirm 後、Pattern F/I compression/加 cut confirm 後、用戶俾返 revised schedule 後
 
 ### Regenerate from Revised Schedule
 
