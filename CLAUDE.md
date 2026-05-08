@@ -569,6 +569,8 @@ User 喺 per-job channel interact 嗰陣，將 interaction summary append 去 `/
 
 **Channel match：** Current channel ID 對應 `context/job-list.md` Active Jobs table 一行 → 寫 per-job log。Match 唔到（DM / general / `#ai-agent` / no-channel-by-design jobs）→ 唔寫，照常規 user activity log。
 
+**Thread handling（重要）：** 如果 current location 係一個 thread（有 `parent_id` / parent channel），**用 parent channel ID 去 lookup `job-list.md`**，唔好用 thread 自己嘅 ID。Thread match 到 → 照樣寫入 parent 嘅 per-job file（即 `activity/jobs/<parent-channel-name>.md`），thread 內所有 iteration 都歸入同一個 job log。Entry 入面注明 thread name / topic（例：「— in thread: timeline-v2」）方便日後追溯。
+
 **Filename：** 取 `job-list.md` row 嘅 `Discord Channel Name` column verbatim，去掉開頭 `#`。例：`#j26016_hsuhk-student-excellence-video-series` → `j26016_hsuhk-student-excellence-video-series.md`。**唔做** underscore→hyphen / case normalization——Channel Name 本身點 spell 就點 spell。
 
 **File 唔存在 → scaffold：**
