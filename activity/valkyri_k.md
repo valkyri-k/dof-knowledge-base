@@ -42,13 +42,12 @@
 - **[2026-04-08] Planyway / Trello Timeline integration 方向** — 等 Kary 揀 3 條 propose 嘅方向（Trello 主控 / 雙向 push / on-demand mirror）；揀完先 set up Trello credentials + 寫 integration logic。Cross-ref: `activity/gap-log.md` 2026-04-08 entry
 - **[2026-04-08] `/home/node/activity.bak/` 刪除** — symlink fix 嘅 backup folder，留低等 Kary confirm 一切 stable 後刪。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 entry「activity/ path 雙位置 bug」
 - **[2026-04-08] Trello checklist member assignment（Storyboard card）** — board 冇 Advanced Checklists power-up，目前用 `@mention` fallback；等 Kary 揀 plan upgrade 定 default 轉做 split-cards approach。Cross-ref: `activity/gap-log.md` 14:23 entry
-- **[2026-04-08] Discord reply routing bug** — 答 trello rules question 嘅長 reply 寫咗喺 terminal 冇 send 出 Discord，user 等於收唔到。已 update memory `feedback_always_reply.md` 加 Rule 2「Discord in → Discord reply tool out, no exceptions」
 - **[2026-05-05] 好醫工大賽 cut milestones** — Calendar 只有 Shoot (Apr 27) + Final (May 11)，冇 1st Cut / 2nd Cut。Kary 被問係咪要補，未回應。待 Kary confirm 是否加入 milestones。（J26067）
 - **[2026-05-05] Smart E job status 未 clarify** — Kary 問 Smart E status，Mugi resolve 到 J26060 (CLP Smart E animation) + J26065 (CLP HKMA Smart E Living) 兩個 candidates，問 Kary 揀邊個，未回應。
-- **[2026-05-05] OCR dispatch dry-run pending（未 confirm）** — 圖片有 2 block：快問快答/J26066→Katy（Style frame / Title x1 / Name tag x3）+ 好E工/J26067→Sohling（Style frame / Title x1 / Divider x2）。Dry-run 已 send，Kary 喺 confirm 前 clear。下次 session 如要 dispatch 請重發圖或打字 trigger。
 - **[2026-04-08] J26053 BOC Trendy BTS mograph 未 assign** — 1st Cut BTS (4/23) + Final BTS (5/15) 兩張只 assign 咗 Yik 做 cut，graphics 邊個負責等 Kary x Sohling discussion 結果。BTS editor 都 default 咗 Yik 未確認
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
+- **[2026-05-08] J26071 Button InvestHK timeline Phase 1 pending** — Draft 已 send（8 milestones，1st Cut May 26 → Final Output Jun 12，2-cut Option B，有 VO window）。等 Kary confirm → Phase 2 Calendar push。
 
 ---
 
@@ -81,6 +80,13 @@
 主要 infra work：Kary 做 multi-channel dispatch test，先發現 channel 1489235328442302604 未 allowlist，Mugi 指示 Kary run `/discord:access group add`，加完即時 test 成功。之後 Kary 一次過 bulk add 14 條 channel（全部係 job-list 入面嘅 project channels），呢個係 production dispatch 功能嘅重要 milestone——Mugi 而家可以 push message 去任何 Current job 嘅 Discord channel。最後 Kary 叫 Mugi dispatch 提示去 J26065 CLP HKMA channel，confirm dispatch pipeline 端到端 work。
 
 **Decision**：Multi-channel dispatch 係今日嘅重要里程碑，job-list.md 入面所有有 channel ID 嘅 job 而家全部可以 dispatch。Bot 基礎設施由「單一 #ai-agent channel」擴展到「全 project channels 覆蓋」。
+
+### 2026-05-08 afternoon/evening session
+今日兩個主要 work streams：job-list 擴展 + J26071 timeline。Job-list 方面：手動 patch 咗 J26071 Button InvestHK（Channel ID 1502220628424396821，Kary 係 Director），之後 Kary 自己喺 Airtable 做咗更大幅度更新——加 Director column + sync 晒所有 Current jobs，仲加咗 J26027 / J26075 / J26077 三條新 job，job-list 由 16 → 19 條。Kary 查 Airtable API 可用性：Mugi 只有 authenticate tools，冇 read/query tools，capability gap logged。
+
+J26071 timeline：Kary 喺 #j26071 channel post 埋 client schedule（screenshot）+ 講明純後期、motion graphics + footage edit、無拍攝。OCR 攞到 client 嘅 phase dates，Final Output deadline = Jun 15。計算完：May 25 佛誕翌日係唯一假期影響排期；2-cut timeline（Option B）係唯一可以 hit Jun 15 deadline 嘅方案，3 cuts 最快都係 Jun 17+ miss deadline。Final Output = Jun 12，3 calendar day buffer。Saturation check 全 clear。Phase 1 draft sent，等 Kary confirm → push Calendar。
+
+OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 task list，第二輪加埋 "submit by Wed 6 May" reminder）——兩輪都加咗 TEST label，正常 flow 通。May 5 嘅 open thread（dry-run pending）resolved。
 
 ### 2026-04-12 afternoon session
 今日主要係 calendar timeline 查詢 + J26016 schedule 整理。Kary 要求列出 J26053 BOC Trendy Too 同 J26016 HSUHK Student Excellence 嘅 project timeline 文字版——兩個都搵到（BOC 17 events，HSUHK 12 events），順帶發現 HSUHK Final Output Apr 27 同 Batch 2 Shoot D2 撞日。跟住 Kary 要求：(1) 移除 Batch 1 post-pro 所有 (TBC)、(2) 按 Batch 1 間距規劃 Batch 2 post-pro。Plan 出咗但 Kary 喺 confirm 間距前 clear，所以執行部分留到下次 session。**Key decision**：HSUHK Final Output Apr 27 係 Batch 1 專屬；Batch 2 post-pro 需要包含 Client FB on 3rd Cut 先出 Final（Batch 1 呢步係 skip 咗），呢個係 Kary 明確糾正嘅 scheduling principle。
@@ -170,3 +176,11 @@
 | 2026-05-05 | Multi-channel dispatch round 2: Orbis remind Sohling find Kary + BOC assign Kary find Sohling | Sent to J26062 + J26053 ✅ |
 | 2026-05-05 | OCR dispatch v2 triggered (2-job image, 快問快答 + 好E工) | Declined x2 (old constraint) → Kary corrected skill file update → re-read → dry-run preview sent; pending confirm before clear |
 | 2026-05-05 | J26067 alias 「好E工」added to job-list.md | Commit 3b3ddcd ✅ |
+| 2026-05-05 | OCR dispatch v2 TEST round 1 (快問快答→Kay / 好E工→Sohling, TEST label) | Sent to J26066 + J26067 ✅ |
+| 2026-05-05 | OCR dispatch v2 TEST round 2 (same 2 blocks + "submit by Wed 6 May", TEST label) | Sent to J26066 + J26067 ✅ |
+| 2026-05-08 | Add J26071 Button InvestHK to job-list (Channel 1502220628424396821, Director: Kary) | Commit 351f9c0 ✅ |
+| 2026-05-08 | Query: job-list 有冇 Director column | 回覆冇，問係咪要加；Kary 自己 Airtable sync 更新 |
+| 2026-05-08 | Job-list Director column + J26027/J26075/J26077 added (Kary direct edit) | Acknowledged ✅ |
+| 2026-05-08 | Query: Airtable API 可用性 | 只有 auth tools，冇 read/query；gap logged |
+| 2026-05-08 | Hello in J26016 channel | Replied ✅ |
+| 2026-05-08 | J26071 timeline request (pure post, motion graphics + footage, VO, 15 Jun deadline) | Phase 1 draft sent: 8 milestones, 1st Cut May 26 → Final Output Jun 12, 2-cut Option B ✅ |

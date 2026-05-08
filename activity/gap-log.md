@@ -85,3 +85,9 @@ Mitigation deployed [[2026-04-26]]（commit `766cbc2`）：
 - End-of-turn self-check：每 turn 結束前驗證有無 send Discord message
 
 Status: open（mitigation deployed，等 follow-up incident 數據驗證）— 同步 logged 落 [007-agent-mugi backlog](file:///Users/kary/Library/Mobile%20Documents/iCloud~md~obsidian/Documents/DOF_Build/projects/007-agent-mugi/backlog/bugs/silent-no-discord-reply.md) bug file 做 vault-side tracking
+
+## [[2026-05-08]] ~10:15 — @valkyri_k
+Type: capability-gap
+Request: 直接 query Airtable Master Job Log（list current jobs、check status、讀 director / project name 等 fields）
+Gap: Mugi 嘅 Airtable MCP 只有 `authenticate` + `complete_authentication` 兩個 tools，冇 list / query / read tools。無法直接 pull Airtable 數據。目前唯一 source 係 `context/job-list.md` cache（手動 / n8n sync）。
+Status: open
