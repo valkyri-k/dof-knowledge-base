@@ -575,7 +575,7 @@ User 喺 per-job channel interact 嗰陣，將 interaction summary append 去 `/
 
 **Filename：** 取 `job-list.md` row 嘅 `Discord Channel Name` column verbatim，去掉開頭 `#`。例：`#j26016_hsuhk-student-excellence-video-series` → `j26016_hsuhk-student-excellence-video-series.md`。**唔做** underscore→hyphen / case normalization——Channel Name 本身點 spell 就點 spell。
 
-**File 唔存在 → scaffold：**
+**File 唔存在 → scaffold + 即場 append entry（atomic）：**
 
 ```markdown
 ---
@@ -597,7 +597,7 @@ last_updated: [[YYYY-MM-DD]]
 ## Interaction Log
 ```
 
-Frontmatter 全部 column 抄自 `job-list.md` row。Body 兩個 heading 起好就 append 第一個 entry。
+Frontmatter 全部 column 抄自 `job-list.md` row。**Scaffold 同第一個 entry 必須喺同一個 Write call 完成**——唔可以 create skeleton file 然後 leave `## Interaction Log` 空（否則睇似 Mugi 認到 job 但冇做嘢）。冇 entry 可以寫 → 唔好建 file，照寫 user activity log 就算。
 
 **Entry format：**
 
@@ -610,10 +610,9 @@ Frontmatter 全部 column 抄自 `job-list.md` row。Body 兩個 heading 起好�
 
 Cross-ref 如有相關 `gap-log.md` / `kary-dev-log.md` entry，加一行 `→ gap-log [[YYYY-MM-DD]] entry` / `→ dev-log [[YYYY-MM-DD]] entry`。
 
-**唔 log 嘅情況：**
-- 純 status query（「J26016 幾時交片？」）
-- Quick lookup / dispatch confirmation
-- Repeated noise
+**Log-worthiness（HARD RULE）：** 喺 thread / per-job channel **每一次同 user 嘅互動**都要 append 一行 Interaction Log entry——包括 identification reply（「呢個係 J26071」）、status query reply、quick lookup、dispatch confirmation。短互動寫短 entry（一句 Kary 問 + 一句 Mugi 答，Followup omit），但**唔可以唔寫**。完整 audit trail > log 簡潔。
+
+唯一例外：repeated noise（同一 thread 連續 2+ 條完全相同 query），可以 collapse 成一行「× N 次」。
 
 **唔即時 push：** Per-job log 嘅 `git add` + `commit` + `push` 跟 user activity log 一齊喺 **Pre-Clear Sequence** single commit 處理（同 `kary-dev-log.md` / `gap-log.md` 一個 commit）。每次 interact 唔即時 push。
 
