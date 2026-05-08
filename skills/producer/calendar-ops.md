@@ -131,18 +131,25 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 
 ## colorId Quick Reference
 
-> Authoritative source（含 keyword matching）：`context/calendar-operations-guide.md`。呢度係 quick lookup。
+| 類別 | 包含嘅 Milestones | colorId | 顏色 |
+|------|-------------------|---------|------|
+| Pre-Production (DOF deliverable) | Script Received, Submit Video Flow, Submit Graphics Reference | `"5"` | Banana（黃色）|
+| Style Frame submit | Submit Style Frame | `"9"` | Blueberry（深藍色）|
+| Client Review | Script Lock, Confirm Graphics Ref, Confirm Style Frame, Client FB 1/2/3 | `"2"` | Sage（綠色）|
+| Shooting | Shooting（single or multi-day）| `"11"` | Tomato（紅色）|
+| Post-Production | 1st Cut, 2nd Cut, 3rd Cut, Picture Lock, Color/Sound/Subtitle | `"7"` | Peacock（淺藍色）|
+| VO Recording | VO Recording window | `"1"` | Lavender（薰衣草紫）|
+| Final Output | Final Output | `"3"` | Grape（葡萄紫）|
+| 其他 | Site Recce, Wardrobe Fitting 等 | `"5"` | Banana（fallback）|
 
-| 顏色 | colorId | 用途 |
-|------|---------|------|
-| Banana（黃） | `"5"` | Script Received、Submit Video Flow、Submit Graphics Ref |
-| Blueberry（深藍） | `"9"` | Submit Style Frame |
-| Tomato（紅） | `"11"` | Shooting Day(s) |
-| Peacock（淺藍） | `"7"` | 1st / 2nd / 3rd Cut、Picture Lock |
-| Sage（綠） | `"2"` | Script Lock、Confirm Graphics Ref、Confirm Style Frame、Client FB 1/2/3 |
-| Lavender（薰衣草紫） | `"1"` | VO Recording window |
-| Grape（葡萄紫） | `"3"` | Final Output |
-| Banana（黃）fallback | `"5"` | 其他（Site Recce、Wardrobe Fitting 等） |
+**判斷關鍵詞：**
+- 「拍攝」「shoot」「shooting」→ `"11"`
+- 「1st cut」「2nd cut」「3rd cut」「picture lock」「color」「sound mix」「subtitle」→ `"7"`
+- 「script lock」「confirm video flow」「confirm graphics」「confirm style」「client feedback」「FB1」「FB2」「FB3」→ `"2"`
+- 「style frame」「submit style」→ `"9"`
+- 「final output」「交片」「出片」→ `"3"`
+- 「VO」「配音」「voice over」→ `"1"`
+- 「script received」「video flow」「graphics ref」→ `"5"`
 
 **技術注意：**
 - colorId 係 string（`"7"`，唔係 `7`）

@@ -1,8 +1,17 @@
 # Calendar Operations Guide（Mugi 操作手冊）
 
-呢份係 Mugi 操作 Google Calendar 嘅完整 reference。所有 Calendar 操作都要跟呢度嘅規則。
+> ⚠️ **Scope 更新（2026-05-09）**
+>
+> `producer-playbook.md` 已經自給自足——HK Holidays query、Standard Milestone Set、colorId mapping、Pre-Pro Chain Logic 全部已 inline 入 playbook。
+>
+> **呢份 file 唔再俾 timeline generation（Phase 1+2）load。** 依家嘅用途係：
+> - Standalone calendar ops（Search / Update / Batch / Add / TBC handling）嘅操作參考
+> - `calendar-ops.md` skill 嘅 supplementary reference
+>
+> Audit backlog item：`projects/007-agent-mugi/backlog/ideas/audit-calendar-operations-guide-redundancy.md`
+> — 確認冇 active reference 後考慮 slim down 或 archive。
 
-**呢個 file 亦同時係 Standard Milestone Set 嘅 single source of truth。** CLAUDE.md 嘅 Document Generation → Milestone Completeness Rule section reference 呢度，唔好喺兩個地方分別維護 milestone list。
+呢份係 Mugi 操作 Google Calendar 嘅完整 reference。
 
 ---
 

@@ -38,34 +38,93 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 
 ---
 
-## 1. High-Level Milestone Shape（Quick Recap）
+## 1. Standard Milestone Set（Single Source of Truth）
 
-> **Authoritative source（含 colorId mapping + 每個 milestone 嘅日期計算規則）：`context/calendar-operations-guide.md` Standard Milestone Set section。**
-> 呢度係 quick recall only——generate 之前必須 read authoritative source，唔好憑呢段記憶 enumerate。
+呢個係**完整 timeline 入面所有 milestones 嘅 canonical list**。Mugi 生成 timeline 時逐個 enumerate，唔可以揈做 date range，唔可以 silent 噉漏 push 邊個。
 
+### Pre-Production
+
+每個都係**獨立 row + 獨立 calendar event**，即使有啲 default 同一日 schedule（Submit Video Flow + Submit Graphics Ref；Script Lock + Confirm Graphics Ref）。
+
+| # | Milestone | Calendar Title | Party | colorId | 由 previous milestone 算起 |
+|---|-----------|---------------|-------|---------|---------------------------|
+| 1 | Script Received | `Script Received - [Project]` | Client | 5 (Banana) | T0 anchor — client share script / materials 嘅日子 |
+| 2 | Submit Video Flow | `Submit Video Flow - [Project]` | DOF | 5 (Banana) | **+5–6 wd from #1**（standard）/ +3–4 wd（compressed） |
+| 3 | Submit Graphics Reference | `Submit Graphics Ref - [Project]` | DOF | 5 (Banana) | **Same day as #2**（default） |
+| 4 | Script Lock | `Script Lock - [Project]` | Client | 2 (Sage) | **+5 wd from #2**（client review，可能涉及 senior approval）/ +3 wd min |
+| 5 | Confirm Graphics Reference | `Confirm Graphics Ref - [Project]` | Client | 2 (Sage) | **Same day as #4**（default）/ 可以 propose 提早 |
+| 6 | Submit Style Frame | `Submit Style Frame - [Project]` | DOF | 9 (Blueberry) | **+2–3 wd from #5** / +1 wd min — **only if project 有 style frame chain** |
+| 7 | Confirm Style Frame | `Confirm Style Frame - [Project]` | Client | 2 (Sage) | **+1–2 wd from #6** / +1 wd min — same condition as #6 |
+
+### Shooting
+
+| # | Milestone | Calendar Title | Party | colorId | Notes |
+|---|-----------|---------------|-------|---------|-------|
+| 8 | Shooting | `([N] Days) Shooting - [Project]` | Both | 11 (Tomato) | Multi-day shoot 用一個 multi-day all-day event。Working Day Cross Check **exempt**。 |
+
+**Pre-Pro → Shoot 最關鍵 dependency：**
+Shoot date − Script Lock (#4) = **standard 7 wd / minimum 3 wd**
+
+Mugi 通常由 shoot date **back-calculate** pre-pro chain：
 ```
-Pre-Pro:
-  Script Received (T0)
-  → Submit Video Flow + Submit Graphics Ref（同日，T0 + 5–6 wd standard / 3–4 wd compressed）
-  → Script Lock + Confirm Graphics Ref（同日，Submit + 5 wd）
-  → Submit Style Frame
-  → Confirm Style Frame
-
-Shooting:
-  Single multi-day event（Script Lock + 7 wd standard / 3 wd min）
-
-Post-Pro:
-  1st Cut → Client FB 1 → 2nd Cut → Client FB 2 → [3rd Cut → Client FB 3 optional] → Picture Lock
-
-Delivery:
-  VO Recording window（PicLock + 1 wd start, 2 wd length, end ≤ Final Output - 2 wd）
-  Color/Sound/Subtitle（doc-only，Calendar 唔 push）
-  Final Output
+Shoot date
+  ↓ -7 wd standard / -3 wd min
+Script Lock (#4)
+  ↓ -5 wd standard / -3 wd min
+Submit Video Flow (#2)
+  ↓ -5~6 wd standard / -3~4 wd min
+Script Received (#1, T0)
 ```
+Standard pre-pro total：T0 → Shoot ≈ **17–18 wd (~3.5 週)**
+Compressed pre-pro total：T0 → Shoot ≈ **9–10 wd (~2 週)**
+
+### Post-Production
+
+| # | Milestone | Calendar Title | Party | colorId | 由 previous 算起 |
+|---|-----------|---------------|-------|---------|----------------|
+| 9 | Submit 1st Cut | `1st Cut - [Project]` | DOF | 7 (Peacock) | **Shoot + 5 wd** / +4 wd min |
+| 10 | Feedback on 1st Cut | `Client FB 1 - [Project]` | Client | 2 (Sage) | **#9 + 3 wd** / +1 wd min |
+| 11 | Submit 2nd Cut | `2nd Cut - [Project]` | DOF | 7 (Peacock) | **#10 + 3–5 wd** / +3 wd min |
+| 12 | Feedback on 2nd Cut | `Client FB 2 - [Project]` | Client | 2 (Sage) | **#11 + 3 wd** / +1 wd min |
+| 13 | Submit 3rd Cut（optional）| `3rd Cut - [Project]` | DOF | 7 (Peacock) | **#12 + 3 wd** / +2 wd min |
+| 14 | Feedback on 3rd Cut（optional）| `Client FB 3 - [Project]` | Client | 2 (Sage) | **#13 + 3 wd** / +1 wd min |
+| 15 | Picture Lock | `Picture Lock - [Project]` | Both | 7 (Peacock) | #14 approve（or #12 if Option B skip 咗 #13/#14） |
+
+### Delivery
+
+| # | Milestone | Calendar Title | Party | colorId | 點計 |
+|---|-----------|---------------|-------|---------|------|
+| 16 | VO Recording (window) | `([N] Days) VO Recording - [Project]` | DOF | 1 (Lavender) | **Window**：開始 = #15 + 1 wd；長度 = 2 wd；結束 ≤ #18 - 2 wd。**Optional**——冇 VO recording / 用 AI VO 就 skip |
+| 17 | Color, Sound Mixing, Subtitle | `Color/Sound/Subtitle - [Project]` | DOF | 7 (Peacock) | **#16 window 結束之後 +1 wd**（如冇 VO 就 #15 + 1 wd）。Doc 必須保留，Calendar 亦 push |
+| 18 | Final Output | `Final Output - [Project]` | DOF | 3 (Grape) | **#17 + 1 wd** |
+
+### VO Recording Window 詳細 logic
+
+**VO recording 唔可以單日 schedule。**
+
+| Field | Logic |
+|-------|-------|
+| Window 開始 | Picture Lock + 1 wd |
+| Window 長度 | 2 wd（standard） |
+| Latest end | Final Output - 2 wd |
+| Working day cross check | Window 入面每一日都唔可以撞 weekend / public holiday。任一日撞 → shift 整個 window 後；後面頂唔順 → shift 前；都唔得 → @Sohling |
+| Preview + doc display 格式 | Date column: `May 21–22`；Day column: `Thu–Fri` |
+| Calendar push | 一個 multi-day all-day event（`end.date` = 最後一日 + 1，end exclusive），colorId `1` |
+
+### Pre-Pro Chain Reasoning
+
+Mugi explain 俾導演聽**點解某個 milestone 排嗰日**：
+
+- **Script Received → Submit Video Flow（5–6 wd）：** DOF 需要時間將 script breakdown 成 visual treatment + graphic reference。Compressed 可收縮至 3–4 wd 但唔建議。
+- **Submit Video Flow → Script Lock（5 wd）：** Client 通常要做 internal review，可能涉及 senior approval。Compressed min 3 wd。
+- **Script Lock → Shoot（7 wd standard / 3 wd min）：** Props、location confirm、crew briefing、shotlist finalize。壓縮到 3 wd 會影響 prep quality。
+- **Graphics Ref bundle with Video Flow：** Default 同日 submit + 同日 confirm，費事 client 分開 approve。Calendar 入面係獨立 events——post team（Keith、Max、Kay）需要分開 track。
+
+**Script Lock 嘅 semantics：** Script Lock = Confirm Video Flow（同一回事，一個 milestone）。Script 至少 90% firm，之後「飛紙仔」係允許的但唔影響 structure。
 
 **Submit / Confirm bundling rule：**
 - Client-facing：同日 submit / 同日 confirm（兩對各一日）
-- Calendar：4 separate events（surgical unbundle — post team 將來可能要分開 track）
+- Calendar：4 separate events
 - Doc / preview：4 independent rows
 
 ---
@@ -91,7 +150,34 @@ Delivery:
 
 Apply 喺**所有非 shooting milestone**：Script Lock、Submit / Confirm Video Flow、Submit / Confirm Graphics Ref、Style Frame Submit / Confirm、1st / 2nd / 3rd Cut、Client FB 1/2/3、Picture Lock、VO Recording window、Color/Sound/Subtitle、Final Output。
 
-**HK Public Holiday fetch：** 任何 calendar planning 開始之前，先一次過 fetch 整個 planning range 嘅 HK public holidays（standard query 見 `context/calendar-operations-guide.md`），cache 落 in-memory set，之後每個 candidate date 對住個 set check。**唔好假設「下個月應該冇 holiday」就 skip fetch**——會撞 Buddha's Birthday、勞動節翌日、清明、重陽呢類用戶日常未必 top-of-mind 嘅 holiday。
+**HK Public Holiday fetch：** 任何 calendar planning 開始之前，先一次過 fetch 整個 planning range 嘅 HK public holidays，cache 落 in-memory set，之後每個 candidate date 對住個 set check。**唔好假設「下個月應該冇 holiday」就 skip fetch**——會撞 Buddha's Birthday、勞動節翌日、清明、重陽呢類用戶日常未必 top-of-mind 嘅 holiday。
+
+```python
+# Fetch HK public holidays for the planning range
+holidays_resp = service.events().list(
+    calendarId='en.hk#holiday@group.v.calendar.google.com',
+    timeMin=range_start.isoformat() + 'T00:00:00Z',
+    timeMax=range_end.isoformat() + 'T00:00:00Z',
+    singleEvents=True,
+    orderBy='startTime'
+).execute()
+
+holiday_dates = {
+    e['start']['date']  # YYYY-MM-DD format
+    for e in holidays_resp.get('items', [])
+    if 'date' in e.get('start', {})
+}
+
+holiday_names_by_date = {
+    e['start']['date']: e.get('summary', 'Public Holiday')
+    for e in holidays_resp.get('items', [])
+    if 'date' in e.get('start', {})
+}
+```
+
+**同一個 conversation 共用同一個 `holiday_dates` set**——唔好對每個 milestone 重新 fetch。一次過 fetch 整個 planning range（今日 → 今日 + 60 wd），cache 用到 planning session 完。
+
+**如果 fetch 失敗：** 明顯 surface 俾用戶知：「⚠️ 我 fetch HK public holiday calendar 嗰陣 fail 咗 — 我會繼續 plan timeline，但**請你自己 double check 有冇 milestone 撞到 public holiday**。HK public holiday 通常包括：農曆新年、清明、復活節、勞動節、佛誕、端午、七一、中秋、國慶、重陽、聖誕。」
 
 ### Rule 2: Weekend / Holiday Cross Check
 
@@ -141,7 +227,7 @@ Shoot 喺 weekend / 假期比較常見（event coverage、wedding、客戶 site 
 ### Standalone Calendar Ops — Specific Flow
 
 **Pre-step（任何 calendar op 之前做一次）：**
-Fetch HK public holidays for the planning range（用 calendar-operations-guide.md 嘅 query），cache in-memory。
+Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Python query），cache in-memory。
 
 **Add event：**
 1. Echo 要 add 嘅 event（name / date / colorId）等用戶 confirm
@@ -237,10 +323,10 @@ Fetch HK public holidays for the planning range（用 calendar-operations-guide.
 ### Step 4: Generate（Two-Phase Document）
 
 **Pre-step A（必須做）：Fetch HK Public Holidays**
-開始 enumerate 之前，先 fetch 整個 planning range 嘅 HK public holidays（用 `en.hk#holiday@group.v.calendar.google.com` calendar，standard query 喺 `context/calendar-operations-guide.md` → HK Public Holidays Reference）。攞返 `holiday_dates` set + `holiday_names_by_date` map，cache in-memory。
+開始 enumerate 之前，先 fetch 整個 planning range 嘅 HK public holidays（用 §2 Rule 1 嘅 standard Python query）。攞返 `holiday_dates` set + `holiday_names_by_date` map，cache in-memory。
 
 **Pre-step B（必須做）：Enumerate Milestone List**
-跟 `context/calendar-operations-guide.md` Standard Milestone Set，逐個列出所有 milestones。每個 milestone 有獨立日期、獨立 colorId、獨立 row。**唔可以揈做 date range，唔可以默默 drop pre-pro。**
+跟 §1 Standard Milestone Set，逐個列出所有 milestones。每個 milestone 有獨立日期、獨立 colorId、獨立 row。**唔可以揈做 date range，唔可以默默 drop pre-pro。**
 
 **Pre-step C（必須做）：Holiday + Weekend Cross Check**
 對每個非 shooting milestone 嘅 candidate date 對住 weekday rule + holiday set check。任何一個 hit weekend / holiday → 自動 push 去下一個 weekday + non-holiday，cascade 後續 milestone 同步調整。Surface 俾用戶睇 push 咗咩。
@@ -589,26 +675,35 @@ docs_service.documents().batchUpdate(
 → 搵到受影響嘅 events → 列出新日期 → 等用戶 confirm → Batch update
 
 **「1st Cut 之後幾耐先有 2nd Cut？」**
-→ 用 `context/production-pipeline.md` 標準工時：Client FB 3 wd + 2nd Cut 3–5 wd = 大約 6–8 working days
+→ 標準工時：Client FB 1 = 3 wd + 2nd Cut 3–5 wd = 大約 **6–8 working days**（見 §1 Standard Milestone Set）
 
 ---
 
-## 10. colorId Quick Reference
+## 10. colorId Reference（Authoritative）
 
-> **Authoritative source（含 keyword matching logic）：`context/calendar-operations-guide.md` colorId mapping section。** 呢度只係 quick lookup，兩邊有出入以 calendar-operations-guide.md 為準。
+| 類別 | 包含嘅 Milestones | colorId | 顏色 |
+|------|-------------------|---------|------|
+| Pre-Production (DOF deliverable) | Script Received, Submit Video Flow, Submit Graphics Reference | `5` | Banana（黃色）|
+| Style Frame submit | Submit Style Frame | `9` | Blueberry（深藍色）|
+| Client Review | Script Lock (= Confirm Video Flow), Confirm Graphics Reference, Confirm Style Frame, Client FB 1, Client FB 2, Client FB 3 | `2` | Sage（綠色）|
+| Shooting | Shooting（single or multi-day range）| `11` | Tomato（紅色）|
+| Post-Production | 1st Cut, 2nd Cut, 3rd Cut, Picture Lock, Color/Sound/Subtitle | `7` | Peacock（淺藍色）|
+| VO Recording | VO Recording window | `1` | Lavender（薰衣草紫）|
+| Final Output | Final Output | `3` | Grape（葡萄紫）|
+| 其他 | Site Recce, Wardrobe Fitting 等 | `5` | Banana（fallback）|
 
-| 顏色 | colorId | 用途 |
-|------|---------|------|
-| Banana（黃） | "5" | Script Received、Submit Video Flow、Submit Graphics Ref（DOF deliverable anchor） |
-| Blueberry（深藍） | "9" | Submit Style Frame |
-| Tomato（紅） | "11" | Shooting Day(s) |
-| Peacock（淺藍） | "7" | 1st / 2nd / 3rd Cut、Picture Lock（post-pro cuts） |
-| Sage（綠） | "2" | Script Lock、Confirm Graphics Ref、Confirm Style Frame、Client FB 1/2/3（client-action） |
-| Lavender（薰衣草紫） | "1" | VO Recording window |
-| Grape（葡萄紫） | "3" | Final Output |
-| Banana（黃）fallback | "5" | 其他 milestone（Site Recce、Wardrobe Fitting 等） |
+### 判斷關鍵詞（Search Calendar event 時識別 type）
+
+- 「拍攝」「shoot」「shooting」→ colorId: `11`
+- 「1st cut」「2nd cut」「3rd cut」「picture lock」「color grading」「sound mix」「subtitle」→ colorId: `7`
+- 「script lock」「confirm video flow」「confirm graphics ref」「confirm style」「client feedback」「FB1」「FB2」「FB3」→ colorId: `2`（client 做嘅嘢）
+- 「style frame」「submit style」→ colorId: `9`
+- 「final output」「交片」「出片」→ colorId: `3`
+- 「VO」「配音」「voice over」→ colorId: `1`
+- 「script received」「video flow」「graphics ref」「graphics reference」→ colorId: `5`
 
 **技術注意：**
 - colorId 係 string（`"7"`，唔係 `7`）
-- 所有 event 預設 all-day（用 `date`，唔係 `dateTime`）
+- 所有 single-day event 預設 all-day（用 `date`，唔係 `dateTime`）
+- Range event（Shooting / VO Window）：multi-day all-day，`end.date` = 最後一日 + 1（API end exclusive）
 - Timezone: `Asia/Hong_Kong`

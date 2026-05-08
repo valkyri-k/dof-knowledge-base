@@ -311,7 +311,7 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 | Client feedback 點處理 | `context/client-feedback-workflow.md` |
 | Job number 點嚟、status 點轉、Monday Standup | `context/job-lifecycle.md` |
 | Calendar event 命名、milestone、TBC 處理 | `context/naming-conventions.md` |
-| Calendar 操作規則、search/update/batch/add、colorId mapping | `context/calendar-operations-guide.md` |
+| Calendar standalone ops 詳細規則（search/update/batch/add、TBC events） | `context/calendar-operations-guide.md` |
 | 用咩工具、Discord 規則、Internal tools 關係 | `context/tools.md` |
 | Active job lookup（J#、client、project name、alias、Discord channel mapping）| `context/job-list.md` |
 
