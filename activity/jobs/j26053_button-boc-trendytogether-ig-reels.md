@@ -15,3 +15,7 @@ last_updated: [[2026-05-09]]
 <!-- Reserved for Master Job Log integration. 暫時留空，唔寫。 -->
 
 ## Interaction Log
+
+### [[2026-05-09]] early morning — Calendar adds (3rd Cut + Cover Design)
+- **Kary 問**：Add 3rd Cut (#1) May 11 + (#2) May 12（via home base channel）；add Cover Design (#1 & 2) May 11（via J26053 channel）。
+- **Mugi 做**：Created all 3 events ✅。Cover Design 初用 Banana，Kary 即時 correct → Blueberry (colorId 9)，已更正。Design deliverable color rule 固定落 memory。

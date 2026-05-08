@@ -47,7 +47,6 @@
 - **[2026-04-08] J26053 BOC Trendy BTS mograph 未 assign** — 1st Cut BTS (4/23) + Final BTS (5/15) 兩張只 assign 咗 Yik 做 cut，graphics 邊個負責等 Kary x Sohling discussion 結果。BTS editor 都 default 咗 Yik 未確認
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
-- **[2026-05-08] J26071 Button InvestHK timeline Phase 1 pending** — Draft 已 send（8 milestones，1st Cut May 26 → Final Output Jun 12，2-cut Option B，有 VO window）。等 Kary confirm → Phase 2 Calendar push。
 
 ---
 
@@ -80,6 +79,17 @@
 主要 infra work：Kary 做 multi-channel dispatch test，先發現 channel 1489235328442302604 未 allowlist，Mugi 指示 Kary run `/discord:access group add`，加完即時 test 成功。之後 Kary 一次過 bulk add 14 條 channel（全部係 job-list 入面嘅 project channels），呢個係 production dispatch 功能嘅重要 milestone——Mugi 而家可以 push message 去任何 Current job 嘅 Discord channel。最後 Kary 叫 Mugi dispatch 提示去 J26065 CLP HKMA channel，confirm dispatch pipeline 端到端 work。
 
 **Decision**：Multi-channel dispatch 係今日嘅重要里程碑，job-list.md 入面所有有 channel ID 嘅 job 而家全部可以 dispatch。Bot 基礎設施由「單一 #ai-agent channel」擴展到「全 project channels 覆蓋」。
+
+### 2026-05-09 early morning session
+主力係 J26071 Button InvestHK timeline full planning + J26053 BOC Trendy Together calendar add-ons。
+
+J26071 方面：Kary post 咗 client schedule screenshot（pure post, motion graphics + footage, 1.5-2min, VO）。Phase 1 draft 係 8-milestone post-pro timeline（1st Cut May 26 → FO Jun 12，2-cut）。之後 Kary 大幅修訂：加入自訂 pre-pro milestones（Submit Script & STB May 14、Script Lock May 15）、Rough Cut（May 20）、兩個 client meeting events（May 11、May 13）、[16:9] cutdowns（Jun 18、Jun 26 TBC）、Submit Project Files SSD（Jun 30）——共 16 milestones。VO 做 Jun 10-11 multi-day event with "(1 Day)" remark。除 Final Output + SSD 外全部加 (TBC) prefix。Flag 咗 Jun 19 端午節（[16:9] 1st Cut 改去 Jun 18）。全部 16 events 一次過 push ✅。
+
+J26053 方面：加 3rd Cut (#1) May 11 + (#2) May 12。另外喺 J26053 channel 加 Cover Design (#1 & 2) May 11——初次用 Banana (colorId 5)，Kary 即時 correct：Design 類應跟 Style Frame 用 Blueberry (colorId 9)。已更正並記入 memory。
+
+**Key learning**：Design 類 deliverable → colorId 9 (Blueberry)，唔係 Banana。呢個係 Mugi 之前唔清楚嘅 color rule，而家固定落 memory。
+
+**CLAUDE.md update（Kary 做）**：Per-job log 加咗 "Log-worthiness HARD RULE"——每一次互動（包括 identification reply、quick lookup）都要寫 entry，唔可以 skip。
 
 ### 2026-05-08 afternoon/evening session
 今日兩個主要 work streams：job-list 擴展 + J26071 timeline。Job-list 方面：手動 patch 咗 J26071 Button InvestHK（Channel ID 1502220628424396821，Kary 係 Director），之後 Kary 自己喺 Airtable 做咗更大幅度更新——加 Director column + sync 晒所有 Current jobs，仲加咗 J26027 / J26075 / J26077 三條新 job，job-list 由 16 → 19 條。Kary 查 Airtable API 可用性：Mugi 只有 authenticate tools，冇 read/query tools，capability gap logged。
@@ -184,3 +194,7 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-08 | Query: Airtable API 可用性 | 只有 auth tools，冇 read/query；gap logged |
 | 2026-05-08 | Hello in J26016 channel | Replied ✅ |
 | 2026-05-08 | J26071 timeline request (pure post, motion graphics + footage, VO, 15 Jun deadline) | Phase 1 draft sent: 8 milestones, 1st Cut May 26 → Final Output Jun 12, 2-cut Option B ✅ |
+| 2026-05-09 | J26071 + J26062 job lookup queries | Answered both ✅ |
+| 2026-05-09 | J26071 full timeline: 16 events incl. pre-pro, Rough Cut, client meetings, [16:9] cutdowns, SSD | All 16 pushed ✅ (May 11–Jun 30); flagged Jun 19 holiday → Jun 18 |
+| 2026-05-09 | J26053 add 3rd Cut (#1) May 11 + (#2) May 12 | Created ✅ |
+| 2026-05-09 | J26053 add Cover Design (#1 & 2) May 11 (wrong color Banana → corrected to Blueberry) | Created + colorId corrected ✅; Design color rule saved to memory |
