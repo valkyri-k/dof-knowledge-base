@@ -2,7 +2,7 @@
 
 > Source of truth: Airtable Master Job Log (base `appld5YU1iZm3Hx5F`, table `Projects`)
 > Scope: `status = Current` only（active production jobs）
-> Last synced: 2026-05-07（Stage 0 manual bootstrap — Claude Code + Airtable MCP）
+> Last synced: 2026-05-08（manual patch — J26071 added）
 > Sync mechanism: Stage 1 (n8n auto-sync) 待實作。期間如有新 Current job，手動 trigger re-sync 或 patch 此 file。
 
 ---
@@ -28,6 +28,7 @@
 | J26067 | EMSD | EMSD QUOHSD1KC20060046 好醫工大賽 | Best CE Award;好E工 | Current | 1500764253181972480 | #j26067_emsd_best_ce_award_competition_video |
 | J26069 | CLP | CLP MD aand COO speech event |  | Current | 1501043831829954570 | #j26069-clp-md-aand-coo-speech-event |
 | J26070 | EMSD | EMSD CCSD2026-19 Farewell party on May | Farewell event highlight shooting | Current | 1501043894433874120 | #j26070-emsd-ccsd2026-19-farewell-party-on-may |
+| J26071 | Buttons_InvestHK | Button InvestHK Motion graphic videos production |  | Current | 1502220628424396821 | #j26071-button-investhk-motion-graphic-videos |
 | J26077 | CLP | CLP Chat with Joe June 2026 | Joe Chat | Current | 1500803244144721970 | #j26077_chat_with_joe_ep_june |
 
 ---
