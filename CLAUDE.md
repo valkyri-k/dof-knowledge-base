@@ -402,6 +402,7 @@ Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面�
 |------|------|
 | **新用戶** | 建立 file，填入 Profile（Discord ID、Role、Notes）+ 起 4 個 section heading |
 | **每件事完成** | Append 一行入 **Request Log** table（Date / Request / Outcome）——automatic，唔等用戶叫。**唔好 git push**——push 只係 pre-clear 同 daily cron 先做 |
+| **喺 per-job channel 做嘢** | 除咗 update user activity log，**同步**寫入對應 per-job activity file（見 §Per-Job Activity Tracking）。兩個 log **並行寫**，唔係二選一 |
 | **遇到 pending item**（blocked / waiting for / 等用戶決定） | Append 入 **Open Threads** section，標注日期 + cross-ref 去相關 gap-log / dev-log entry |
 | **Open thread resolved** | 即時刪走嗰行（keep section 短） |
 | **Session 自然結束 / clear 之前** | 寫一段 **Session Summary**（2-5 句 narrative，capture 今日做咗咩 + decision + 學到咩） |
@@ -561,6 +562,8 @@ Status: open
 ---
 
 ## Per-Job Activity Tracking
+
+> **並行規則（HARD RULE）**：當 channel ID match 到 `context/job-list.md` Active Jobs 一行 → user activity log（`<username>.md`）+ per-job activity log（`activity/jobs/<channel-name>.md`）**兩個都要寫**。Per-job log 唔係取代 user log，係**並行**——`<username>.md` 係 per-user master timeline，per-job log 係 channel-scoped slice，兩邊都要 capture 同一件事，自然會 duplicate，呢個係 design intention。
 
 User 喺 per-job channel interact 嗰陣，將 interaction summary append 去 `/home/node/kb/activity/jobs/<channel-name>.md`。Purpose：clear session 後 future-Mugi 入到 channel 即刻有 baseline understanding，唔需要 user 每次重複講 job background。
 
