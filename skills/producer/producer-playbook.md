@@ -35,6 +35,7 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 - ❌ Phase 2 完 auto-gen doc（問先，冇得假設）
 - ❌ Phase 3 時重跑 Pre-step A–G（dates 已 committed，重跑係 wasted token）
 - ❌ Phase 3 時再 flag Pattern A–J（dates 已 lock，flag 無 actionable value）
+- ❌ Phase 1 同時跑多個 scenario Python script（standard + compressed 並列計）—— Single-Scenario Rule，見 §1 Compression Rules
 
 ---
 
@@ -49,12 +50,12 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 | # | Milestone | Calendar Title | Party | colorId | 由 previous milestone 算起 |
 |---|-----------|---------------|-------|---------|---------------------------|
 | 1 | Script Received | `Script Received - [Project]` | Client | 5 (Banana) | T0 anchor — client share script / materials 嘅日子 |
-| 2 | Submit Video Flow | `Submit Video Flow - [Project]` | DOF | 5 (Banana) | **+5–6 wd from #1**（standard）/ +3–4 wd（compressed） |
+| 2 | Submit Video Flow | `Submit Video Flow - [Project]` | DOF | 5 (Banana) | **+5–6 wd from #1** |
 | 3 | Submit Graphics Reference | `Submit Graphics Ref - [Project]` | DOF | 5 (Banana) | **Same day as #2**（default） |
-| 4 | Script Lock | `Script Lock - [Project]` | Client | 2 (Sage) | **+5 wd from #2**（client review，可能涉及 senior approval）/ +3 wd min |
+| 4 | Script Lock | `Script Lock - [Project]` | Client | 2 (Sage) | **+5 wd from #2**（client review，可能涉及 senior approval） |
 | 5 | Confirm Graphics Reference | `Confirm Graphics Ref - [Project]` | Client | 2 (Sage) | **Same day as #4**（default）/ 可以 propose 提早 |
-| 6 | Submit Style Frame | `Submit Style Frame - [Project]` | DOF | 9 (Blueberry) | **+2–3 wd from #5** / +1 wd min — **only if project 有 style frame chain** |
-| 7 | Confirm Style Frame | `Confirm Style Frame - [Project]` | Client | 2 (Sage) | **+1–2 wd from #6** / +1 wd min — same condition as #6 |
+| 6 | Submit Style Frame | `Submit Style Frame - [Project]` | DOF | 9 (Blueberry) | **+2–3 wd from #5** — **only if project 有 style frame chain** |
+| 7 | Confirm Style Frame | `Confirm Style Frame - [Project]` | Client | 2 (Sage) | **+1–2 wd from #6** — same condition as #6 |
 
 ### Shooting
 
@@ -63,31 +64,30 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 | 8 | Shooting | `([N] Days) Shooting - [Project]` | Both | 11 (Tomato) | Multi-day shoot 用一個 multi-day all-day event。Working Day Cross Check **exempt**。 |
 
 **Pre-Pro → Shoot 最關鍵 dependency：**
-Shoot date − Script Lock (#4) = **standard 7 wd / minimum 3 wd**
+Shoot date − Script Lock (#4) = **7 wd**
 
-Mugi 通常由 shoot date **back-calculate** pre-pro chain：
+Mugi 由 shoot date **back-calculate** pre-pro chain（**default = standard，唔好同時計 compressed**——compression 規則見本節末尾）：
 ```
 Shoot date
-  ↓ -7 wd standard / -3 wd min
+  ↓ -7 wd
 Script Lock (#4)
-  ↓ -5 wd standard / -3 wd min
+  ↓ -5 wd
 Submit Video Flow (#2)
-  ↓ -5~6 wd standard / -3~4 wd min
+  ↓ -5~6 wd
 Script Received (#1, T0)
 ```
-Standard pre-pro total：T0 → Shoot ≈ **17–18 wd (~3.5 週)**
-Compressed pre-pro total：T0 → Shoot ≈ **9–10 wd (~2 週)**
+Pre-pro total：T0 → Shoot ≈ **17–18 wd (~3.5 週)**
 
 ### Post-Production
 
 | # | Milestone | Calendar Title | Party | colorId | 由 previous 算起 |
 |---|-----------|---------------|-------|---------|----------------|
-| 9 | Submit 1st Cut | `1st Cut - [Project]` | DOF | 7 (Peacock) | **Shoot + 5 wd** / +4 wd min |
-| 10 | Feedback on 1st Cut | `Client FB 1 - [Project]` | Client | 2 (Sage) | **#9 + 3 wd** / +1 wd min |
-| 11 | Submit 2nd Cut | `2nd Cut - [Project]` | DOF | 7 (Peacock) | **#10 + 3–5 wd** / +3 wd min |
-| 12 | Feedback on 2nd Cut | `Client FB 2 - [Project]` | Client | 2 (Sage) | **#11 + 3 wd** / +1 wd min |
-| 13 | Submit 3rd Cut（optional）| `3rd Cut - [Project]` | DOF | 7 (Peacock) | **#12 + 3 wd** / +2 wd min |
-| 14 | Feedback on 3rd Cut（optional）| `Client FB 3 - [Project]` | Client | 2 (Sage) | **#13 + 3 wd** / +1 wd min |
+| 9 | Submit 1st Cut | `1st Cut - [Project]` | DOF | 7 (Peacock) | **Shoot + 5 wd** |
+| 10 | Feedback on 1st Cut | `Client FB 1 - [Project]` | Client | 2 (Sage) | **#9 + 3 wd** |
+| 11 | Submit 2nd Cut | `2nd Cut - [Project]` | DOF | 7 (Peacock) | **#10 + 3–5 wd** |
+| 12 | Feedback on 2nd Cut | `Client FB 2 - [Project]` | Client | 2 (Sage) | **#11 + 3 wd** |
+| 13 | Submit 3rd Cut（optional）| `3rd Cut - [Project]` | DOF | 7 (Peacock) | **#12 + 3 wd** |
+| 14 | Feedback on 3rd Cut（optional）| `Client FB 3 - [Project]` | Client | 2 (Sage) | **#13 + 3 wd** |
 | 15 | Picture Lock | `Picture Lock - [Project]` | Both | 7 (Peacock) | #14 approve（or #12 if Option B skip 咗 #13/#14） |
 
 ### Delivery
@@ -126,6 +126,33 @@ Mugi explain 俾導演聽**點解某個 milestone 排嗰日**：
 - Client-facing：同日 submit / 同日 confirm（兩對各一日）
 - Calendar：4 separate events
 - Doc / preview：4 independent rows
+
+### Compression Rules（**only when explicitly triggered**）
+
+**Default 計 timeline = standard。唔好預先同時計 compressed。** Compressed 數字得喺以下 trigger 滿足先行用：
+
+| Trigger | Compressed minimums |
+|---------|---------------------|
+| 用戶明確要求壓縮（「tight 啲」/「壓返一個禮拜」/「快啲交」）| 見下表 |
+| Standard timeline 計完 miss final deadline | 見下表 |
+| Pattern F / G / I 場景（graphics 量輕 / event / 加 cut）+ 用戶 confirm | 見下表 |
+
+**Compressed minimums（淨喺 trigger fired 先用）：**
+
+| Edge | Standard | Compressed min |
+|------|----------|----------------|
+| Script Received → Submit Video Flow | 5–6 wd | 3–4 wd |
+| Submit Video Flow → Script Lock | 5 wd | 3 wd |
+| Script Lock → Shoot | 7 wd | 3 wd |
+| Submit Style Frame → Confirm Style Frame | 1–2 wd | 1 wd |
+| Shoot → 1st Cut | 5 wd | 4 wd |
+| 1st Cut → FB 1 | 3 wd | 1 wd |
+| 2nd Cut → FB 2 | 3 wd | 1 wd |
+| FB 2 → 3rd Cut | 3 wd | 2 wd |
+
+**Single-Scenario Rule：** 一個 timeline request **只計一個 scenario**。先計 standard → 撞 deadline 至 fall back compressed → 仲撞至走 Pattern J（escalate Sohling）。**禁止同時 enumerate standard + compressed 兩個 Python script 對比**——係用 token + thinking time，唔係 producer judgment。
+
+Compressed pre-pro total（reference only）：T0 → Shoot ≈ 9–10 wd (~2 週)。
 
 ---
 
@@ -269,6 +296,7 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 - 提到「動畫」/ `animation` / `motion only` → Full animation → **Refuse**
 - 提到「多個 version」/「英文 + 中文版」/「多語言」→ Multi-version → **Refuse**
 - 提到「X 條片」/「multi-video」/「呢個 series」→ Multi-video → **Refuse**
+- 提到「pure post」/「純後期」/「後期 only」/「冇拍攝」/「唔使拍」/「motion graphics + footage」/「only edit」→ Pure post → **直接 skip 整套 pre-pro + Shooting**（Script Received → Style Frame + Shooting 全部唔出現），timeline 由 1st Cut 開始。**唔好仲計 pre-pro scenario**——pre-pro chain 同呢類 job 完全無關。
 - 描述模糊無法判斷 → 假設普通拍攝，繼續 generate，喺 director discussion 嗰度 flag
 
 **支援嘅 Genre（影響 timeline 行為）：**
@@ -345,10 +373,12 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 
 ```
 ☐ HK public holidays 我有冇 fetch 咗？
+☐ 我係咪只跑咗 1 個 scenario？（Single-Scenario Rule — 唔好預先 enumerate standard + compressed 對比）
+☐ Pure-post job？係 → pre-pro + Shooting 已經 skip 晒，唔好計 pre-pro chain（見 §3 Step 2 keyword detection）
 ☐ Pre-pro milestones 我有冇 enumerate 晒？（預設 7 個：Script Received / Submit Video Flow / Submit Graphics Ref / Script Lock / Confirm Graphics Ref / Submit Style Frame / Confirm Style Frame，除非用戶明確話冇 graphics / pure post）
-☐ Submit Video Flow 同 Script Received 之間有冇至少 5–6 wd（standard）/ 3–4 wd（compressed）？
+☐ Submit Video Flow 同 Script Received 之間有冇 5–6 wd？（compressed 3–4 wd 淨喺 §1 Compression Rules trigger fired 先用）
 ☐ Script Lock 同 Submit Video Flow 之間有冇 5 wd？
-☐ Script Lock 同 Shoot 之間有冇至少 3 wd（min）/ 7 wd（standard）？
+☐ Script Lock 同 Shoot 之間有冇 7 wd？（compressed 3 wd 同上條件）
 ☐ 每個非 shooting milestone 都喺 weekday + non-holiday？
 ☐ 每個 milestone 有冇獨立日期？（冇 date range collapse）
 ☐ VO Recording 係咪 multi-day window？Window start = PicLock + 1 wd, length = 2 wd, end ≤ Final Output - 2 wd?
