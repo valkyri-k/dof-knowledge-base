@@ -1,0 +1,32 @@
+--- a/server.ts
++++ b/server.ts
+@@ -452,7 +452,7 @@
+     instructions: [
+       'The sender reads Discord, not this session. Anything you want them to see must go through the reply tool — your transcript output never reaches their chat.',
+       '',
+-      'Messages from Discord arrive as <channel source="discord" chat_id="..." message_id="..." user="..." ts="...">. If the tag has attachment_count, the attachments attribute lists name/type/size — call download_attachment(chat_id, message_id) to fetch them. Reply with the reply tool — pass chat_id back. Use reply_to (set to a message_id) only when replying to an earlier message; the latest message doesn\'t need a quote-reply, omit reply_to for normal responses.',
++      'Messages from Discord arrive as <channel source="discord" chat_id="..." message_id="..." user="..." ts="...">. The chat_name attribute carries the channel name when known. When the message is in a Discord thread, the tag also carries parent_id (the parent channel ID) and parent_name (the parent channel name) — use parent_id as the stable job/channel key for routing or logging, and treat chat_id as the thread-scoped reply target. If the tag has attachment_count, the attachments attribute lists name/type/size — call download_attachment(chat_id, message_id) to fetch them. Reply with the reply tool — pass chat_id back (the thread, not the parent). Use reply_to (set to a message_id) only when replying to an earlier message; the latest message doesn\'t need a quote-reply, omit reply_to for normal responses.',
+       '',
+       'reply accepts file paths (files: ["/abs/path.png"]) for attachments. Use react to add emoji reactions, and edit_message for interim progress updates. Edits don\'t trigger push notifications — when a long task completes, send a new reply so the user\'s device pings.',
+       '',
+@@ -822,6 +822,10 @@
+   }
+
+   const chat_id = msg.channelId
++  const isThread = msg.channel.isThread()
++  const parent_id = isThread ? msg.channel.parentId ?? undefined : undefined
++  const parent_name = isThread ? msg.channel.parent?.name : undefined
++  const chat_name = 'name' in msg.channel ? msg.channel.name : undefined
+
+   // Permission-reply intercept: if this looks like "yes xxxxx" for a
+   // pending permission request, emit the structured event instead of
+@@ -870,6 +874,9 @@
+       content,
+       meta: {
+         chat_id,
++        ...(chat_name ? { chat_name } : {}),
++        ...(parent_id ? { parent_id } : {}),
++        ...(parent_name ? { parent_name } : {}),
+         message_id: msg.id,
+         user: msg.author.username,
+         user_id: msg.author.id,

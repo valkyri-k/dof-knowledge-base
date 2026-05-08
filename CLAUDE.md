@@ -567,9 +567,11 @@ Status: open
 
 User 喺 per-job channel interact 嗰陣，將 interaction summary append 去 `/home/node/kb/activity/jobs/<channel-name>.md`。Purpose：clear session 後 future-Mugi 入到 channel 即刻有 baseline understanding，唔需要 user 每次重複講 job background。
 
-**Channel match：** Current channel ID 對應 `context/job-list.md` Active Jobs table 一行 → 寫 per-job log。Match 唔到（DM / general / `#ai-agent` / no-channel-by-design jobs）→ 唔寫，照常規 user activity log。
+**Channel match：** 用 inbound channel envelope 嘅 `parent_id`（如果有）— 否則 fall back `chat_id` — 去對 `context/job-list.md` Active Jobs table。Match 到 → 寫 per-job log。Match 唔到（DM / general / `#ai-agent` / no-channel-by-design jobs）→ 唔寫，照常規 user activity log。
 
-**Thread handling（重要）：** 如果 current location 係一個 thread（有 `parent_id` / parent channel），**用 parent channel ID 去 lookup `job-list.md`**，唔好用 thread 自己嘅 ID。Thread match 到 → 照樣寫入 parent 嘅 per-job file（即 `activity/jobs/<parent-channel-name>.md`），thread 內所有 iteration 都歸入同一個 job log。Entry 入面注明 thread name / topic（例：「— in thread: timeline-v2」）方便日後追溯。
+**Thread handling（重要）：** Thread message 嘅 envelope 會 carry `parent_id`（parent channel ID）+ `parent_name`（parent channel name）。**Lookup key 永遠用 `parent_id` when present**，唔好用 `chat_id`（thread 自己嘅 ID）。Thread match 到 → 寫入 parent 嘅 per-job file（`activity/jobs/<parent-channel-name>.md`），thread 內所有 iteration 都歸入同一個 job log。Entry 入面注明 thread name / topic（例：「— in thread: timeline-v2」）方便日後追溯。
+
+> **若果 envelope 冇 `parent_id` 但你身處 thread**（罕見，e.g. plugin 未 patch），即停手寫 per-job log，照寫 user activity log，並 surface 一句「thread parent 認唔到，per-job log skipped」俾用戶。**唔好估**亦唔好寫去 thread ID 嘅檔名。
 
 **Filename：** 取 `job-list.md` row 嘅 `Discord Channel Name` column verbatim，去掉開頭 `#`。例：`#j26016_hsuhk-student-excellence-video-series` → `j26016_hsuhk-student-excellence-video-series.md`。**唔做** underscore→hyphen / case normalization——Channel Name 本身點 spell 就點 spell。
 
