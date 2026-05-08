@@ -560,6 +560,62 @@ Status: open
 
 ---
 
+## Per-Job Activity Tracking
+
+User 喺 per-job channel interact 嗰陣，將 interaction summary append 去 `/home/node/kb/activity/jobs/<channel-name>.md`。Purpose：clear session 後 future-Mugi 入到 channel 即刻有 baseline understanding，唔需要 user 每次重複講 job background。
+
+**Channel match：** Current channel ID 對應 `context/job-list.md` Active Jobs table 一行 → 寫 per-job log。Match 唔到（DM / general / `#ai-agent` / no-channel-by-design jobs）→ 唔寫，照常規 user activity log。
+
+**Filename：** 取 `job-list.md` row 嘅 `Discord Channel Name` column verbatim，去掉開頭 `#`。例：`#j26016_hsuhk-student-excellence-video-series` → `j26016_hsuhk-student-excellence-video-series.md`。**唔做** underscore→hyphen / case normalization——Channel Name 本身點 spell 就點 spell。
+
+**File 唔存在 → scaffold：**
+
+```markdown
+---
+job_no: <Job No>
+client: <Client>
+project_name: <Project Name>
+director: <Director>
+discord_channel_id: <Channel ID>
+discord_channel_name: <Channel Name>
+created: [[YYYY-MM-DD]]
+last_updated: [[YYYY-MM-DD]]
+---
+
+# <Job No> — <Project Name>
+
+## Job Context
+<!-- Reserved for Master Job Log integration. 暫時留空，唔寫。 -->
+
+## Interaction Log
+```
+
+Frontmatter 全部 column 抄自 `job-list.md` row。Body 兩個 heading 起好就 append 第一個 entry。
+
+**Entry format：**
+
+```
+### [[YYYY-MM-DD]] <morning/afternoon/evening> — <topic>
+- **Kary 問**：<1-2 行 summary>
+- **Mugi 做**：<1-2 行 outcome / decision>
+- **Followup**：<pending / waiting on，如有；冇就 omit>
+```
+
+Cross-ref 如有相關 `gap-log.md` / `kary-dev-log.md` entry，加一行 `→ gap-log [[YYYY-MM-DD]] entry` / `→ dev-log [[YYYY-MM-DD]] entry`。
+
+**唔 log 嘅情況：**
+- 純 status query（「J26016 幾時交片？」）
+- Quick lookup / dispatch confirmation
+- Repeated noise
+
+**唔即時 push：** Per-job log 嘅 `git add` + `commit` + `push` 跟 user activity log 一齊喺 **Pre-Clear Sequence** single commit 處理（同 `kary-dev-log.md` / `gap-log.md` 一個 commit）。每次 interact 唔即時 push。
+
+**File 寫入永遠用 absolute path** `/home/node/kb/activity/jobs/<filename>.md`（同 user activity log 嘅 path rule 一致）。
+
+**同其他 log 嘅關係：** Per-job log 係**補充**，唔取代 `<username>.md` user activity log。Per-user 仍然係 master timeline，per-job 係 channel-scoped slice。
+
+---
+
 ## Memory Hygiene
 
 Mugi 創建 reference / lookup 類 memory file 之前，**必須先 grep CLAUDE.md + context/** 睇有冇現成 canonical handling（包括 live-fetch pattern）。如果 upstream 已經 cover →
