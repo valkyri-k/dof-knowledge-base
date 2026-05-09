@@ -53,6 +53,8 @@
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
 - **[2026-05-09] J260ZZ Test Project 3 Phase 1 draft pending** — 3-cut compressed schedule sent (Shoot May 19, Jun 15 FO，17 milestones)，waiting Kary confirm → Phase 2 Calendar push
+- **[2026-05-09] J260YY Test Project 2 Phase 1 draft pending** — Compressed-Edge-Case 3-cut timeline sent (Shoot May 18, Final Jun 15，17 milestones)，waiting Kary confirm → Phase 2 Calendar push
+- **[2026-05-09] root-owned kb files recurring bug** — `scripts/timeline_backward.py` root-owned pattern（estimate: 由 Kary Claude Code local session 改 file 以 root process 跑）；dev-log `2026-05-09 14:53` logged；awaiting permanent fix decision。Cross-ref: `activity/kary-dev-log.md` 2026-05-09 14:53 entry
 
 ---
 
@@ -96,6 +98,15 @@ J26053 方面：加 3rd Cut (#1) May 11 + (#2) May 12。另外喺 J26053 channel
 **Key learning**：Design 類 deliverable → colorId 9 (Blueberry)，唔係 Banana。呢個係 Mugi 之前唔清楚嘅 color rule，而家固定落 memory。
 
 **CLAUDE.md update（Kary 做）**：Per-job log 加咗 "Log-worthiness HARD RULE"——每一次互動（包括 identification reply、quick lookup）都要寫 entry，唔可以 skip。
+
+### 2026-05-09 late afternoon session
+J260YY Test Project 2 timeline planning + In-Discord Profile Correction Protocol test + root-owned files bug。
+
+Timeline：Kary post 咗 client schedule image（MG + footage，1-day shoot，VO，Jun 15 deadline）。Mugi 攞 image → parse client schedule（Final Jun 15，filming window May 18-22）→ propose 3 shoot date candidates（May 18/20/22）→ Kary 揀 May 18 + 3-cut → `scripts/timeline_backward.py` 跑出 Compressed-Edge-Case 3-cut（effective kickstart May 12，Script Received May 11，shoot May 18，17 milestones）→ Phase 1 draft sent，pending confirm。期間 Kary 問點解 shoot date proposal step 用 inline Python 而唔係直接跑 script → 解釋：script 需要 `--shoot-date` argument，candidate proposal 係過渡計算，script 係 confirmed date 後先跑。Feature idea logged（dev-log）。
+
+Profile Correction Protocol test：Kary 測試 add + remove test entry，兩步都成功。Remove 時 git push 失敗——`scripts/timeline_backward.py` root-owned，merge unlink 失敗。兩次 `sudo chown` 後 merge + push 成功（commit `2833b2d`）。Bug logged（dev-log）。
+
+**Key learning**：root-owned kb files 係 recurring pattern（Apr 8 `.git/objects`，今次 `scripts/`），estimate 每次 Kary Claude Code session 改 kb files 以 root 跑。需要 permanent fix discussion。
 
 ### 2026-05-09 afternoon session
 主力 test Phase 1 timeline generation workflow（Compressed-Edge-Case Branch）。J260ZZ Test Project 3：1 day shoot + VO + Jun 15 deadline。關鍵發現：May 9 = Saturday（唔係 Friday），effective_kickstart 正確移到 May 11。Standard pre-pro 唔 fit（Script Lock 需要 May 8 < kickstart May 11）→ Compressed-Edge-Case triggered。Compressed pre-pro (2 wd gaps) → Shoot May 19 (Tue)。Post-pro window = 14 wd，落入 14-19 wd range，flagged 2-cut vs 3-cut trade-off，Kary 揀 3-cut compressed（gaps 3+2+3+1+3+2 wd，FB2 = 1 wd 緊）。Phase 1 draft sent，等 confirm push Calendar（Phase 2 pending）。May 25 佛誕翌日 holiday + Saturday kickstart detection 兩個 date-handling checkpoints 都正確處理。
@@ -215,3 +226,8 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-09 | J260ZZ: Kary chose 3-cut | Full Phase 1 draft sent (17 milestones, 3-cut compressed, gaps 3+2+3+1+3+2 wd); awaiting confirm for Phase 2 |
 | 2026-05-09 | Query: Pre-Clear Sequence 幾多 steps + Step 5 係咩 | 答：7 steps；Step 5 = Profile candidate detection，draft 入 Pending Profile Review，唔 self-promote |
 | 2026-05-09 | Kary 指出 pre-clear Steps 4+5 冇明確執行 | 承認：Step 4 valid skip 但無記錄原因；Step 5 報「0」但未 explicitly run criteria check |
+| 2026-05-09 | J260YY Test Project 2 Phase 1 timeline (1-day shoot, VO, style frame, Jun 15 FO) | Compressed-Edge-Case 3-cut sent (17 milestones, Shoot May 18); pending Kary confirm → Phase 2 |
+| 2026-05-09 | Query: 點解 shoot date proposal 用 inline Python | Explained §5 needs confirmed --shoot-date; feature-idea logged dev-log `55bee33` |
+| 2026-05-09 | Profile test: Working Style add "test entry — please remove" | Added ✅ (commit `9be29e4`) |
+| 2026-05-09 | Profile test: Working Style remove "test entry — please remove" | Removed ✅ (commit `2833b2d` after 2x chown fix) |
+| 2026-05-09 | root-owned scripts/timeline_backward.py bug (git merge unlink failed) | Logged dev-log `41e887f`; Kary ran 2x chown; merged + pushed `2833b2d` ✅ |
