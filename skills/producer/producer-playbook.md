@@ -69,6 +69,8 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 - ❌ Echo script JSON output 落 reply（user 睇人類可讀 markdown，唔睇 JSON）
 - ❌ Self-Check logic gates 喺 reply 入面逐條 echo + reason（mental check only，pass 唔出聲）
 - ❌ 假設 filming window length = actual shoot day count（e.g. 「Filming May 18–22」 ≠ 5 日連拍）—— 必須 §3 Step 3 ask
+- ❌ Silent compress 1st Cut（或任何 cut）唔 flag——script `cut_warnings` 入面任何 cut ≤ 3 wd 一律照原樣 echo 落 reply，唔可以 hide
+- ❌ 留 idle window 喺 FB-last 同 Picture Lock 之間（slack 應該 distribute 落 cut gaps，唔好 default 落 trailing buffer）
 
 ---
 
@@ -224,16 +226,32 @@ Window 14–19 wd 嗰下 Mugi 主動 flag，**唔好默默 silent decide**：
 >
 > 你想點？」
 
-**Step E — Distribute slack（cut-gap-first，cap 4–5 wd per gap）**
+**Step E — Distribute slack（cut-priority，per-mode caps）**
 
 `slack = available_window - min_required_for_chosen_cut_count`
 
-優先級：
-1. **Cut production gaps first**（FB1 → 2nd Cut / FB2 → 3rd Cut，3-cut 都 distribute；Shoot → 1st Cut 通常維持 5 wd 唔加）—— 每個 cap **5 wd**，超過就 cap 住停
-2. **Feedback rounds last**（FB1 / FB2 / FB3）—— 默認 3 wd MIN；cut gaps 全部 cap 後仲有 slack 先加去 feedback
-3. 仲有剩 slack（cut gaps 同 feedback 都填滿）→ **留喺 cut gap**（俾 post team 多日 buffer），**唔可以** pull Final Output 早
+**Distribution 優先級（嚴格按次序 fill 到 cap）：**
+1. **1st Cut（Shoot → 1st Cut）** — DOF post team 真實 production time，最緊要俾足
+2. **2nd Cut（FB1 → 2nd Cut）**
+3. **3rd Cut（FB2 → 3rd Cut）**
+4. **FB1（1st Cut → FB1）**
+5. **FB2（2nd Cut → FB2）**
+6. **FB3（3rd Cut → FB3）**
 
-**點解 cut-gap-first：** 每個 cut delivery 需要 DOF post team 真實 production time。Compressing cut production = 直接 burn out post team。Compressing feedback = client-facing trade-off，client 自己決定。3 cuts 嘅情況下我哋會 frame 俾 client：「3 輪 iteration 即係每輪 feedback time 緊啲」。
+**Per-mode caps（max gap = MIN + extra）：**
+
+| Mode | Shoot→1st Cut | Cut→Cut（2nd / 3rd） | FB（1 / 2 / 3） |
+|---|---|---|---|
+| Standard | 5 + 3 = **8 wd** | 3 + 5 = **8 wd** | 3 + 2 = **5 wd** |
+| Compressed | 4 + 2 = **6 wd** | 3 + 3 = **6 wd** | 1 + 2 = **3 wd** |
+| Extreme（Compressed-Edge-Case 用）| 2 + 3 = **5 wd** | 2 + 3 = **5 wd** | 1 + 2 = **3 wd** |
+
+**Algorithm：** 由 priority order 第 1 項開始，每個 slot 填到 cap，剩 slack 滾去下一個。所有 slot 填到 cap 仲有剩 → **留喺最後一個 cut gap**（最 conservative），**唔可以** pull Final Output 早。
+
+**Danger flag — Cut duration ≤ 3 wd：**
+任何一個 cut（1st / 2nd / 3rd）嘅 incoming gap（Shoot → 1st、FB1 → 2nd、FB2 → 3rd）≤ 3 wd 一律 flag 落 `cut_warnings` array。Mugi reply 必須照原樣 echo 出嚟，唔可以 silent compress。Threshold ≤ 3 wd 嘅理由：post team 真係頂唔順，呢個 level 要 director / producer review 條 cut 嘅 scope。
+
+**點解 1st Cut first：** 1st Cut 係整條 post chain 最 foundational 嘅交付。1st Cut 嘅 production time 直接決定條片嘅 baseline quality（rough cut → music → pacing → first impression）。後面 cuts 主要係 iterate 1st Cut，1st Cut squeeze = 後面冇得追。Compressing feedback = client-facing trade-off，client 自己決定；compressing cut production = 直接 burn out post team。
 
 **Step F — Past-milestone Detection（feasibility gate）**
 
@@ -598,6 +616,7 @@ milestones: [{order, name, date, weekday, colorId, party, calendar_title}, ...]�
 vo_window: {start, end, days, calendar_title, colorId} | null
 has_style_frame: bool
 warnings: [一個 string array — 全部 ⚠️ flags + holiday push notes + 切換 branch 嘅 narration]
+cut_warnings: [一個 string array — cut duration ≤ 3 wd 嘅 danger flags（1st / 2nd / 3rd Cut 任何一個 incoming gap ≤ 3 wd 都會出現喺度）]
 extreme_squeeze_propositions: [{id, name, detail}, ...] | null（status="extreme_squeeze" 先有）
 ```
 
@@ -614,9 +633,10 @@ extreme_squeeze_propositions: [{id, name, detail}, ...] | null（status="extreme
 1. 一句 timeline summary（kickstart → final，cut count，scenario label）
 2. 列 milestones（每個一行：`Date (Weekday) — Name`）
 3. VO window 一行（如有）
-4. Warnings list（每條 ⚠️ 一行）
-5. Pattern flags（§3 Step 5 Pattern A–J 對 milestones / warnings 揀 applicable 嘅出）
-6. 結尾問：「OK 唔 OK？OK 我就 push Calendar」
+4. Warnings list（每條 ⚠️ 一行 — script `warnings` array 照原樣 echo）
+5. **`cut_warnings` 照原樣 echo**（每條 ⚠️ 一行；`cut_warnings` 空就 skip 呢段）—— 唔可以 silent compress、唔可以 paraphrase、唔可以 hide。Cut ≤ 3 wd 係 director / producer 要知嘅 risk surface
+6. Pattern flags（§3 Step 5 Pattern A–J 對 milestones / warnings 揀 applicable 嘅出）
+7. 結尾問：「OK 唔 OK？OK 我就 push Calendar」
 
 **❌ Anti-patterns（嚴格禁止）：**
 - ❌ Inline 寫 Python（重 implement HK holidays / push_to_weekday / back_wd 邏輯）— **永遠 invoke script**
@@ -803,6 +823,22 @@ Standard logic resolve 唔到 → **stop generation，直接 escalate**。唔好
 > 你想用邊個？揀完我可以即刻 generate full timeline。」
 
 **重要：唔好幫用戶 lock date——只係 propose，最終決定喺人。**
+
+#### Candidate-Phase Reply Discipline（避免 inline Python token bloat）
+
+呢個 phase 嘅 weekday / holiday math **限制如下**：
+
+- **Inline Python：最多 1 條 invocation 整個 candidate phase**。Saturday push、HK holiday avoid、weekday lookup 全部喺同一 helper 入面 batch 出 candidates，**唔好** forward + backward 拆兩條 inline call。
+- **唔好** 行 forward weekday math 出 candidate，再 backward 倒算 Script Lock 拆兩個 turn。一條 helper 一次 return 齊（candidate date + weekday + back-calculated Script Lock + holiday note）。
+- 預設要 handle 嘅 edge cases（**v1 必入**，唔好 post-hoc 補）：
+  - Candidate 揀中 Saturday / Sunday → push 至下一個 weekday
+  - Candidate 揀中 HK holiday → push 至下一個 non-holiday weekday
+  - Back-calculated Script Lock 同今日 distance < 5 wd → flag「window 太緊，俾少於 5 wd video flow round-trip」
+  - 整個 range 全 holiday + weekend → fallback 出範圍外推 1–2 個 candidate
+- **唔好** echo helper 嘅 Python source / stdout 落 reply。Reply 純 markdown candidate list。
+- **真正 lock shoot date** 之後（用戶揀咗一個）→ 行 §3 Step 4 Pre-step A 嘅 `scripts/timeline_backward.py`。Candidate phase 同 timeline generation 嘅 math **唔可以混合**——candidate phase 只係 propose date，timeline math 由 script encapsulate。
+
+> Long-term：呢個 candidate phase 應該由 `scripts/timeline_backward.py --propose-shoot-mode` 取代（idea backlog 入面），到時 inline Python 完全 zero。
 
 ### Cut Delivery Saturation Check（**Phase 2 trigger，唔喺 Phase 1 跑**）
 
