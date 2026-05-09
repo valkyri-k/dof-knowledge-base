@@ -517,14 +517,18 @@ Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完�
 2. **寫 Session Summary** — Append 一段新嘅 narrative 入 Recent Session Summaries section，跟 standard format `### YYYY-MM-DD <morning/afternoon/evening> session`。內容要 capture：今晚做咗咩主要 work、邊啲 decisions、學到咩、有冇 surface 新 issue / capability gap。**唔好 list 細節**——細節已經喺 Request Log table，narrative 講 nuance。
 3. **更新 Request Log** — 將今晚發生但未 log 嘅 entries append 入 table（每件主要事一行）。
 4. **Cross-update related logs**（如有需要） — 如果今晚有 architectural decision / bug fix / capability gap，update 埋 `kary-dev-log.md` 或 `gap-log.md` 嘅相關 entry。
-5. **Profile candidate detection** — Review 今晚 conversation，檢查每個 sender 有冇符合**任何一條** promotion criteria：
+5. **Profile candidate detection** — 呢個 step 拆兩部分：
+
+   **Part A — Review（MANDATORY，永遠唔可以 skip）**：每個 sender 嘅 message + 自己今晚 reply 都要 explicit walk through 三條 promotion criteria，**心入面（或 chain-of-thought）行過一次**，唔可以默默略過：
    - **Explicit profile-shaping instruction**：sender 講「以後我講 X 即係指 Y」/「你記住我負責 Z」/「以後 reply 我簡短啲」等明顯指令 → confidence: high, source: explicit
    - **Correction signal**：sender 修正 Mugi 對佢嘅理解（「我唔係 director 啦，我係 producer」）→ confidence: high, source: corrected
    - **Repeat pattern**：sender 表現一致 working style / shorthand / preference，**且過往 activity log 有同類 evidence** → 2 次 confidence: low；3+ 次 confidence: medium。Source: observed。
 
-   符合 → draft 一條 entry 入 sender activity file 嘅 **Pending Profile Review** section（schema 見 File format template）。**唔符合任何條件 → skip 呢個 step**。
+   **Part B — Draft（CONDITIONAL）**：Review 後得出嘅 candidates，每條 draft 一個 entry 入 sender activity file 嘅 **Pending Profile Review** section（schema 見 File format template）。如果 Part A 結論係 0 candidate → 唔需要寫 file，但 review 嘅 fact 仍然要喺 Step 7 report 出嚟（「Profile review: 0 candidate」）。
 
-   **Skip 細則：**
+   **絕對禁止**：跳過 Part A 直接寫「Profile drafts: 0」。Review 必須真係 run 過，唔係 default-skip 嘅 escape hatch。
+
+   **Skip 細則（apply 落 Part B draft 動作，唔 apply 落 Part A review）：**
    - 純 quick lookup / 閒聊冇 substantive interaction → skip
    - Sender 已存在 active **User Practice Profile** entry 同 candidate 矛盾 → 仍然 draft 但 entry 加 `conflicts_with: <existing entry text>` field，等 Kary 解
    - 同類 candidate 已喺 Pending Profile Review section（未被 review） → skip duplicate，但 evidence list append 新 evidence pointer
@@ -536,9 +540,34 @@ Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完�
 
    **永遠唔好** silent self-promote 入 active **User Practice Profile**——只能 draft 入 Pending Profile Review，等 Claude Code review approve 後先 promote。
 6. **Commit + push** — Stage 全部相關 file，single commit（message 簡述今晚主題），push 上 GitHub。Commit message format 跟現有 convention。
-7. **Report 俾用戶** — 一個簡潔 message 講做咗咩 + commit hash + open threads count + 如有 profile drafts 報 count + 講「OK 你而家可以 `/clear` 啦」。例：
+7. **Report 俾用戶** — 一個簡潔 message。**Mandatory fields，每次都要齊**（即使 value 係 0 或 skip）：
 
-> ✅ Pre-clear done. Commit `abc1234` pushed. Open threads: 2 (Planyway 方向 / activity.bak 待刪). Profile drafts: 1 pending review (sohling: response-guidance, observed × 3). Session summary 寫低咗今晚 stress test + activity-path bug fix + memory schema rework。OK 你而家可以 /clear 啦。
+   1. `Commit <hash> pushed`
+   2. `Open threads: N` （括號內列 thread topic，N=0 寫「none」）
+   3. `Cross-log updates: <list 邊個 file updated 或 'skip — 今晚冇 architectural decision'>`（Step 4 result）
+   4. `Profile review: N candidate drafted` （N=0 都要寫，**證明 Part A review 真係 run 過**；如果 N>0 列每條 sender + category + source）（Step 5 result）
+   5. `Session: <主題>`（Step 2 narrative 嘅 1 句 condensed version）
+   6. `OK 你而家可以 /clear 啦`
+
+   例（happy path）：
+
+   > ✅ Pre-clear done. Commit `abc1234` pushed.
+   > Open threads: 2 (Planyway 方向 / activity.bak 待刪).
+   > Cross-log updates: kary-dev-log.md (activity-path bug fix), gap-log.md (Planyway gap).
+   > Profile review: 1 candidate drafted (sohling: response-guidance, observed × 3).
+   > Session: stress test + activity-path bug fix + memory schema rework.
+   > OK 你而家可以 /clear 啦。
+
+   例（quiet session，所有 conditional step 都 skip）：
+
+   > ✅ Pre-clear done. Commit `xyz5678` pushed.
+   > Open threads: none.
+   > Cross-log updates: skip — 今晚冇 architectural decision / bug / capability gap.
+   > Profile review: 0 candidate drafted.
+   > Session: J260ZZ timeline test, Compressed-Edge-Case branch trigger 確認.
+   > OK 你而家可以 /clear 啦。
+
+   **絕對禁止省略任何 mandatory field**——「冇嘢報」要 explicit 寫「none / skip / 0 candidate」，唔可以 silently 省。
 
 **重要原則：**
 - **唔好問「要唔要寫 summary」**——用戶講 clear 即係已經 commit，直接執行
