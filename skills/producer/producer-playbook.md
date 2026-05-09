@@ -8,12 +8,12 @@
 
 > ## 🔒 PHASE 1 TOKEN-CONTROL HARD RULES（違反 = REWRITE，唔係 best practice，係 contract）
 >
-> 1. **PYTHON STDOUT = 1 LINE ONLY**：Backward-planning Python script 嘅 `print()` 只可以出 **一個 final milestone JSON array**。任何 intermediate value（`today:`、`effective_kickstart:`、`final_output:`、`C/S:`、`VO:`、`Picture Lock:` 等）一律唔准 print。違反 → 廢棄輸出，rewrite script。
-> 2. **PYTHON 必須 EFFECTIVE-KICKSTART-AWARE**：Script 第一句必須計 `effective_kickstart_date`（today 撞 weekend / HK holiday → push 下一個 weekday + non-holiday），所有後續 milestone math 用佢，唔可以用 raw `today`。第一次 run 計錯要二次 run = token waste，唔接受。
-> 3. **SELF-CHECK 唔可以 ECHO**：Pre-step E 嘅 6 條 ☐ 係 mental check，**pass 就 pass，唔好喺 output 逐條 echo + reason**。只係 fail 嗰陣先 surface 嗰一條。
-> 4. **SINGLE-SCENARIO**：一個 request 只跑一個 scenario 嘅 Python script。唔可以 standard + compressed 並列計嚟對比。
+> 1. **TIMELINE MATH = INVOKE SCRIPT，唔好 INLINE PYTHON**：所有 backward-planning math 由 `scripts/timeline_backward.py` 處理。Mugi 用 Bash CLI 入 args、parse 1-line JSON output、寫 reply。**唔好再 inline 寫 Python**（重 implement HK holidays / push_to_weekday / back_wd 邏輯）。Script 已經涵蓋 standard / compressed-edge-case / extreme-squeeze / Pattern J / pure-post 全部 branch。詳見 §3 Step 4。
+> 2. **JSON OUTPUT 唔可以 ECHO 落 REPLY**：Script stdout 1 行 JSON，Mugi 內部 parse；reply 入面只列人類可讀嘅 milestones / warnings / Pattern flags。**唔好 dump JSON 俾用戶睇。**
+> 3. **SELF-CHECK 唔可以 ECHO**：Pre-step B 嘅 logic gates 係 mental check，**pass 就 pass，唔好喺 output 逐條 echo + reason**。只係 fail 嗰陣先 surface 嗰一條。
+> 4. **SINGLE-SCENARIO**：一個 request 只 invoke 一次 script。唔好為咗對比 scenario 跑兩次（standard + compressed）—— script 內部已自動 fallback。
 >
-> 呢 4 條一齊行 Phase 1 先會 < 12k token。Spec 寫咗但唔跟 → token bloat 主因。
+> 呢 4 條一齊行 Phase 1 先會 < 8k token。Spec 寫咗但唔跟 → token bloat 主因。
 
 ---
 
@@ -39,7 +39,7 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 
 ### Phase 1 — Draft text preview
 **Trigger：** 用戶第一次提 timeline（「幫 J26XXX draft timeline」、「排個 post schedule」、「generate timeline」）。
-**做：** 跟 §3 Step 1–5 + Pre-step A–F。Output 文字版 markdown table + 適用嘅 Pattern A–J flags。
+**做：** 跟 §3 Step 1–5 + Pre-step A–B。Output 文字版 markdown table + 適用嘅 Pattern A–J flags。
 **Calendar API：嚴格 zero query**——director 由 `context/job-list.md` lookup；conflict / saturation 留 Phase 2 一次過做。Phase 1 = lightweight inference round（first-pass timeline 命中率本身唔高，user 一定會 feedback 調整；先 query Calendar 等於白做，schedule 穩定咗 Phase 2 一次過 query 反而 cleaner）。
 **Gate：** 停低等用戶 confirm 文字版。**唔 auto-push Calendar。**
 
@@ -54,20 +54,20 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 
 ### Phase 3 — Doc generation（opt-in only）
 **Trigger：** 用戶答「要」/「好」/「出埋」——或後來話「出 timeline doc for J26XXX」/「幫我出埋份 doc」。
-**做：** **跳過 Step 1–5 + Pre-step A–F。** Search Calendar by J-number 攞 committed dates，直接跟 §6 Row Deletion + §7 Doc Naming 寫入 Timeline_Template。
+**做：** **跳過 Step 1–5 + Pre-step A–B。** Search Calendar by J-number 攞 committed dates，直接跟 §6 Row Deletion + §7 Doc Naming 寫入 Timeline_Template。
 **Gate：** 冇 gate——doc 寫完 return Drive link 就算。
 
 ### Anti-patterns（嚴格禁止）
 
 - ❌ Phase 1 完 auto-push Calendar（一定要 confirm 先 push）
 - ❌ Phase 2 完 auto-gen doc（問先，冇得假設）
-- ❌ Phase 3 時重跑 Pre-step A–F（dates 已 committed，重跑係 wasted token）
+- ❌ Phase 3 時重跑 Pre-step A–B（dates 已 committed，重跑係 wasted token）
 - ❌ Phase 3 時再 flag Pattern A–J（dates 已 lock，flag 無 actionable value）
-- ❌ Phase 1 同時跑多個 scenario Python script（standard + compressed 並列計）—— Single-Scenario Rule，見 §1 Compression Rules
+- ❌ Phase 1 invoke 多次 script 對比 scenario（standard + compressed）—— Single-Scenario Rule，script 內部已自動 fallback
 - ❌ Phase 1 query Calendar API（director 由 `context/job-list.md` lookup；conflict / saturation / 已 marked event 全部留 Phase 2 一次過）
-- ❌ Python script verbose stdout（每個 intermediate value、step-by-step narration、SELF-CHECK section print 出嚟）—— 食爆 token 主因；script 只 print final milestone JSON
-- ❌ Python script 用 raw `today` 而冇計 `effective_kickstart_date`（→ today 撞 weekend / holiday 嗰陣計錯，要二次 run fix Saturday-loop）—— 必須一次過 right
-- ❌ Self-Check 6 條 ☐ 喺 reply 入面逐條 echo + reason（mental check only，pass 唔出聲）
+- ❌ Inline 寫 Python 重做 timeline math（HK holidays / push_to_weekday / back_wd 邏輯由 `scripts/timeline_backward.py` 唯一實作 — 永遠 invoke script）
+- ❌ Echo script JSON output 落 reply（user 睇人類可讀 markdown，唔睇 JSON）
+- ❌ Self-Check logic gates 喺 reply 入面逐條 echo + reason（mental check only，pass 唔出聲）
 - ❌ 假設 filming window length = actual shoot day count（e.g. 「Filming May 18–22」 ≠ 5 日連拍）—— 必須 §3 Step 3 ask
 
 ---
@@ -547,136 +547,96 @@ Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或
 
 ### Step 4: Generate（Two-Phase Document）
 
-**Pre-step A（必須做）：Fetch HK Public Holidays**
-開始 enumerate 之前，先 fetch 整個 planning range 嘅 HK public holidays（用 §2 Rule 1 嘅 standard Python query）。攞返 `holiday_dates` set + `holiday_names_by_date` map，cache in-memory。
+**Pre-step A（必須做）：Invoke timeline backward-planning script**
 
-**Pre-step B（必須做）：Enumerate Milestone List via Backward-Planning**
+**唔好再 inline 寫 Python**。所有 backward-planning math（HK holidays load / kickstart push / backward tail / cut chain / pre-pro / Compressed-Edge-Case / Extreme-Squeeze / Pattern J / pure-post）已經由 `scripts/timeline_backward.py` encapsulate。Phase 1 只係 invoke script + parse JSON + 寫 reply。
 
-跟 §1 Standard Milestone Set + **§1 Post-Production Backward-Planning from Final Delivery Anchor** algorithm。**核心 ordering：由 Final Output anchor 倒推，唔好 forward-chain from Shoot 然後 derive Final Output。**
+**Bash CLI invocation（standard shoot+post）：**
 
-**Python script output convention（必須跟從，Phase 1 token bloat 主控）：**
-Backward-planning Python script 嘅 stdout **必須 minimal**：
-- ❌ 唔好逐個 intermediate value print（Kickstart / Final / Shoot / C/S / VO window / Picture Lock / available window / 3 個 cut date / chain total / compressed pre-pro / parallel style frame 各 print 一行）
-- ❌ 唔好 print step-by-step narration（「Backward tail...」「Standard pre-pro back-calc...」「=== SELF-CHECK ===」逐 milestone status 一行）
-- ❌ 唔好喺 Python 內 echo SELF-CHECK list（self-check 由 Pre-step E mental check 處理，唔係 Python stdout）
-- ✅ 只 print **final milestone JSON**（一個 array of `{name, date, weekday, colorId}` object）
-- ✅ Error / assertion failure 先 print 一行（chain total mismatch / past-milestone detected → Compressed branch 之類）
-
-Verbose stdout 連 Self-Check 24 條 in-context echo 係 Phase 1 17k tokens / 4m+ 嘅主因。Single-Scenario Rule + silent script + minimal Self-Check 三者一齊行先 effective。
-
-**✅ Canonical Python template（直接 base on 呢個改，唔好 ad hoc 重寫）：**
-
-```python
-import json
-from datetime import date, timedelta
-
-# ---- §0 effective_kickstart helper（每次跑 backward-planning 必須用） ----
-HK_HOLIDAYS = {  # load from context/holidays/hk-2026.json
-    # date(2026, 5, 25), ...
-}
-
-def push_to_weekday(d):
-    while d.weekday() >= 5 or d in HK_HOLIDAYS:
-        d += timedelta(days=1)
-    return d
-
-def back_wd(d, n):  # n working days backward, skip weekend + holiday
-    while n > 0:
-        d -= timedelta(days=1)
-        if d.weekday() < 5 and d not in HK_HOLIDAYS:
-            n -= 1
-    return d
-
-today = date(2026, 5, 9)
-effective_kickstart = push_to_weekday(today)
-final_output = date(2026, 6, 15)  # client deadline anchor
-
-# ---- backward chain（C/S, VO, Picture Lock, cuts, pre-pro）----
-# ... 全部 math 用 effective_kickstart + back_wd()，唔用 raw today ...
-
-milestones = [
-    {"name": "Script Received", "date": "2026-05-11", "weekday": "Mon", "colorId": "5"},
-    # ... 其餘 milestones ...
-    {"name": "Final Output", "date": "2026-06-15", "weekday": "Mon", "colorId": "11"},
-]
-
-# ---- ONLY OUTPUT LINE（其他 print 一律刪走） ----
-print(json.dumps(milestones))
+```bash
+python3 scripts/timeline_backward.py \
+  --today 2026-05-09 \
+  --final-output 2026-06-15 \
+  --shoot-mode standard \
+  --shoot-date 2026-05-19 \
+  --has-vo true \
+  --has-style-frame true \
+  --project "J26XXX-Project-Name"
 ```
 
-**❌ Anti-example（real test 2026-05-09 J260YY 出現過嘅 verbose pattern，唔好再寫）：**
+**Pure-post（材料 ready 嗰日做 1st Cut start anchor）：**
 
-```python
-# 違反：每個 intermediate value 一行
-today = date(2026, 5, 9)
-print(f"today: {today} {today.strftime('%A')}")           # ❌
-effective_kickstart = push_to_weekday(today)
-print(f"effective_kickstart: {effective_kickstart} ...")   # ❌
-final_output = date(2026, 6, 15)
-print(f"final_output: {final_output} ...")                 # ❌
-cs_date = back_wd(final_output, 1)
-print(f"C/S: {cs_date} ...")                               # ❌
-# ...
-print("=== SELF-CHECK ===")                                # ❌ 無論 Python 內定 reply 都唔好 echo
+```bash
+python3 scripts/timeline_backward.py \
+  --today 2026-05-09 \
+  --final-output 2026-07-15 \
+  --shoot-mode pure-post \
+  --first-cut-start 2026-05-20 \
+  --has-vo true \
+  --project "J26XXX-Project-Name"
 ```
 
-**Hard rule：** 寫完 script 提交執行**之前**，自己 grep 一次 `print(` —— 應該得**一個** match（final `print(json.dumps(milestones))`）。多過一個 = rewrite。
+**其他 flags（按需要加）：**
+- `--senior-approval-fb2-wd N` — 用戶提到 senior approval / 走管理層 review → 強制 2-cut，FB2 = N wd，slack 落上游
+- `--cut-count-override 2` — 用戶 explicit 要 2-cut（覆蓋 default）
+- `--shoot-days N` — multi-day shoot（default 1）
+- `--has-vo false` — 冇 VO recording
+- `--has-style-frame false` — 冇 style frame milestone
+- `--holidays-dir path` — 一般唔需要 override（default = `context/holidays/`，auto-glob `hk-*.json`）
 
-執行次序：
-
-1. **Step 0：Anchor `kickstart_date = today`**（default）/ user-stated date；計 `effective_kickstart_date`（today 撞 weekend / HK holiday → push 落下一個 weekday + non-holiday；見 §0 Kickstart Anchor）
-2. **確認 Final Output anchor**——client deadline 明唔明？冇 → 主動問用戶（見 §1 Backward-Planning subsection）
-3. **Step A：Anchor `final_output_date = client_deadline`**
-4. **Step B：Backward tail** — 計 C/S（final-1 wd）、VO window（end ≤ final-2 wd, length 2 wd）、Picture Lock（VO start - 1 wd 或 C/S - 1 wd）
-5. **Step C：Forward MIN from Shoot**（standard）/ from 1st Cut start（pure-post）—— 計 3-cut MIN 同 2-cut MIN
-6. **Step D：Decide cut count** — 用 Step B 推出嚟嘅 `picture_lock_date` 同 Shoot 之間嘅 available window 對住 §1 cut count table（≥20 = 3 cuts，14–19 = flag trade-off + 問用戶，<14 = Pattern J）
-7. **Step E：Distribute slack cut-gap-first**（cap 4–5 wd per gap，feedback rounds last，剩 slack 留 cut gap 唔 pull final 早）
-8. **Pre-pro chain**（standard shoot+post only）：由 Shoot back-calculate Script Lock (-7 wd) → Submit Video Flow (-5 wd) → Script Received (-5–6 wd)
-9. **Step F：Past-milestone Detection** — 全部 backward-derived milestones（pre-pro chain + Picture Lock + VO start + C/S）對 `effective_kickstart_date` check。任何一個 < effective_kickstart → 觸發 Compressed-Edge-Case Branch（見 §1）。✋ 永遠唔好默默加 `[已過]` tag。
-10. **Enumerate 全部 milestones**——每個獨立日期、獨立 colorId、獨立 row。**唔可以揈做 date range，唔可以默默 drop pre-pro。**
-
-**Senior approval exception：** 用戶提到 2nd cut 後要 senior approval / 走管理層 review → 強制 2 cuts，FB2 拎用戶指定嘅長度，剩 slack 落上游。
-
-**Pure-post：** Skip Step 7（pre-pro chain）+ skip Shoot anchor。1st Cut start anchor 由用戶提供（材料 ready 嗰日）。Backward-from-final logic 一樣 apply。
-
-**Pre-step C（必須做）：Holiday + Weekend Cross Check**
-對每個非 shooting milestone 嘅 candidate date 對住 weekday rule + holiday set check。任何一個 hit weekend / holiday → 自動 push 去下一個 weekday + non-holiday，cascade 後續 milestone 同步調整。Surface 俾用戶睇 push 咗咩。
-
-**Pre-step D（必須做）：VO Window 計算**（如 VO recording）
-- `vo_window_earliest_start = picture_lock_date + 1 wd`
-- `vo_window_length = 2 wd`
-- `vo_window_latest_end ≤ final_output_date - 2 wd`
-- Calendar event：multi-day all-day event，`end.date` 係 exclusive（length 2 wd → `end.date = start.date + 2 wd + 1 day`）
-- Event title：`(2 Days) VO Recording - [Project]`
-
-**Pre-step E（必須做）：Pre-flight Self-Check（minimal — 2 hard gates + 6 logic gates）**
-
-Self-Check **唔好喺 output 逐 ☐ echo + reason**（in-context introspection 係 Phase 1 token bloat 第二大主因）。Mental check，pass 就 pass，只係 fail 嘅情況先 surface。
-
-**🔴 Python Execution Hard Gates（提交 Python script 之前 mental check，違反 = rewrite，唔係 retry）：**
+**Script 輸出 1 行 JSON。Top-level keys：**
 
 ```
-☐ Python stdout = 1 line JSON only？grep `print(` 應該得 1 個 match（final `print(json.dumps(milestones))`）。多過一個 = rewrite，唔係再跑一次 patch。
-☐ 第一次 Python run 必須 effective_kickstart-aware：script 第一段必須 `effective_kickstart = push_to_weekday(today)`，所有 backward chain math 用 `effective_kickstart` 唔用 raw `today`。冇 = rewrite，唔好用「跑完發現撞 Saturday → 再跑一次」嘅 retry pattern（雙倍 token）。
+status: "standard" | "compressed_edge_case" | "extreme_squeeze" | "infeasible_pattern_j" | "pure_post" | "pure_post_compressed"
+scenario_label: 一句中文 label（e.g. "Compressed-Edge-Case 3-cut (default)"）
+effective_kickstart: ISO date
+final_output: ISO date（push 過 weekend / holiday）
+shoot_date: ISO date | null
+available_wd: int（shoot/1st-cut → picture_lock 之間 working day）
+cut_count: int（0 = Pattern J infeasible）
+milestones: [{order, name, date, weekday, colorId, party, calendar_title}, ...]（chronological order）
+vo_window: {start, end, days, calendar_title, colorId} | null
+has_style_frame: bool
+warnings: [一個 string array — 全部 ⚠️ flags + holiday push notes + 切換 branch 嘅 narration]
+extreme_squeeze_propositions: [{id, name, detail}, ...] | null（status="extreme_squeeze" 先有）
 ```
 
-**6 Logic Gates：**
+**Branch routing：**
+
+| `status` | Phase 1 reply 點寫 |
+|---|---|
+| `standard` / `pure_post` | 直接列 milestones + VO window + warnings → 問用戶要唔要 push Calendar |
+| `compressed_edge_case` / `pure_post_compressed` | 同上，但 warning 一定有「切換 Compressed-Edge-Case Branch」narration → 用戶見到要決定接受 / 延 final |
+| `extreme_squeeze` | **唔好出 timeline**。Surface `scenario_label` + `extreme_squeeze_propositions` 3 條 → tag director call decision（見 §3 Pattern J / Senior） |
+| `infeasible_pattern_j` | **唔好出 timeline**。Surface `warnings`（Pattern J narration）+ tag Sohling escalation |
+
+**Phase 1 reply convention：**
+1. 一句 timeline summary（kickstart → final，cut count，scenario label）
+2. 列 milestones（每個一行：`Date (Weekday) — Name`）
+3. VO window 一行（如有）
+4. Warnings list（每條 ⚠️ 一行）
+5. Pattern flags（§3 Step 5 Pattern A–J 對 milestones / warnings 揀 applicable 嘅出）
+6. 結尾問：「OK 唔 OK？OK 我就 push Calendar」
+
+**❌ Anti-patterns（嚴格禁止）：**
+- ❌ Inline 寫 Python（重 implement HK holidays / push_to_weekday / back_wd 邏輯）— **永遠 invoke script**
+- ❌ Echo script 嘅 stdout JSON 落 reply（user 唔需要見 JSON）
+- ❌ 跑多次 script 對比 scenario（Single-Scenario Rule — script 內部已經自動 fallback standard → compressed-edge-case → extreme-squeeze → Pattern J）
+- ❌ Phase 1 query Calendar API（saturation / conflict 全部留 Phase 2）
+
+**Pre-step B（必須做）：Pre-flight Self-Check（mental，唔 echo）**
+
+Script output 出嚟之後，mental check 以下 logic gates。Pass 就直接寫 reply，唔好喺 reply 內 echo 條 list（in-context introspection = token bloat）。
 
 ```
-☐ Kickstart anchored（today by default；today 撞 weekend / holiday → effective_kickstart = next weekday + non-holiday）
-☐ Final Output = client deadline anchor（冇 → 主動問用戶）
-☐ Step F: Backward-derived milestones 全部 ≥ effective_kickstart_date？任何 past → Compressed-Edge-Case Branch + ⚠️ warning + (a) extend / (b) aggressive recommend；連 Compressed 都頂唔順 → Extreme-Squeeze Tier surface 3 propositions 俾導演
-☐ Cut count: standard 跟 §1 Step D table；Compressed-Edge-Case 仍 default 3-cut（squeeze gap，唔 first lever drop cut）
-☐ 每個非 shooting milestone weekday + non-holiday（hit → push 下一 weekday + cascade）
-☐ Single-Scenario Rule: 只跑 1 scenario（唔好預先 enumerate standard + compressed 對比）
+☐ status field 識別 → 揀啱 branch routing
+☐ milestones array 非空（除非 status 係 infeasible / extreme_squeeze）
+☐ VO window dates 對住 §1 weekend cross check rule（vo_window 已自動計，但要 mental verify warnings 入面有冇 weekend cross flag）
+☐ Pattern A–J 對 warnings / scenario 揀啱（Pattern A 壓縮 / B Shoot TBC / D senior approval / J infeasible）
+☐ Single-Scenario Rule: 只 invoke 1 次 script
 ```
 
-其餘 detail（VO window math / pre-pro chain spacing / row 1:1 / sub-step ordering / pre-pro 7 milestones enumeration / 無 `[已過]` tagging / pure-post skip pre-pro）由 algorithm 步驟本身保證。如果 algorithm 步驟漏咗某啲 detail → 喺步驟 fix，唔係喺 self-check 補。
-
-**2 hard gates + 6 logic gates 全部 yes 先可以 finalize。** 任何一條 no → 補返。無法 resolve → escalate Sohling（Pattern J）。
-
-**Pre-step F（必須做）：Edge Case Escape Hatch**
-上面任何 pre-step 撞咗無法 standard rule resolve 嘅情況 → 直接走 Pattern J，stop generation + tag Sohling。
+任何一條 fail → 補返 / 重 invoke script with 正確 args。無法 resolve → escalate Sohling（Pattern J）。
 
 ---
 
