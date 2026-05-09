@@ -8,6 +8,16 @@
 
 ## 0. Workflow Phases（開工前必讀）
 
+### Kickstart Anchor（hard default）
+
+**Today = project kickstart date**——**hard default 假設**，唔需要用戶明確講「今日 kickstart」。Mugi 收到 timeline request 嗰陣自動將「今日」當 forward boundary：所有 milestone（backward derive 定 forward chain 出嚟都計）**唔可以早過 kickstart_date**。
+
+**Override condition：** 用戶明確 state「[milestone] 已完成於 [date]」嗰陣，先將該 milestone lock 喺 stated date，當 partial pre-pro 已執行。冇 explicit「已完成」聲明 → 一律當未開始。
+
+**為咩重要：** Backward-from-final-anchor algorithm 由 client deadline 倒推 pre-pro chain，如果倒推出嚟嘅 date 早過今日，silent 噉假設 client 已經做完嗰啲 pre-pro work 係**錯**——pre-pro 唔可以喺 kickstart 之前發生。Backward-derived milestone < `kickstart_date` → 觸發 §1 **Compressed-Edge-Case Branch**（唔好默默加 `[已過]` tag）。
+
+---
+
 Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-proceed 落下一 phase。**
 
 ### Phase 1 — Draft text preview
@@ -146,6 +156,9 @@ Mugi explain 俾導演聽**點解某個 milestone 排嗰日**：
 
 #### Backward-Planning Algorithm（適用 standard shoot+post + pure-post）
 
+**Step 0 — Anchor Kickstart Date**
+`kickstart_date = today`（default）/ user-stated date（見 §0 Kickstart Anchor）。Backward chain 推出嚟嘅 milestones 全部要 ≥ `kickstart_date`，否則觸發 Step F。
+
 **Step A — Anchor Final Output**
 `final_output_date = client_deadline`（hard anchor，唔郁）。
 
@@ -196,6 +209,56 @@ Window 14–19 wd 嗰下 Mugi 主動 flag，**唔好默默 silent decide**：
 3. 仲有剩 slack（cut gaps 同 feedback 都填滿）→ **留喺 cut gap**（俾 post team 多日 buffer），**唔可以** pull Final Output 早
 
 **點解 cut-gap-first：** 每個 cut delivery 需要 DOF post team 真實 production time。Compressing cut production = 直接 burn out post team。Compressing feedback = client-facing trade-off，client 自己決定。3 cuts 嘅情況下我哋會 frame 俾 client：「3 輪 iteration 即係每輪 feedback time 緊啲」。
+
+**Step F — Past-milestone Detection（feasibility gate）**
+
+行完 Step B + Step E 之後，逐個 backward-derived milestone（C/S、VO window start、Picture Lock、3rd/2nd/1st Cut、pre-pro chain：Confirm/Submit Style Frame、Confirm/Submit Graphics Ref、Script Lock、Submit Video Flow、Script Received）對住 `kickstart_date` check：
+
+```
+IF any backward-derived milestone < kickstart_date:
+  → Timeline INFEASIBLE under standard logic
+  → Trigger Compressed-Edge-Case Branch（見下面 sub-section）
+ELSE:
+  → Standard output，繼續 §3 Step 4 enumerate
+```
+
+**❌ 唔可以**默默喺 past-milestone 行加 `[已過]` tag——backward-derived date 早過今日**唔等於**嗰個 milestone 已經完成。除非用戶 explicit override（見 §0 Kickstart Anchor），一律當未開始 → infeasibility。
+
+---
+
+### Compressed-Edge-Case Branch（Step F triggered）
+
+當 Step F detect 到 past-milestone（backward chain 撞穿 kickstart）→ Standard logic 已經頂唔順，行呢個 branch。**比下面 §1 Compression Rules 更激進**——pre-pro 全 parallel、Style Frame 移後、cut count force 2 或以下、buffer 全部壓到 0–1 wd。
+
+| 改動 | Standard | Compressed-Edge-Case |
+|---|---|---|
+| Shoot date | client-stated 或 backward-derived | **ASAP = kickstart + 1–2 wd prep**（props / location confirm minimum） |
+| Style Frame | Pre-shoot deliverable（Submit + Confirm Style Frame 喺 Shoot 前 confirm） | **並行 1st Cut**（夾喺 1st Cut 俾 client review，唔再 block shoot；接受 style 改返工 risk） |
+| Pre-pro chain | Script → Submit Video Flow → Submit Graphics Ref → Script Lock → Confirm Graphics Ref sequential | 全部 **parallel**（kickstart 後同步推） |
+| Cut count | §1 Step D 邏輯（≥20 wd = 3 / 14–19 = flag / 10–13 = 2 compressed） | **Force 2-cut 或以下**（時間冇 buffer 跑 3-cut） |
+| Slack distribution | Step E cut-gap-first（cap 4–5 wd） | 所有 buffer 壓到 **0–1 wd** |
+
+**Output 必須含 explicit ⚠️ warning（唔係 optional）：**
+
+```
+⚠️ Timeline INFEASIBLE under standard logic
+今日 kickstart → client deadline = [N working days]
+Standard pre-pro chain 需要 [M working days]，超出 available window。
+
+以下 schedule 採用 Compressed-Edge-Case：
+  - Shoot ASAP（[date]，kickstart + [1–2] wd prep）
+  - Style Frame 並行 1st Cut（唔再 pre-shoot confirm，接受 style 改返工 risk）
+  - Pre-pro 全部 parallel
+  - Force 2-cut（buffer 0–1 wd）
+
+Recommend client 二選一：
+  (a) Negotiate deadline extension to [date]（standard logic 可行嘅 minimum）
+  (b) Confirm aggressive schedule below + accept style frame 改返工 risk
+```
+
+**Style Frame scope rule：** Style Frame parallel-with-1st-cut **只准** Compressed-Edge-Case Branch 用。Standard timeline 仍然 pre-shoot confirm（避免 style 改返工 cost）。
+
+**連 Compressed-Edge-Case 都頂唔順？** Force 2-cut + pre-pro 全 parallel + buffer 0 wd 仍然撞 deadline → 走 Pattern J，escalate Sohling。
 
 ---
 
@@ -421,14 +484,16 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 
 執行次序：
 
-1. **確認 Final Output anchor**——client deadline 明唔明？冇 → 主動問用戶（見 §1 Backward-Planning subsection）
-2. **Step A：Anchor `final_output_date = client_deadline`**
-3. **Step B：Backward tail** — 計 C/S（final-1 wd）、VO window（end ≤ final-2 wd, length 2 wd）、Picture Lock（VO start - 1 wd 或 C/S - 1 wd）
-4. **Step C：Forward MIN from Shoot**（standard）/ from 1st Cut start（pure-post）—— 計 3-cut MIN 同 2-cut MIN
-5. **Step D：Decide cut count** — 用 Step B 推出嚟嘅 `picture_lock_date` 同 Shoot 之間嘅 available window 對住 §1 cut count table（≥20 = 3 cuts，14–19 = flag trade-off + 問用戶，<14 = Pattern J）
-6. **Step E：Distribute slack cut-gap-first**（cap 4–5 wd per gap，feedback rounds last，剩 slack 留 cut gap 唔 pull final 早）
-7. **Pre-pro chain**（standard shoot+post only）：由 Shoot back-calculate Script Lock (-7 wd) → Submit Video Flow (-5 wd) → Script Received (-5–6 wd)
-8. **Enumerate 全部 milestones**——每個獨立日期、獨立 colorId、獨立 row。**唔可以揈做 date range，唔可以默默 drop pre-pro。**
+1. **Step 0：Anchor `kickstart_date = today`**（default）/ user-stated date（見 §0 Kickstart Anchor）
+2. **確認 Final Output anchor**——client deadline 明唔明？冇 → 主動問用戶（見 §1 Backward-Planning subsection）
+3. **Step A：Anchor `final_output_date = client_deadline`**
+4. **Step B：Backward tail** — 計 C/S（final-1 wd）、VO window（end ≤ final-2 wd, length 2 wd）、Picture Lock（VO start - 1 wd 或 C/S - 1 wd）
+5. **Step C：Forward MIN from Shoot**（standard）/ from 1st Cut start（pure-post）—— 計 3-cut MIN 同 2-cut MIN
+6. **Step D：Decide cut count** — 用 Step B 推出嚟嘅 `picture_lock_date` 同 Shoot 之間嘅 available window 對住 §1 cut count table（≥20 = 3 cuts，14–19 = flag trade-off + 問用戶，<14 = Pattern J）
+7. **Step E：Distribute slack cut-gap-first**（cap 4–5 wd per gap，feedback rounds last，剩 slack 留 cut gap 唔 pull final 早）
+8. **Pre-pro chain**（standard shoot+post only）：由 Shoot back-calculate Script Lock (-7 wd) → Submit Video Flow (-5 wd) → Script Received (-5–6 wd)
+9. **Step F：Past-milestone Detection** — 全部 backward-derived milestones（pre-pro chain + Picture Lock + VO start + C/S）對 `kickstart_date` check。任何一個 < kickstart → 觸發 Compressed-Edge-Case Branch（見 §1）。✋ 永遠唔好默默加 `[已過]` tag。
+10. **Enumerate 全部 milestones**——每個獨立日期、獨立 colorId、獨立 row。**唔可以揈做 date range，唔可以默默 drop pre-pro。**
 
 **Senior approval exception：** 用戶提到 2nd cut 後要 senior approval / 走管理層 review → 強制 2 cuts，FB2 拎用戶指定嘅長度，剩 slack 落上游。
 
@@ -448,10 +513,15 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 
 ```
 ☐ HK public holidays 我有冇 fetch 咗？
+☐ Kickstart date anchored（today by default，除非用戶 explicit「[milestone] 已完成於 [date]」override）？
 ☐ 我係咪只跑咗 1 個 scenario？（Single-Scenario Rule — 唔好預先 enumerate standard + compressed 對比）
 ☐ Final Output = client deadline anchor？冇 pull 早過 deadline？（§1 Backward-Planning core rule）
 ☐ 冇 client deadline 嘅話我有冇主動問？
 ☐ Backward tail 反推啱：C/S = Final - 1 wd？VO window end ≤ Final - 2 wd？Picture Lock = VO start - 1 wd（或 C/S - 1 wd 冇 VO）？
+☐ Step F：Backward-derived milestones（pre-pro chain + Picture Lock + VO start + C/S）全部 ≥ kickstart_date？任何一個 < kickstart → 觸發 Compressed-Edge-Case Branch
+☐ 如果有 past-milestone：Compressed-Edge-Case Branch triggered（pre-pro parallel、Shoot ASAP、Style Frame 並行 1st Cut、Force 2-cut、buffer 0–1 wd）？
+☐ Compressed-Edge-Case output 含 explicit ⚠️ warning + (a) extend deadline / (b) confirm aggressive schedule recommend？
+☐ 冇默默加 `[已過]` tag 落 backward-derived past milestone？（永遠當未開始除非用戶 explicit override）
 ☐ Cut count decision 跟 §1 Step D table（≥20 = 3, 14–19 = flag trade-off, <14 = Pattern J）？
 ☐ Slack distribution 跟 cut-gap-first（cap 4–5 wd）—— 唔係 silent compress feedback or pull final 早？
 ☐ Pure-post job？係 → pre-pro + Shooting 已經 skip 晒，唔好計 pre-pro chain（見 §3 Step 2 keyword detection）；backward-from-final logic 仍然 apply
@@ -607,6 +677,9 @@ Standard logic resolve 唔到 → **stop generation，直接 escalate**。唔好
 | Drop 3rd cut → silent pull Final Output 早                                    | Drop cut 時 Final Output 唔郁，slack 改落 1st/2nd cut gap 同 feedback                                 |
 | Window 14–19 wd silent decide 行 2-cut 或 3-cut compressed                     | Mugi 主動 flag trade-off + 問用戶                                                                   |
 | 冇 client deadline 直接 forward-chain 計到 Final Output                           | 主動問 client 嗰邊有冇 confirm final delivery date                                                    |
+| Backward-derived milestone < kickstart date 默默加 `[已過]` tag 當已完成              | Backward chain 撞穿 kickstart → 觸發 Compressed-Edge-Case Branch；除非用戶 explicit「[milestone] 已完成於 [date]」否則一律當未開始 |
+| Standard timeline 排 Style Frame parallel-with-1st-cut（捨 pre-shoot confirm）        | Standard timeline 仍然 Submit + Confirm Style Frame pre-shoot；parallel-with-1st-cut **只准** Compressed-Edge-Case Branch 用 |
+| Forward chain 唔 anchor today，backward chain 倒推到任何日子（包括早過今日）都算 valid       | Kickstart date = today（default），所有 backward-derived milestone ≥ kickstart_date；觸發 Step F + Compressed-Edge-Case |
 
 ---
 
