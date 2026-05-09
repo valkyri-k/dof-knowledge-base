@@ -387,3 +387,9 @@ Type: decision
 Context: Mugi 唔回應 #ai-agent-mugi 嘅 thread posts，因為 Discord thread 有獨立 chat_id，唔喺 whitelist 入面。
 Note: "B better / process & log this issue" — Kary 決定改用 Option B：喺 DOF Discord server 任何 channel（包括 threads）都回應，信 Discord bot access control。已更新 CLAUDE.md Channel Policy。唔再維護 channel ID whitelist。
 Status: done
+
+## [[2026-05-09]] 14:28
+Type: feature-idea
+Context: J260YY Test Project 2 timeline planning session。Shoot date 未 lock，Mugi 跟 §5 flow propose candidates，手寫 inline Python 計 Script Lock back-dates + post window sizes。Kary 問點解唔直接跑 scripts/timeline_backward.py。
+Note: `timeline_backward.py` 需要 `--shoot-date` 作為 input，shoot date 未決定前跑唔到。Inline Python 係 shoot date candidate proposal 嘅過渡計算（§5 flow），唔係 timeline generation 本身。但如果 script 支援 proposal mode（e.g. `--propose-shoot-from DATE --propose-shoot-to DATE`），呢步可以整合入去，避免 ad-hoc inline Python。
+Status: open
