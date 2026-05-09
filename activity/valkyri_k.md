@@ -100,6 +100,9 @@ J26053 方面：加 3rd Cut (#1) May 11 + (#2) May 12。另外喺 J26053 channel
 ### 2026-05-09 afternoon session
 主力 test Phase 1 timeline generation workflow（Compressed-Edge-Case Branch）。J260ZZ Test Project 3：1 day shoot + VO + Jun 15 deadline。關鍵發現：May 9 = Saturday（唔係 Friday），effective_kickstart 正確移到 May 11。Standard pre-pro 唔 fit（Script Lock 需要 May 8 < kickstart May 11）→ Compressed-Edge-Case triggered。Compressed pre-pro (2 wd gaps) → Shoot May 19 (Tue)。Post-pro window = 14 wd，落入 14-19 wd range，flagged 2-cut vs 3-cut trade-off，Kary 揀 3-cut compressed（gaps 3+2+3+1+3+2 wd，FB2 = 1 wd 緊）。Phase 1 draft sent，等 confirm push Calendar（Phase 2 pending）。May 25 佛誕翌日 holiday + Saturday kickstart detection 兩個 date-handling checkpoints 都正確處理。
 
+### 2026-05-09 evening session
+Post-clear mini-session。Kary 喺 Discord 查詢 Pre-Clear Sequence 而家有幾多 step（答：7 steps）同 Step 5 係咩（Profile candidate detection）。跟住 Kary 指出頭先 pre-clear 冇跑足 7 steps——Steps 4+5 冇明確執行，只係 silent skip。Mugi 承認：Step 4（cross-update logs）是 valid skip（冇 bug/gap），但冇記錄 skip 原因；Step 5（profile candidate detection）報「0」但冇 explicitly run 過 criteria check。**Decision：下次 pre-clear 必須明確 run + document 每個 step，即使 skip 都要講原因。**
+
 ### 2026-05-08 afternoon/evening session
 今日兩個主要 work streams：job-list 擴展 + J26071 timeline。Job-list 方面：手動 patch 咗 J26071 Button InvestHK（Channel ID 1502220628424396821，Kary 係 Director），之後 Kary 自己喺 Airtable 做咗更大幅度更新——加 Director column + sync 晒所有 Current jobs，仲加咗 J26027 / J26075 / J26077 三條新 job，job-list 由 16 → 19 條。Kary 查 Airtable API 可用性：Mugi 只有 authenticate tools，冇 read/query tools，capability gap logged。
 
@@ -210,3 +213,5 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-09 | J260ZZ Test Project 3 timeline planning (MG + footage, 1-day shoot, VO, Jun 15 deadline) | Phase 1 in progress — asked follow-ups re: filming vs pure-post + shoot days |
 | 2026-05-09 | J260ZZ: confirmed 1-day shoot, propose date | Compressed-Edge-Case triggered (May 9=Sat → kickstart May 11); proposed Shoot May 19; flagged 2-cut vs 3-cut |
 | 2026-05-09 | J260ZZ: Kary chose 3-cut | Full Phase 1 draft sent (17 milestones, 3-cut compressed, gaps 3+2+3+1+3+2 wd); awaiting confirm for Phase 2 |
+| 2026-05-09 | Query: Pre-Clear Sequence 幾多 steps + Step 5 係咩 | 答：7 steps；Step 5 = Profile candidate detection，draft 入 Pending Profile Review，唔 self-promote |
+| 2026-05-09 | Kary 指出 pre-clear Steps 4+5 冇明確執行 | 承認：Step 4 valid skip 但無記錄原因；Step 5 報「0」但未 explicitly run criteria check |
