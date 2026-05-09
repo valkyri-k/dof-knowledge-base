@@ -52,8 +52,6 @@
 - **[2026-04-08] J26053 BOC Trendy BTS mograph 未 assign** — 1st Cut BTS (4/23) + Final BTS (5/15) 兩張只 assign 咗 Yik 做 cut，graphics 邊個負責等 Kary x Sohling discussion 結果。BTS editor 都 default 咗 Yik 未確認
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
-- **[2026-05-09] J260ZZ Test Project 3 Phase 1 draft pending** — 3-cut compressed schedule sent (Shoot May 19, Jun 15 FO，17 milestones)，waiting Kary confirm → Phase 2 Calendar push
-- **[2026-05-09] J260AA Test Project 3 Phase 1 draft pending** — Compressed-Edge-Case 3-cut sent (Shoot May 18, VO Jun 10-11, FO Jun 15, 17 milestones，style frame parallel 1st Cut)，waiting Kary confirm → Phase 2 Calendar push
 - **[2026-05-09] root-owned kb files recurring bug** — `scripts/timeline_backward.py` root-owned pattern（estimate: 由 Kary Claude Code local session 改 file 以 root process 跑）；dev-log `2026-05-09 14:53` logged；awaiting permanent fix decision。Cross-ref: `activity/kary-dev-log.md` 2026-05-09 14:53 entry
 
 ---
@@ -125,6 +123,9 @@ Post-clear mini-session。Kary 喺 Discord 查詢 Pre-Clear Sequence 而家有�
 
 ### 2026-05-09 quick test session (J26071 remind verb)
 Kary 喺 J26071 channel 測試 `remind` verb 行為。Mugi 落錯 path——直接 create Google Calendar event（「Remind: Send 1st Cut — InvestHK」2026-05-10 09:00 HKT），但按 kb/CLAUDE.md Verb Routing section，`remind` 係 reserved verb，應該 clarify 而唔係 fall through 去 Calendar。Kary 確認係 test only → 指示 revert。Calendar event deleted + activity log entries removed。Session 淨係 2 個 Discord messages + revert，冇實質 production change。**Key observation：Verb Routing section 喺 kb/CLAUDE.md 存在，但今次 session 嘅 system prompt 冇呢個 section（版本差異）——呢個係 test 嘅 context，唔係 Mugi violation。**
+
+### 2026-05-10 morning session
+本 session 係一系列純 behavior test，冇實質 production change。J260AA Test Project 3 timeline test：完整跑咗 image parse → clarify questions → candidate propose script → full timeline script，Compressed-Edge-Case 3-cut output 正常（Shoot May 18，17 milestones，VO Jun 10-11，FO Jun 15）；Phase 1 draft sent，Kary 即確認 test only → ignored。另外兩個快速 test：J26062 cross-job mention（@Mugi update J26071 timeline）→ Mugi 正確 detect cross-job + ask clarify intent；J26062 reminder verb test → Mugi 正確 trigger reserved-verb clarification flow。三個 test 全部 pass，無需 log 任何 architectural decision 或 capability gap。
 
 ### 2026-05-08 afternoon/evening session
 今日兩個主要 work streams：job-list 擴展 + J26071 timeline。Job-list 方面：手動 patch 咗 J26071 Button InvestHK（Channel ID 1502220628424396821，Kary 係 Director），之後 Kary 自己喺 Airtable 做咗更大幅度更新——加 Director column + sync 晒所有 Current jobs，仲加咗 J26027 / J26075 / J26077 三條新 job，job-list 由 16 → 19 條。Kary 查 Airtable API 可用性：Mugi 只有 authenticate tools，冇 read/query tools，capability gap logged。
@@ -251,3 +252,6 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-09 | J26071 test: "remind Kary to send first cut tomorrow" | Mugi created Calendar reminder event (wrong path — should clarify per Verb Routing rule); Kary: test only → revert |
 | 2026-05-09 | Revert test: delete Calendar event + activity log entries | Calendar event tgq8568jmv65lr5139fcv5rdq4 deleted; log entries removed ✅ |
 | 2026-05-09 | J26071 Trello assign verb test: 「assign Kary to send first cut tomorrow」 | Routed to Trello: new list + card created → Kary: test only → card archived + log entries removed ✅ |
+| 2026-05-09 | J260AA Test Project 3 timeline planning (client schedule image, MG + footage, 1-day shoot, VO, Jun 15 deadline) | Parsed image → asked shoot days → ran candidate+full timeline scripts (Compressed-Edge-Case 3-cut, Shoot May 18, 17 milestones) → Phase 1 draft sent → Kary: test only, ignore ✅ |
+| 2026-05-09 | J26062 cross-job mention test: @Mugi update J26071 timeline | Detected cross-job, clarified intent → Kary: test only, ignore ✅ |
+| 2026-05-09 | J26062 reminder verb test: 「remind Kary to send 1st cut tmr」 | Triggered reserved-verb clarify flow → Kary: test only, ignore ✅ |
