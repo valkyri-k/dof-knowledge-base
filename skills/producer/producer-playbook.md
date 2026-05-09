@@ -6,6 +6,17 @@
 
 ---
 
+> ## 🔒 PHASE 1 TOKEN-CONTROL HARD RULES（違反 = REWRITE，唔係 best practice，係 contract）
+>
+> 1. **PYTHON STDOUT = 1 LINE ONLY**：Backward-planning Python script 嘅 `print()` 只可以出 **一個 final milestone JSON array**。任何 intermediate value（`today:`、`effective_kickstart:`、`final_output:`、`C/S:`、`VO:`、`Picture Lock:` 等）一律唔准 print。違反 → 廢棄輸出，rewrite script。
+> 2. **PYTHON 必須 EFFECTIVE-KICKSTART-AWARE**：Script 第一句必須計 `effective_kickstart_date`（today 撞 weekend / HK holiday → push 下一個 weekday + non-holiday），所有後續 milestone math 用佢，唔可以用 raw `today`。第一次 run 計錯要二次 run = token waste，唔接受。
+> 3. **SELF-CHECK 唔可以 ECHO**：Pre-step E 嘅 6 條 ☐ 係 mental check，**pass 就 pass，唔好喺 output 逐條 echo + reason**。只係 fail 嗰陣先 surface 嗰一條。
+> 4. **SINGLE-SCENARIO**：一個 request 只跑一個 scenario 嘅 Python script。唔可以 standard + compressed 並列計嚟對比。
+>
+> 呢 4 條一齊行 Phase 1 先會 < 12k token。Spec 寫咗但唔跟 → token bloat 主因。
+
+---
+
 ## 0. Workflow Phases（開工前必讀）
 
 ### Kickstart Anchor（hard default）
@@ -55,6 +66,8 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 - ❌ Phase 1 同時跑多個 scenario Python script（standard + compressed 並列計）—— Single-Scenario Rule，見 §1 Compression Rules
 - ❌ Phase 1 query Calendar API（director 由 `context/job-list.md` lookup；conflict / saturation / 已 marked event 全部留 Phase 2 一次過）
 - ❌ Python script verbose stdout（每個 intermediate value、step-by-step narration、SELF-CHECK section print 出嚟）—— 食爆 token 主因；script 只 print final milestone JSON
+- ❌ Python script 用 raw `today` 而冇計 `effective_kickstart_date`（→ today 撞 weekend / holiday 嗰陣計錯，要二次 run fix Saturday-loop）—— 必須一次過 right
+- ❌ Self-Check 6 條 ☐ 喺 reply 入面逐條 echo + reason（mental check only，pass 唔出聲）
 - ❌ 假設 filming window length = actual shoot day count（e.g. 「Filming May 18–22」 ≠ 5 日連拍）—— 必須 §3 Step 3 ask
 
 ---
@@ -551,6 +564,64 @@ Backward-planning Python script 嘅 stdout **必須 minimal**：
 
 Verbose stdout 連 Self-Check 24 條 in-context echo 係 Phase 1 17k tokens / 4m+ 嘅主因。Single-Scenario Rule + silent script + minimal Self-Check 三者一齊行先 effective。
 
+**✅ Canonical Python template（直接 base on 呢個改，唔好 ad hoc 重寫）：**
+
+```python
+import json
+from datetime import date, timedelta
+
+# ---- §0 effective_kickstart helper（每次跑 backward-planning 必須用） ----
+HK_HOLIDAYS = {  # load from context/holidays/hk-2026.json
+    # date(2026, 5, 25), ...
+}
+
+def push_to_weekday(d):
+    while d.weekday() >= 5 or d in HK_HOLIDAYS:
+        d += timedelta(days=1)
+    return d
+
+def back_wd(d, n):  # n working days backward, skip weekend + holiday
+    while n > 0:
+        d -= timedelta(days=1)
+        if d.weekday() < 5 and d not in HK_HOLIDAYS:
+            n -= 1
+    return d
+
+today = date(2026, 5, 9)
+effective_kickstart = push_to_weekday(today)
+final_output = date(2026, 6, 15)  # client deadline anchor
+
+# ---- backward chain（C/S, VO, Picture Lock, cuts, pre-pro）----
+# ... 全部 math 用 effective_kickstart + back_wd()，唔用 raw today ...
+
+milestones = [
+    {"name": "Script Received", "date": "2026-05-11", "weekday": "Mon", "colorId": "5"},
+    # ... 其餘 milestones ...
+    {"name": "Final Output", "date": "2026-06-15", "weekday": "Mon", "colorId": "11"},
+]
+
+# ---- ONLY OUTPUT LINE（其他 print 一律刪走） ----
+print(json.dumps(milestones))
+```
+
+**❌ Anti-example（real test 2026-05-09 J260YY 出現過嘅 verbose pattern，唔好再寫）：**
+
+```python
+# 違反：每個 intermediate value 一行
+today = date(2026, 5, 9)
+print(f"today: {today} {today.strftime('%A')}")           # ❌
+effective_kickstart = push_to_weekday(today)
+print(f"effective_kickstart: {effective_kickstart} ...")   # ❌
+final_output = date(2026, 6, 15)
+print(f"final_output: {final_output} ...")                 # ❌
+cs_date = back_wd(final_output, 1)
+print(f"C/S: {cs_date} ...")                               # ❌
+# ...
+print("=== SELF-CHECK ===")                                # ❌ 無論 Python 內定 reply 都唔好 echo
+```
+
+**Hard rule：** 寫完 script 提交執行**之前**，自己 grep 一次 `print(` —— 應該得**一個** match（final `print(json.dumps(milestones))`）。多過一個 = rewrite。
+
 執行次序：
 
 1. **Step 0：Anchor `kickstart_date = today`**（default）/ user-stated date；計 `effective_kickstart_date`（today 撞 weekend / HK holiday → push 落下一個 weekday + non-holiday；見 §0 Kickstart Anchor）
@@ -578,9 +649,18 @@ Verbose stdout 連 Self-Check 24 條 in-context echo 係 Phase 1 17k tokens / 4m
 - Calendar event：multi-day all-day event，`end.date` 係 exclusive（length 2 wd → `end.date = start.date + 2 wd + 1 day`）
 - Event title：`(2 Days) VO Recording - [Project]`
 
-**Pre-step E（必須做）：Pre-flight Self-Check（minimal — 6 critical gates only）**
+**Pre-step E（必須做）：Pre-flight Self-Check（minimal — 2 hard gates + 6 logic gates）**
 
 Self-Check **唔好喺 output 逐 ☐ echo + reason**（in-context introspection 係 Phase 1 token bloat 第二大主因）。Mental check，pass 就 pass，只係 fail 嘅情況先 surface。
+
+**🔴 Python Execution Hard Gates（提交 Python script 之前 mental check，違反 = rewrite，唔係 retry）：**
+
+```
+☐ Python stdout = 1 line JSON only？grep `print(` 應該得 1 個 match（final `print(json.dumps(milestones))`）。多過一個 = rewrite，唔係再跑一次 patch。
+☐ 第一次 Python run 必須 effective_kickstart-aware：script 第一段必須 `effective_kickstart = push_to_weekday(today)`，所有 backward chain math 用 `effective_kickstart` 唔用 raw `today`。冇 = rewrite，唔好用「跑完發現撞 Saturday → 再跑一次」嘅 retry pattern（雙倍 token）。
+```
+
+**6 Logic Gates：**
 
 ```
 ☐ Kickstart anchored（today by default；today 撞 weekend / holiday → effective_kickstart = next weekday + non-holiday）
@@ -593,7 +673,7 @@ Self-Check **唔好喺 output 逐 ☐ echo + reason**（in-context introspection
 
 其餘 detail（VO window math / pre-pro chain spacing / row 1:1 / sub-step ordering / pre-pro 7 milestones enumeration / 無 `[已過]` tagging / pure-post skip pre-pro）由 algorithm 步驟本身保證。如果 algorithm 步驟漏咗某啲 detail → 喺步驟 fix，唔係喺 self-check 補。
 
-**6 條 ☐ 全部 yes 先可以 finalize。** 任何一條 no → 補返。無法 resolve → escalate Sohling（Pattern J）。
+**2 hard gates + 6 logic gates 全部 yes 先可以 finalize。** 任何一條 no → 補返。無法 resolve → escalate Sohling（Pattern J）。
 
 **Pre-step F（必須做）：Edge Case Escape Hatch**
 上面任何 pre-step 撞咗無法 standard rule resolve 嘅情況 → 直接走 Pattern J，stop generation + tag Sohling。
