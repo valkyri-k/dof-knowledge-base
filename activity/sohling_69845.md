@@ -35,6 +35,11 @@
 
 ---
 
+## Pending Profile Review
+（Mugi Pre-Clear Sequence draft，等 Claude Code review approve / reject。冇 candidate 留空。）
+
+---
+
 ## Open Threads
 （pending items，resolved 即時刪）
 

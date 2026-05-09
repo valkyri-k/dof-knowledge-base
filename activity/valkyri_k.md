@@ -37,6 +37,11 @@
 
 ---
 
+## Pending Profile Review
+（Mugi Pre-Clear Sequence draft，等 Claude Code review approve / reject。冇 candidate 留空。）
+
+---
+
 ## Open Threads
 
 - **[2026-04-08] Planyway / Trello Timeline integration 方向** — 等 Kary 揀 3 條 propose 嘅方向（Trello 主控 / 雙向 push / on-demand mirror）；揀完先 set up Trello credentials + 寫 integration logic。Cross-ref: `activity/gap-log.md` 2026-04-08 entry

@@ -387,14 +387,16 @@ Activity log 嘅核心 purpose 係**俾將來嘅 Mugi（clear session 之後）�
 
 Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面，會 sync 上 GitHub）。Mugi 寫嘅時候**永遠用 absolute path** `/home/node/kb/activity/<file>`，唔好用 bare relative path `activity/<file>`——`/home/node/activity` 而家係 symlink 指返 `kb/activity`，但係將來如果 setup 又出錯，bare path 可能 silent 寫去 wrong folder 而 push 唔到 GitHub。同樣 apply 落 `gap-log.md`、`kary-dev-log.md` 同任何將來新 activity file。
 
-### File 結構（3-section hybrid schema）
+### File 結構（5-section hybrid schema）
 
-每個 user activity file 有 **3 個 section**，各有用途：
+每個 user activity file 有 **5 個 section**，各有用途：
 
-1. **Profile**（top） — 靜態資訊
-2. **Open Threads** — 未 resolved 嘅 pending items（incremental update，resolved 就刪）
-3. **Recent Session Summaries** — Narrative form 嘅 session 紀錄，每次 clear session 前寫一段
-4. **Request Log** — Table form 嘅 scan ledger（每件事一行）
+1. **Profile**（top） — 靜態資訊（Discord ID / Role / Common requests / Notes）
+2. **User Practice Profile**（如有） — Mugi 對 user working style / shorthand / response preference 嘅 stable derived rules，由 Pre-Clear Sequence Step 5 promotion + Claude Code review 維護
+3. **Pending Profile Review**（如有） — Mugi 觀察到嘅 profile candidate，等 Claude Code review approve / reject。每次 Pre-Clear Sequence Step 5 append。**唔影響 runtime behavior**，runtime 只 load `User Practice Profile`。
+4. **Open Threads** — 未 resolved 嘅 pending items（incremental update，resolved 就刪）
+5. **Recent Session Summaries** — Narrative form 嘅 session 紀錄，每次 clear session 前寫一段
+6. **Request Log** — Table form 嘅 scan ledger（每件事一行）
 
 ### 點維護
 
@@ -405,6 +407,7 @@ Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面�
 | **喺 per-job channel 做嘢** | 除咗 update user activity log，**同步**寫入對應 per-job activity file（見 §Per-Job Activity Tracking）。兩個 log **並行寫**，唔係二選一 |
 | **遇到 pending item**（blocked / waiting for / 等用戶決定） | Append 入 **Open Threads** section，標注日期 + cross-ref 去相關 gap-log / dev-log entry |
 | **Open thread resolved** | 即時刪走嗰行（keep section 短） |
+| **觀察到 user 有 repeat pattern / explicit profile-shaping instruction / correction** | Pre-Clear Sequence 嘅 Step 5 自動 detect + draft 入 **Pending Profile Review** section（標 `status: pending-review`）。Runtime 唔即時 apply，等 Kary 用 Claude Code review skill approve 後 promote 入 **User Practice Profile**。**永遠唔好** silent self-promote 入 active profile。 |
 | **Session 自然結束 / clear 之前** | 寫一段 **Session Summary**（2-5 句 narrative，capture 今日做咗咩 + decision + 學到咩） |
 | **Session 開始** | Read `/home/node/kb/activity/<username>.md`——先掃 Open Threads，再睇最近 1-2 段 Session Summary，最後睇 Request Log table 揾具體日期 |
 | **Profile updates** | 發現用戶常見 request pattern → update Common requests 同 Notes |
@@ -427,6 +430,44 @@ Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面�
 - **Role:** <role or Unknown>
 - **Common requests:** <patterns>
 - **Notes:** <anything useful>
+
+---
+
+## User Practice Profile
+（由 Claude Code review approve 後 promote 入嚟，Mugi 唔自己改）
+
+### Responsibilities
+- [confirmed responsibility / domain]
+
+### Working Style
+- [observed stable interaction style]
+
+### Response Guidance
+- [how Mugi should adapt replies]
+
+### Known Shorthand
+- [phrase] = [meaning]
+
+### Evidence
+- [[YYYY-MM-DD]] [brief evidence pointer]
+
+---
+
+## Pending Profile Review
+（Mugi Pre-Clear Sequence draft，等 Claude Code review approve / reject）
+
+### [[YYYY-MM-DD]] <morning/afternoon/evening>
+
+- entry: <profile statement>
+  category: responsibilities | working-style | response-guidance | shorthand
+  confidence: high | medium | low
+  source: explicit | observed | corrected
+  evidence:
+    - [[YYYY-MM-DD]] <brief evidence pointer>
+  proposed_visibility: kary-only | team-shared
+  status: pending-review
+  drafted_by: mugi
+  drafted_at: YYYY-MM-DD
 
 ---
 
@@ -476,10 +517,28 @@ Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完�
 2. **寫 Session Summary** — Append 一段新嘅 narrative 入 Recent Session Summaries section，跟 standard format `### YYYY-MM-DD <morning/afternoon/evening> session`。內容要 capture：今晚做咗咩主要 work、邊啲 decisions、學到咩、有冇 surface 新 issue / capability gap。**唔好 list 細節**——細節已經喺 Request Log table，narrative 講 nuance。
 3. **更新 Request Log** — 將今晚發生但未 log 嘅 entries append 入 table（每件主要事一行）。
 4. **Cross-update related logs**（如有需要） — 如果今晚有 architectural decision / bug fix / capability gap，update 埋 `kary-dev-log.md` 或 `gap-log.md` 嘅相關 entry。
-5. **Commit + push** — Stage 全部相關 file，single commit（message 簡述今晚主題），push 上 GitHub。Commit message format 跟現有 convention。
-6. **Report 俾用戶** — 一個簡潔 message 講做咗咩 + commit hash + open threads count + 講「OK 你而家可以 `/clear` 啦」。例：
+5. **Profile candidate detection** — Review 今晚 conversation，檢查每個 sender 有冇符合**任何一條** promotion criteria：
+   - **Explicit profile-shaping instruction**：sender 講「以後我講 X 即係指 Y」/「你記住我負責 Z」/「以後 reply 我簡短啲」等明顯指令 → confidence: high, source: explicit
+   - **Correction signal**：sender 修正 Mugi 對佢嘅理解（「我唔係 director 啦，我係 producer」）→ confidence: high, source: corrected
+   - **Repeat pattern**：sender 表現一致 working style / shorthand / preference，**且過往 activity log 有同類 evidence** → 2 次 confidence: low；3+ 次 confidence: medium。Source: observed。
 
-> ✅ Pre-clear done. Commit `abc1234` pushed. Open threads: 2 (Planyway 方向 / activity.bak 待刪). Session summary 寫低咗今晚 stress test + activity-path bug fix + memory schema rework。OK 你而家可以 /clear 啦。
+   符合 → draft 一條 entry 入 sender activity file 嘅 **Pending Profile Review** section（schema 見 File format template）。**唔符合任何條件 → skip 呢個 step**。
+
+   **Skip 細則：**
+   - 純 quick lookup / 閒聊冇 substantive interaction → skip
+   - Sender 已存在 active **User Practice Profile** entry 同 candidate 矛盾 → 仍然 draft 但 entry 加 `conflicts_with: <existing entry text>` field，等 Kary 解
+   - 同類 candidate 已喺 Pending Profile Review section（未被 review） → skip duplicate，但 evidence list append 新 evidence pointer
+   - 對其他 user 嘅 personal evaluation（e.g.「Benjy 慢」） → **絕對唔 draft**，呢類嘢去 `kary/reasoning/`，唔入 Mugi profile
+
+   **Visibility 默認：**
+   - 一般 working-style / shorthand → `proposed_visibility: team-shared`
+   - 個人 admin preference / 涉及第三方人嘅 context → `proposed_visibility: kary-only`
+
+   **永遠唔好** silent self-promote 入 active **User Practice Profile**——只能 draft 入 Pending Profile Review，等 Claude Code review approve 後先 promote。
+6. **Commit + push** — Stage 全部相關 file，single commit（message 簡述今晚主題），push 上 GitHub。Commit message format 跟現有 convention。
+7. **Report 俾用戶** — 一個簡潔 message 講做咗咩 + commit hash + open threads count + 如有 profile drafts 報 count + 講「OK 你而家可以 `/clear` 啦」。例：
+
+> ✅ Pre-clear done. Commit `abc1234` pushed. Open threads: 2 (Planyway 方向 / activity.bak 待刪). Profile drafts: 1 pending review (sohling: response-guidance, observed × 3). Session summary 寫低咗今晚 stress test + activity-path bug fix + memory schema rework。OK 你而家可以 /clear 啦。
 
 **重要原則：**
 - **唔好問「要唔要寫 summary」**——用戶講 clear 即係已經 commit，直接執行
@@ -487,6 +546,7 @@ Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完�
 - **唔好做 destructive 嘢**——pre-clear sequence 全部係 append + commit + push，唔涉及 delete / overwrite。如果 commit / push 失敗（e.g. permission issue / merge conflict），**要 stop + 報告**，唔好嘗試自己 force-resolve
 - **Mugi 自己唔可以 `/clear`**——`/clear` 係 Claude Code 嘅 client-side command，要用戶自己打。Mugi 嘅責任係**準備好 disk state**，個 actual `/clear` 由用戶執行
 - **如果今晚冇實質 work**（純粹閒聊 / 一兩句 quick query），可以寫一句短 Session Summary（「今晚冇 production work，主要係 quick lookup」）然後仍然 commit + push——keep cadence consistent
+- **Profile promotion 永遠 review-gated**——Pre-Clear Sequence Step 5 只可以 draft 入 **Pending Profile Review** section。Promote 入 **User Practice Profile**（active runtime）係 Claude Code review skill 嘅職責，唔係 Mugi。Mugi 主動 silent promote 屬於 violation。
 
 ---
 
