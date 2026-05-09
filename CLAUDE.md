@@ -392,8 +392,8 @@ Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面�
 每個 user activity file 有 **5 個 section**，各有用途：
 
 1. **Profile**（top） — 靜態資訊（Discord ID / Role / Common requests / Notes）
-2. **User Practice Profile**（如有） — Mugi 對 user working style / shorthand / response preference 嘅 stable derived rules，由 Pre-Clear Sequence Step 5 promotion + Claude Code review 維護
-3. **Pending Profile Review**（如有） — Mugi 觀察到嘅 profile candidate，等 Claude Code review approve / reject。每次 Pre-Clear Sequence Step 5 append。**唔影響 runtime behavior**，runtime 只 load `User Practice Profile`。
+2. **User Practice Profile**（如有） — Mugi 對 user working style / shorthand / response preference 嘅 stable derived rules，由 **Kary 喺 Discord 直接 trigger correction** 維護（見 §In-Discord Profile Correction Protocol）。Pre-Clear Sequence Step 5 會 draft candidate 入 Pending Profile Review 做 audit trail，但**唔自動 promote** 入呢度。
+3. **Pending Profile Review**（如有） — Mugi 觀察到嘅 profile candidate。每次 Pre-Clear Sequence Step 5 append。**唔影響 runtime behavior**，runtime 只 load `User Practice Profile`。**呢個 section 而家係 audit trail**——Mugi 自己唔 promote、Claude Code 都唔做 batch review。Kary 偶爾 scan，覺得有 entry 值得入 Profile 就喺 Discord 直接叫 Mugi 改（見 §In-Discord Profile Correction Protocol）。
 4. **Open Threads** — 未 resolved 嘅 pending items（incremental update，resolved 就刪）
 5. **Recent Session Summaries** — Narrative form 嘅 session 紀錄，每次 clear session 前寫一段
 6. **Request Log** — Table form 嘅 scan ledger（每件事一行）
@@ -407,7 +407,7 @@ Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面�
 | **喺 per-job channel 做嘢** | 除咗 update user activity log，**同步**寫入對應 per-job activity file（見 §Per-Job Activity Tracking）。兩個 log **並行寫**，唔係二選一 |
 | **遇到 pending item**（blocked / waiting for / 等用戶決定） | Append 入 **Open Threads** section，標注日期 + cross-ref 去相關 gap-log / dev-log entry |
 | **Open thread resolved** | 即時刪走嗰行（keep section 短） |
-| **觀察到 user 有 repeat pattern / explicit profile-shaping instruction / correction** | Pre-Clear Sequence 嘅 Step 5 自動 detect + draft 入 **Pending Profile Review** section（標 `status: pending-review`）。Runtime 唔即時 apply，等 Kary 用 Claude Code review skill approve 後 promote 入 **User Practice Profile**。**永遠唔好** silent self-promote 入 active profile。 |
+| **觀察到 user 有 repeat pattern / explicit profile-shaping instruction / correction** | Pre-Clear Sequence 嘅 Step 5 自動 detect + draft 入 **Pending Profile Review** section（標 `status: pending-review`）做 audit trail。Runtime 唔即時 apply。**永遠唔好** silent self-promote 入 active **User Practice Profile**。Profile promotion 由 Kary 喺 Discord 直接 trigger（見 §In-Discord Profile Correction Protocol）。 |
 | **Session 自然結束 / clear 之前** | 寫一段 **Session Summary**（2-5 句 narrative，capture 今日做咗咩 + decision + 學到咩） |
 | **Session 開始** | Read `/home/node/kb/activity/<username>.md`——先掃 Open Threads，再睇最近 1-2 段 Session Summary，最後睇 Request Log table 揾具體日期 |
 | **Profile updates** | 發現用戶常見 request pattern → update Common requests 同 Notes |
@@ -434,7 +434,7 @@ Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面�
 ---
 
 ## User Practice Profile
-（由 Claude Code review approve 後 promote 入嚟，Mugi 唔自己改）
+（由 Kary 喺 Discord 直接叫 Mugi 改入嚟——見 §In-Discord Profile Correction Protocol。Mugi 自己 Pre-Clear Sequence 唔可以 promote 入呢度）
 
 ### Responsibilities
 - [confirmed responsibility / domain]
@@ -454,7 +454,7 @@ Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面�
 ---
 
 ## Pending Profile Review
-（Mugi Pre-Clear Sequence draft，等 Claude Code review approve / reject）
+（Mugi Pre-Clear Sequence draft，audit trail；Kary 偶爾 scan，覺得有 entry 值得入 Profile 就喺 Discord 直接叫 Mugi 改）
 
 ### [[YYYY-MM-DD]] <morning/afternoon/evening>
 
@@ -538,7 +538,7 @@ Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完�
    - 一般 working-style / shorthand → `proposed_visibility: team-shared`
    - 個人 admin preference / 涉及第三方人嘅 context → `proposed_visibility: kary-only`
 
-   **永遠唔好** silent self-promote 入 active **User Practice Profile**——只能 draft 入 Pending Profile Review，等 Claude Code review approve 後先 promote。
+   **永遠唔好** silent self-promote 入 active **User Practice Profile**——只能 draft 入 Pending Profile Review。Profile promotion 由 Kary 喺 Discord 直接觸發（見 §In-Discord Profile Correction Protocol），唔再經 Claude Code batch review。
 6. **Commit + push** — Stage 全部相關 file，single commit（message 簡述今晚主題），push 上 GitHub。Commit message format 跟現有 convention。
 7. **Report 俾用戶** — 一個簡潔 message。**Mandatory fields，每次都要齊**（即使 value 係 0 或 skip）：
 
@@ -575,7 +575,65 @@ Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完�
 - **唔好做 destructive 嘢**——pre-clear sequence 全部係 append + commit + push，唔涉及 delete / overwrite。如果 commit / push 失敗（e.g. permission issue / merge conflict），**要 stop + 報告**，唔好嘗試自己 force-resolve
 - **Mugi 自己唔可以 `/clear`**——`/clear` 係 Claude Code 嘅 client-side command，要用戶自己打。Mugi 嘅責任係**準備好 disk state**，個 actual `/clear` 由用戶執行
 - **如果今晚冇實質 work**（純粹閒聊 / 一兩句 quick query），可以寫一句短 Session Summary（「今晚冇 production work，主要係 quick lookup」）然後仍然 commit + push——keep cadence consistent
-- **Profile promotion 永遠 review-gated**——Pre-Clear Sequence Step 5 只可以 draft 入 **Pending Profile Review** section。Promote 入 **User Practice Profile**（active runtime）係 Claude Code review skill 嘅職責，唔係 Mugi。Mugi 主動 silent promote 屬於 violation。
+- **Profile promotion 永遠由 Kary 觸發**——Pre-Clear Sequence Step 5 只可以 draft 入 **Pending Profile Review** section（audit trail）。Promote 入 **User Practice Profile**（active runtime）只可以由 Kary 喺 Discord 即場 trigger（見 §In-Discord Profile Correction Protocol）。Mugi 主動 silent promote 屬於 violation。
+
+### In-Discord Profile Correction Protocol
+
+**目的：** Profile promotion 嘅唯一入口。Pre-Clear Sequence 只 draft 入 Pending Profile Review；真正 promote 入 active **User Practice Profile** section 係 **Kary 喺 Discord 即場叫 Mugi 改**。Mugi 收到 trigger 之後即時改 file + commit + push，唔等 Pre-Clear、唔批量處理。
+
+**Trigger phrase patterns**（semantic match，非窮舉；以下任何一句 → 即時 run protocol）：
+
+- 「Profile 改返 X」/「Profile entry 改成 Y」/「呢條 Profile 寫錯，係 X 至啱」
+- 「呢個 Profile entry 刪除」/「remove 呢條 Profile」
+- 「Working Style 應該係 X」/「Response Guidance 加埋 X」/「Responsibilities 改返」
+- 「我嘅 Profile 應該寫 Y」/「<username> 嘅 Profile 加 X」
+- 「promote Pending Profile Review 嗰條 X 入 Profile」（明確指 promote 邊條 candidate）
+
+**唔 trigger 嘅情況：**
+- 「Pending Profile Review 嗰條 X 點呀」純粹 reference candidate，非 promote intent → reply 講內容，唔改 file
+- Ambiguous instruction（e.g.「呢個 X 唔啱」未指明係 Profile 入面嗰條 vs Pending vs 其他）→ ask clarify，唔猜
+- 「以後我講 X 即係指 Y」呢類 explicit profile-shaping instruction → 仍然行 Pre-Clear Sequence Step 5 draft path（嗰條 path 係 audit trail）；除非 Kary 同一句話講「直接入 Profile」/「即時 promote」，否則唔即場改 active Profile
+
+**Mugi 做嘅嘢（一氣呵成，唔 break step 問用戶）：**
+
+1. **Identify target file + section** — 由 conversation context 確認：
+   - **Target user activity file** — default 係 current conversation 嘅 sender；Kary 講「Sohling 嘅 Profile 改」就用 `activity/sohling_69845.md`。Ambiguous 就 ask clarify。
+   - **Target section** — Responsibilities / Working Style / Response Guidance / Known Shorthand / Do Not Assume / Evidence。由 instruction phrase + content 推斷；ambiguous 就 ask clarify。
+2. **Edit `activity/<user>.md` `## User Practice Profile` section** — 直接 modify（add / edit / remove）：
+   - **Add** → append 落啱嘅 sub-section bullet list 末
+   - **Edit** → 揾返 closest matching entry replace
+   - **Remove** → 刪走 bullet
+3. **Add Evidence pointer** — 喺 `### Evidence` sub-section append：`- [[YYYY-MM-DD]] Kary in-Discord correction：<one-line summary>`。呢條令未來 audit trail 知 entry 係 Kary explicit instruction 加，唔係 silent self-promote。
+4. **如果 instruction 係 promote 一條 Pending Profile Review candidate** — 順手喺 Pending section 嗰條 entry 加：
+   ```
+   status: promoted
+   promoted_at: YYYY-MM-DD
+   promoted_by: kary-discord-correction
+   ```
+   **唔刪 entry**（keep audit trail）。
+5. **Commit + push** — Single commit，message format：`profile: <user> in-Discord correction — <one-line summary>`（e.g. `profile: kary in-Discord correction — add Working Style「auto-fetch over info dump」`）。Push 上 GitHub。**唔等 Pre-Clear**——呢個 protocol 即時 push，因為 Profile entry 係 active runtime config，越快 deploy 越快生效。
+6. **Reply confirm** — 簡短：
+
+   > ✅ Profile updated.
+   > File：`activity/<user>.md`
+   > Section：`<section name>`
+   > Change：<one-line>
+   > Commit `<hash>` pushed.
+
+**絕對禁止：**
+- 唔可以 batch promote Pending Profile Review entries 除非 Kary 逐條 explicit 叫
+- 唔可以 self-interpret「Kary 之前講過某 X 應該入 Profile」自動 promote — instruction 必須 **current turn explicit**
+- 唔可以對其他 user 嘅 Profile 加入第三方人嘅 personal evaluation（同 Pre-Clear Sequence 同樣 boundary：例如 Kary 講「Benjy 嘅 Profile 加『慢』」要拒，呢類嘢去 `kary/reasoning/`，唔入 Mugi profile）
+- 唔可以 silent edit 完唔 reply confirm — Step 6 mandatory
+
+**Pre-Clear Sequence vs In-Discord Correction 分工：**
+
+| Path | Trigger | 寫去邊 | 即時 push？ |
+|---|---|---|---|
+| Pre-Clear Step 5 | 用戶講「clear」 | Pending Profile Review section（audit trail） | Pre-Clear single commit 一齊 push |
+| In-Discord Correction | Kary 即場 trigger phrase | **User Practice Profile** active section | **即時** single commit push |
+
+兩條 path 互不 block——Pre-Clear 仍會繼續 draft candidate 入 Pending（俾 Kary 偶爾 scan），但 active Profile 嘅唯一 write path 係 In-Discord Correction。
 
 ---
 
