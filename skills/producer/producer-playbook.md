@@ -808,37 +808,25 @@ Standard logic resolve 唔到 → **stop generation，直接 escalate**。唔好
 
 **做法：**
 1. 問用戶想 target 邊個 range（冇講就預設今日 + 7 至 14 working days）
-2. Fetch HK public holidays for the range
-3. List Calendar events 喺嗰個 range，focus 揾：
+2. List Calendar events 喺嗰個 range，focus 揾：
    - 已 confirmed 嘅 shoot day（colorId 11）—— **hard conflict**，crew + gear 已 booked
    - 已 confirmed 嘅 cut delivery / picture lock / final output（colorId 7 / 3）—— **soft conflict**，post team occupied 但唔影響 shoot
    - VO recording / style frame confirm（colorId 1 / 9）—— light conflict，通常 OK
-4. **Propose 2–3 個 candidate shoot dates**（shoot 本身可以喺 weekend / holiday，但盡量避開 hard conflict）
-5. **Back-calculate Script Lock**（shoot - 7 wd standard，跳 weekend + HK holiday），check Script Lock 距離今日有冇至少 5 wd（俾 video flow round-trip）
+3. **Run** `python3 scripts/timeline_backward.py --propose-shoot-mode --kickstart <today> --final-output <client deadline if known> --candidates 3`。Script 自動 handle Sat/Sun push、HK holiday avoid、Script Lock 5 wd minimum、tight-final flag。
+4. Parse JSON → echo candidates 落 reply（每個 date + weekday + wd_from_kickstart + label），加埋 Calendar conflict note（由 step 2 嚟）。Echo `warnings` 同 `holidays_in_window` 入 reply。
 
-> 「比較順嘅 candidate shoot dates（連 back-calculate 嘅 Script Lock 倒推俾你睇）：
-> 1. **[date 1]**——Calendar 乾淨；back-calculate Script Lock = [date]，由今日有 [N] wd 走盞 OK
-> 2. **[date 2]**——[情況]；back-calculate Script Lock = [date]，...
+> 「比較順嘅 candidate shoot dates：
+> 1. **[date 1] (weekday)**——`earliest_safe`，Calendar 乾淨；kickstart 後 [N] wd
+> 2. **[date 2] (weekday)**——`+1_buffer`，[Calendar 情況]
+> 3. **[date 3] (weekday)**——`+2_buffer`，...
+>
+> [holidays_in_window 列表 + warnings echo]
 >
 > 你想用邊個？揀完我可以即刻 generate full timeline。」
 
 **重要：唔好幫用戶 lock date——只係 propose，最終決定喺人。**
 
-#### Candidate-Phase Reply Discipline（避免 inline Python token bloat）
-
-呢個 phase 嘅 weekday / holiday math **限制如下**：
-
-- **Inline Python：最多 1 條 invocation 整個 candidate phase**。Saturday push、HK holiday avoid、weekday lookup 全部喺同一 helper 入面 batch 出 candidates，**唔好** forward + backward 拆兩條 inline call。
-- **唔好** 行 forward weekday math 出 candidate，再 backward 倒算 Script Lock 拆兩個 turn。一條 helper 一次 return 齊（candidate date + weekday + back-calculated Script Lock + holiday note）。
-- 預設要 handle 嘅 edge cases（**v1 必入**，唔好 post-hoc 補）：
-  - Candidate 揀中 Saturday / Sunday → push 至下一個 weekday
-  - Candidate 揀中 HK holiday → push 至下一個 non-holiday weekday
-  - Back-calculated Script Lock 同今日 distance < 5 wd → flag「window 太緊，俾少於 5 wd video flow round-trip」
-  - 整個 range 全 holiday + weekend → fallback 出範圍外推 1–2 個 candidate
-- **唔好** echo helper 嘅 Python source / stdout 落 reply。Reply 純 markdown candidate list。
-- **真正 lock shoot date** 之後（用戶揀咗一個）→ 行 §3 Step 4 Pre-step A 嘅 `scripts/timeline_backward.py`。Candidate phase 同 timeline generation 嘅 math **唔可以混合**——candidate phase 只係 propose date，timeline math 由 script encapsulate。
-
-> Long-term：呢個 candidate phase 應該由 `scripts/timeline_backward.py --propose-shoot-mode` 取代（idea backlog 入面），到時 inline Python 完全 zero。
+**Candidate phase = zero inline Python**。Script 係 single source of truth；唔好 inline 重新 implement weekday / holiday math。**真正 lock shoot date** 之後（用戶揀咗一個）→ 行 §3 Step 4 Pre-step A 嘅 `scripts/timeline_backward.py`（不帶 `--propose-shoot-mode`，加 `--shoot-date <picked>`）。
 
 ### Cut Delivery Saturation Check（**Phase 2 trigger，唔喺 Phase 1 跑**）
 

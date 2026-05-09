@@ -342,7 +342,7 @@ def push_milestones(milestones: list, holidays: set, warnings: list) -> list:
 def parse_args():
     p = argparse.ArgumentParser(description="Mugi backward timeline generator")
     p.add_argument("--today", help="ISO date override (default: system today)")
-    p.add_argument("--final-output", required=True, help="Client deadline anchor (ISO)")
+    p.add_argument("--final-output", help="Client deadline anchor (ISO)")
     p.add_argument("--shoot-mode", choices=["standard", "pure-post"], default="standard")
     p.add_argument("--shoot-date", help="Locked shoot date (ISO). Standard mode only.")
     p.add_argument("--first-cut-start", help="Pure-post 1st Cut start anchor (ISO).")
@@ -358,6 +358,12 @@ def parse_args():
                    default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
                                         "context", "holidays"),
                    help="Folder containing hk-*.json (auto-glob)")
+    # --- propose-shoot-mode flags ---
+    p.add_argument("--propose-shoot-mode", action="store_true",
+                   help="Propose N candidate Shoot Dates from kickstart, exit early.")
+    p.add_argument("--kickstart", help="Kickstart date (ISO). Defaults to --today.")
+    p.add_argument("--candidates", type=int, default=3,
+                   help="Number of candidate shoot dates (default 3)")
     return p.parse_args()
 
 
@@ -369,18 +375,141 @@ def emit(payload: dict):
     print(json.dumps(payload, ensure_ascii=False))
 
 
+def propose_shoot_dates(kickstart: date, final_output: date | None,
+                        n_candidates: int, holidays: set, holiday_names: dict) -> dict:
+    """
+    Propose N candidate Shoot Dates from kickstart.
+
+    Earliest = effective_kickstart + 5 wd (Script Lock minimum baseline).
+    Subsequent candidates = +1 wd, +2 wd ... each is already a working day
+    (add_wd skips weekend + holiday automatically).
+
+    Output schema (1-line JSON):
+      {
+        "status": "shoot_proposal",
+        "kickstart_input": "<iso>",
+        "kickstart_effective": "<iso>",
+        "candidates": [{"date","weekday","wd_from_kickstart","label"} ...],
+        "warnings": [...],
+        "holidays_in_window": [{"date","name"} ...]
+      }
+    """
+    warnings: list = []
+    effective_kickstart = push_to_wd(kickstart, holidays)
+    if effective_kickstart != kickstart:
+        warnings.append(
+            f"⚠️ Kickstart {kickstart.isoformat()} ({WEEKDAY_NAMES[kickstart.weekday()]}) "
+            f"撞 weekend / holiday → effective kickstart push 去 "
+            f"{effective_kickstart.isoformat()} ({WEEKDAY_NAMES[effective_kickstart.weekday()]})。"
+        )
+
+    earliest = add_wd(effective_kickstart, 5, holidays)
+    candidates = []
+    for i in range(max(1, n_candidates)):
+        cand = add_wd(earliest, i, holidays)
+        wd_from_kick = wd_count(effective_kickstart, cand, holidays)
+        if i == 0:
+            label = "earliest_safe"
+        else:
+            label = f"+{i}_buffer"
+        candidates.append({
+            "date": cand.isoformat(),
+            "weekday": WEEKDAY_NAMES[cand.weekday()],
+            "wd_from_kickstart": wd_from_kick,
+            "label": label,
+        })
+
+    # Holidays between kickstart and final (or +60 days if no final)
+    window_end = final_output if final_output else (effective_kickstart + timedelta(days=60))
+    holidays_in_window = []
+    for hd in sorted(holidays):
+        if effective_kickstart <= hd <= window_end:
+            holidays_in_window.append({
+                "date": hd.isoformat(),
+                "weekday": WEEKDAY_NAMES[hd.weekday()],
+                "name": holiday_names.get(hd, "Public Holiday"),
+            })
+
+    # Tight-final warnings (rough heuristic — we don't yet know cut_count / VO)
+    if final_output:
+        for c in candidates:
+            cd = date.fromisoformat(c["date"])
+            wd_to_final = wd_count(cd, final_output, holidays)
+            # Compressed 3-cut min post window ≈ 11 wd shoot→final (incl tail).
+            # Standard 3-cut min post window ≈ 20 wd. Flag both tiers.
+            if wd_to_final < 7:
+                warnings.append(
+                    f"⚠️ Candidate {c['date']} → Final {final_output.isoformat()} "
+                    f"= {wd_to_final} wd，連 Compressed-Edge-Case 都頂唔順 — 揀呢個會 trigger Extreme-Squeeze。"
+                )
+            elif wd_to_final < 11:
+                warnings.append(
+                    f"⚠️ Candidate {c['date']} → Final {final_output.isoformat()} "
+                    f"= {wd_to_final} wd，post window 緊 — likely Compressed-Edge-Case。"
+                )
+            elif wd_to_final < 20:
+                warnings.append(
+                    f"ℹ️ Candidate {c['date']} → Final {final_output.isoformat()} "
+                    f"= {wd_to_final} wd，行 compressed 3-cut（feedback 1 wd）— 標準 3-cut 需 ≥ 20 wd。"
+                )
+
+    warnings.append(
+        "Script Lock window = 5 wd（kickstart → shoot 最低 baseline）— 如果客戶要 multi-revision script，建議延後 shoot。"
+    )
+
+    return {
+        "status": "shoot_proposal",
+        "kickstart_input": kickstart.isoformat(),
+        "kickstart_effective": effective_kickstart.isoformat(),
+        "kickstart_effective_weekday": WEEKDAY_NAMES[effective_kickstart.weekday()],
+        "final_output": final_output.isoformat() if final_output else None,
+        "candidates": candidates,
+        "warnings": warnings,
+        "holidays_in_window": holidays_in_window,
+    }
+
+
 def main():
     args = parse_args()
 
     try:
         today = date.fromisoformat(args.today) if args.today else date.today()
+    except ValueError as e:
+        emit({"status": "error", "error": f"Invalid --today: {e}"})
+        return
+
+    holidays_dir = os.path.normpath(args.holidays_dir)
+    holidays, holiday_names = load_holidays(holidays_dir)
+
+    # ----- propose-shoot-mode early branch -----
+    if args.propose_shoot_mode:
+        try:
+            kickstart = date.fromisoformat(args.kickstart) if args.kickstart else today
+            final_output_opt = date.fromisoformat(args.final_output) if args.final_output else None
+        except ValueError as e:
+            emit({"status": "error", "error": f"Invalid date: {e}"})
+            return
+        payload = propose_shoot_dates(
+            kickstart, final_output_opt, args.candidates, holidays, holiday_names
+        )
+        if not holidays:
+            payload["warnings"].insert(
+                0,
+                f"⚠️ Holiday set empty (looked in {holidays_dir}/hk-*.json). 請 double-check candidate 冇撞 public holiday。"
+            )
+        emit(payload)
+        return
+
+    if not args.final_output:
+        emit({"status": "error", "error": "--final-output required (unless --propose-shoot-mode)"})
+        return
+
+    try:
         final_output = date.fromisoformat(args.final_output)
     except ValueError as e:
         emit({"status": "error", "error": f"Invalid date: {e}"})
         return
 
-    holidays_dir = os.path.normpath(args.holidays_dir)
-    holidays, holiday_names = load_holidays(holidays_dir)
     warnings: list = []
     if not holidays:
         warnings.append(
