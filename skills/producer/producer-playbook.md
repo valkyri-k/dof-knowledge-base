@@ -12,7 +12,7 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 
 ### Phase 1 — Draft text preview
 **Trigger：** 用戶第一次提 timeline（「幫 J26XXX draft timeline」、「排個 post schedule」、「generate timeline」）。
-**做：** 跟 §3 Step 1–5 + Pre-step A–G。Output 文字版 markdown table + 適用嘅 Pattern A–J flags。
+**做：** 跟 §3 Step 1–5 + Pre-step A–F。Output 文字版 markdown table + 適用嘅 Pattern A–J flags。
 **Gate：** 停低等用戶 confirm 文字版。**唔 auto-push Calendar。**
 
 ### Phase 2 — Push to Calendar
@@ -26,14 +26,14 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 
 ### Phase 3 — Doc generation（opt-in only）
 **Trigger：** 用戶答「要」/「好」/「出埋」——或後來話「出 timeline doc for J26XXX」/「幫我出埋份 doc」。
-**做：** **跳過 Step 1–5 + Pre-step A–G。** Search Calendar by J-number 攞 committed dates，直接跟 §6 Row Deletion + §7 Doc Naming 寫入 Timeline_Template。
+**做：** **跳過 Step 1–5 + Pre-step A–F。** Search Calendar by J-number 攞 committed dates，直接跟 §6 Row Deletion + §7 Doc Naming 寫入 Timeline_Template。
 **Gate：** 冇 gate——doc 寫完 return Drive link 就算。
 
 ### Anti-patterns（嚴格禁止）
 
 - ❌ Phase 1 完 auto-push Calendar（一定要 confirm 先 push）
 - ❌ Phase 2 完 auto-gen doc（問先，冇得假設）
-- ❌ Phase 3 時重跑 Pre-step A–G（dates 已 committed，重跑係 wasted token）
+- ❌ Phase 3 時重跑 Pre-step A–F（dates 已 committed，重跑係 wasted token）
 - ❌ Phase 3 時再 flag Pattern A–J（dates 已 lock，flag 無 actionable value）
 - ❌ Phase 1 同時跑多個 scenario Python script（standard + compressed 並列計）—— Single-Scenario Rule，見 §1 Compression Rules
 
@@ -232,7 +232,7 @@ Shoot 喺 weekend / 假期比較常見（event coverage、wedding、客戶 site 
 - 已有 **≥ 4** → trigger warning + 建議 push 後 1 日（preferred）
 - 詳細 escalation logic 見下面 **Calendar Integration → Cut Delivery Saturation Check**
 
-呢個 check 喺 standalone calendar ops 同 **timeline Phase 2** 都 mandatory（timeline Phase 1 唔跑，見 §3 Pre-step E）。
+呢個 check 喺 standalone calendar ops 同 **timeline Phase 2** 都 mandatory（timeline Phase 1 唔跑，見 §0 Phase 2 Flow）。
 
 **Saturation threshold reasoning：** Post team 交片嗰日要等導演 review + cross-check 改嘢 + 即時 turnaround client feedback。四條已係邊緣，第五條落去就冇 buffer 走盞。
 
@@ -366,10 +366,7 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 - Calendar event：multi-day all-day event，`end.date` 係 exclusive（length 2 wd → `end.date = start.date + 2 wd + 1 day`）
 - Event title：`(2 Days) VO Recording - [Project]`
 
-**Pre-step E（Phase 1 skip — Phase 2 開頭做）：Cut Delivery Saturation Check**
-Phase 1 只做文字 draft，dates 未 confirm，saturation check 無 actionable value——**唔跑**。Phase 2 用戶 confirm 後、push Calendar 之前先執行（見 §0 Phase 2 Flow + §5 Cut Delivery Saturation Check）。
-
-**Pre-step F（必須做）：Pre-flight Self-Check**
+**Pre-step E（必須做）：Pre-flight Self-Check**
 
 ```
 ☐ HK public holidays 我有冇 fetch 咗？
@@ -384,7 +381,7 @@ Phase 1 只做文字 draft，dates 未 confirm，saturation check 無 actionable
 ☐ VO Recording 係咪 multi-day window？Window start = PicLock + 1 wd, length = 2 wd, end ≤ Final Output - 2 wd?
 ☐ Submit Video Flow / Submit Graphics Ref 係咪 separate row？Script Lock / Confirm Graphics Ref 同樣？
 ☐ Color/Sound/Subtitle row 喺 doc 入面有冇保留？
-☐ Saturation check 留返 Phase 2 做——Phase 1 唔跑（見 Pre-step E）
+☐ Holiday + weekday cross-check 完成（saturation check 留返 Phase 2 做）
 ☐ Preview 嘅 milestone list 同 Calendar push list 係咪 1:1？
 ☐ Doc template 嘅 row 同 preview / Calendar 係咪 1:1？
 ☐ 任何 skip 咗嘅 milestone 我有冇喺 director discussion 講明？
@@ -392,7 +389,7 @@ Phase 1 只做文字 draft，dates 未 confirm，saturation check 無 actionable
 
 **全部 ☐ 都係 yes 先可以 finalize。** 任何一個 no → 補返。無法 resolve → escalate Sohling（Pattern J）。
 
-**Pre-step G（必須做）：Edge Case Escape Hatch**
+**Pre-step F（必須做）：Edge Case Escape Hatch**
 上面任何 pre-step 撞咗無法 standard rule resolve 嘅情況 → 直接走 Pattern J，stop generation + tag Sohling。
 
 ---
