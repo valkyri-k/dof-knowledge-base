@@ -388,6 +388,12 @@ Context: Mugi 唔回應 #ai-agent-mugi 嘅 thread posts，因為 Discord thread 
 Note: "B better / process & log this issue" — Kary 決定改用 Option B：喺 DOF Discord server 任何 channel（包括 threads）都回應，信 Discord bot access control。已更新 CLAUDE.md Channel Policy。唔再維護 channel ID whitelist。
 Status: done
 
+## [[2026-05-09]] 14:53
+Type: bug
+Context: Mugi 幫 Kary remove profile test entry，push 嗰陣 `git merge origin/main` 失敗，error「unable to unlink old 'scripts/timeline_backward.py': Permission denied」。`scripts/timeline_backward.py` 係 root-owned（`-rw-r--r-- 1 root root`），estimate 係 Kary 喺 Claude Code local session 修改該 file 時以 root process 跑所致。Fix：`sudo chown -R node:node /home/node/kb/scripts/`（加上之前已做嘅 `sudo chown -R node:node /home/node/kb/.git`）。
+Note: 同 Apr 8 嘅 `.git/objects` root-owned bug 係同一底層 pattern——kb repo 入面有 file 由 root 建立 / 修改。每次都要手動 chown fix。考慮 permanent fix：e.g. Claude Code session 完結前自動 `chown -R node:node /home/node/kb`，或者 Claude Code 本身配置以 `node` user 跑。
+Status: open
+
 ## [[2026-05-09]] 14:28
 Type: feature-idea
 Context: J260YY Test Project 2 timeline planning session。Shoot date 未 lock，Mugi 跟 §5 flow propose candidates，手寫 inline Python 計 Script Lock back-dates + post window sizes。Kary 問點解唔直接跑 scripts/timeline_backward.py。
