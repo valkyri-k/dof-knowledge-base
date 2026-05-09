@@ -23,6 +23,7 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 ### Phase 1 — Draft text preview
 **Trigger：** 用戶第一次提 timeline（「幫 J26XXX draft timeline」、「排個 post schedule」、「generate timeline」）。
 **做：** 跟 §3 Step 1–5 + Pre-step A–F。Output 文字版 markdown table + 適用嘅 Pattern A–J flags。
+**Calendar API：嚴格 zero query**——director 由 `context/job-list.md` lookup；conflict / saturation 留 Phase 2 一次過做。Phase 1 = lightweight inference round（first-pass timeline 命中率本身唔高，user 一定會 feedback 調整；先 query Calendar 等於白做，schedule 穩定咗 Phase 2 一次過 query 反而 cleaner）。
 **Gate：** 停低等用戶 confirm 文字版。**唔 auto-push Calendar。**
 
 ### Phase 2 — Push to Calendar
@@ -46,6 +47,9 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 - ❌ Phase 3 時重跑 Pre-step A–F（dates 已 committed，重跑係 wasted token）
 - ❌ Phase 3 時再 flag Pattern A–J（dates 已 lock，flag 無 actionable value）
 - ❌ Phase 1 同時跑多個 scenario Python script（standard + compressed 並列計）—— Single-Scenario Rule，見 §1 Compression Rules
+- ❌ Phase 1 query Calendar API（director 由 `context/job-list.md` lookup；conflict / saturation / 已 marked event 全部留 Phase 2 一次過）
+- ❌ Python script verbose stdout（每個 intermediate value、step-by-step narration、SELF-CHECK section print 出嚟）—— 食爆 token 主因；script 只 print final milestone JSON
+- ❌ 假設 filming window length = actual shoot day count（e.g. 「Filming May 18–22」 ≠ 5 日連拍）—— 必須 §3 Step 3 ask
 
 ---
 
@@ -423,17 +427,20 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 
 **設計原則：minimal friction，最大化 inference。** 由 user message + Calendar context 抽取資料，唔好問來問去。只係真正缺嘅資料先追問。
 
-### Step 1: Parse Request + Calendar Context Pull
+### Step 1: Parse Request + Job List Lookup（zero Calendar API）
+
+**Phase 1 嚴格唔 query Calendar API。** Director / conflict / saturation 全部留 Phase 2 處理（見 §0 Phase 1 boundary + §5 Cut Delivery Saturation Check）。
 
 由 user message 直接抽取：
 - Video type（有冇提到動畫 / 多個 version / 多條片）
-- Job number、project shorthand、director、shoot date
+- Job number、project shorthand、shoot window / shoot date hint、client deadline hint
 - 語氣詞：「暫定」/「TBC」/「未 confirm」= soft commitment，唔係 confirmed date
 
-同時 search Calendar by J-number：
-- Director（event description）
-- Shoot date 及主要 milestones
-- Confirmed events vs. TBC events
+由 `context/job-list.md` lookup 該 job number：
+- Director（job-list 有 `director` column）
+- 已記錄嘅 shoot date / pre-pro milestones（如 job-list 有）
+
+Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或 Pattern C 留空。**唔好為咗揾 director 而 query Calendar。**
 
 ### Step 2: Type Detection + Gate
 
@@ -460,18 +467,27 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 
 ### Step 3: Minimal Follow-up
 
-**Mandatory asks**（如 request / Calendar 冇明確提供）：
+**Mandatory asks**（如 user message / `context/job-list.md` 冇明確提供）：
 
 **一次過問晒，唔好一條一條問：**
-> 「Generate timeline 之前要知兩樣：
+> 「Generate timeline 之前要知幾樣：
 > 1. 咩類型嘅片？Corporate / Event / Social Media / Pure Post（純後期）/ Animation？
-> 2. 有冇 VO recording？」
+> 2. 有冇 VO recording？
+> 3. Filming window 入面**實際拍幾多日**？（DOF 好少連拍整個 window — e.g. May 18–22 通常只係 1–3 日 actual shoot，唔係 5 日連拍）
+> 4. Shoot date 有冇已經 fix（你 / team 已經 mark 落 Calendar）？冇 → Mugi 喺 window 內 propose；有 → 我會用你提供嘅 date。」
 
 **關於 VO 嘅問法（重要）：** 問「有冇 **VO recording**」，**唔好**問「有冇 VO」。
 - Traditional voice talent → 有 recording session → 排 VO Recording window（multi-day，colorId 1）
 - AI VO → 冇 recording → skip VO Recording window，Final Output 可提前
 
-如果 Genre + VO 用戶已經清楚提到 → 呢步 skip，直接 generate。
+**關於 #3（filming window vs actual shoot days）：** Input「Filming May 18–22」係 client schedule 嘅 window，**唔等於** actual shoot count。永遠唔好默默當 window length = shoot day count。User 答返之後：
+- 1 日 actual → 1 個 Shooting milestone（colorId 11），shoot date 由 user 揀 / Mugi 喺 window 內 propose
+- 2–3 日 actual → 多個 separate Shooting milestone rows，每日獨立 colorId 11
+- 真係連拍整個 window → user explicit confirm 先 accept
+
+**關於 #4（shoot date fix status）：** Reactive ask only — Mugi **唔 query Calendar** 確認。User 答有 → 直接用佢提供嘅 date；答冇 → 跟 §5 Shoot Date Planning propose（Phase 1 propose 一樣 zero Calendar API，純粹 holidays MD + weekday math 出 candidate）。
+
+如果 Genre + VO + actual shoot days + shoot date status 用戶已經清楚提到 → 呢步 skip，直接 generate。
 
 ### Step 4: Generate（Two-Phase Document）
 
@@ -481,6 +497,16 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 **Pre-step B（必須做）：Enumerate Milestone List via Backward-Planning**
 
 跟 §1 Standard Milestone Set + **§1 Post-Production Backward-Planning from Final Delivery Anchor** algorithm。**核心 ordering：由 Final Output anchor 倒推，唔好 forward-chain from Shoot 然後 derive Final Output。**
+
+**Python script output convention（必須跟從，Phase 1 token bloat 主控）：**
+Backward-planning Python script 嘅 stdout **必須 minimal**：
+- ❌ 唔好逐個 intermediate value print（Kickstart / Final / Shoot / C/S / VO window / Picture Lock / available window / 3 個 cut date / chain total / compressed pre-pro / parallel style frame 各 print 一行）
+- ❌ 唔好 print step-by-step narration（「Backward tail...」「Standard pre-pro back-calc...」「=== SELF-CHECK ===」逐 milestone status 一行）
+- ❌ 唔好喺 Python 內 echo SELF-CHECK list（self-check 由 Pre-step E mental check 處理，唔係 Python stdout）
+- ✅ 只 print **final milestone JSON**（一個 array of `{name, date, weekday, colorId}` object）
+- ✅ Error / assertion failure 先 print 一行（chain total mismatch / past-milestone detected → Compressed branch 之類）
+
+Verbose stdout 連 Self-Check 24 條 in-context echo 係 Phase 1 17k tokens / 4m+ 嘅主因。Single-Scenario Rule + silent script + minimal Self-Check 三者一齊行先 effective。
 
 執行次序：
 
@@ -509,38 +535,22 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 - Calendar event：multi-day all-day event，`end.date` 係 exclusive（length 2 wd → `end.date = start.date + 2 wd + 1 day`）
 - Event title：`(2 Days) VO Recording - [Project]`
 
-**Pre-step E（必須做）：Pre-flight Self-Check**
+**Pre-step E（必須做）：Pre-flight Self-Check（minimal — 6 critical gates only）**
+
+Self-Check **唔好喺 output 逐 ☐ echo + reason**（in-context introspection 係 Phase 1 token bloat 第二大主因）。Mental check，pass 就 pass，只係 fail 嘅情況先 surface。
 
 ```
-☐ HK public holidays 我有冇 fetch 咗？
-☐ Kickstart date anchored（today by default，除非用戶 explicit「[milestone] 已完成於 [date]」override）？
-☐ 我係咪只跑咗 1 個 scenario？（Single-Scenario Rule — 唔好預先 enumerate standard + compressed 對比）
-☐ Final Output = client deadline anchor？冇 pull 早過 deadline？（§1 Backward-Planning core rule）
-☐ 冇 client deadline 嘅話我有冇主動問？
-☐ Backward tail 反推啱：C/S = Final - 1 wd？VO window end ≤ Final - 2 wd？Picture Lock = VO start - 1 wd（或 C/S - 1 wd 冇 VO）？
-☐ Step F：Backward-derived milestones（pre-pro chain + Picture Lock + VO start + C/S）全部 ≥ kickstart_date？任何一個 < kickstart → 觸發 Compressed-Edge-Case Branch
-☐ 如果有 past-milestone：Compressed-Edge-Case Branch triggered（pre-pro parallel、Shoot ASAP、Style Frame 並行 1st Cut、Force 2-cut、buffer 0–1 wd）？
-☐ Compressed-Edge-Case output 含 explicit ⚠️ warning + (a) extend deadline / (b) confirm aggressive schedule recommend？
-☐ 冇默默加 `[已過]` tag 落 backward-derived past milestone？（永遠當未開始除非用戶 explicit override）
-☐ Cut count decision 跟 §1 Step D table（≥20 = 3, 14–19 = flag trade-off, <14 = Pattern J）？
-☐ Slack distribution 跟 cut-gap-first（cap 4–5 wd）—— 唔係 silent compress feedback or pull final 早？
-☐ Pure-post job？係 → pre-pro + Shooting 已經 skip 晒，唔好計 pre-pro chain（見 §3 Step 2 keyword detection）；backward-from-final logic 仍然 apply
-☐ Pre-pro milestones 我有冇 enumerate 晒？（預設 7 個：Script Received / Submit Video Flow / Submit Graphics Ref / Script Lock / Confirm Graphics Ref / Submit Style Frame / Confirm Style Frame，除非用戶明確話冇 graphics / pure post）
-☐ Submit Video Flow 同 Script Received 之間有冇 5–6 wd？（compressed 3–4 wd 淨喺 §1 Compression Rules trigger fired 先用）
-☐ Script Lock 同 Submit Video Flow 之間有冇 5 wd？
-☐ Script Lock 同 Shoot 之間有冇 7 wd？（compressed 3 wd 同上條件）
-☐ 每個非 shooting milestone 都喺 weekday + non-holiday？
-☐ 每個 milestone 有冇獨立日期？（冇 date range collapse）
-☐ VO Recording 係咪 multi-day window？Window end ≤ Final - 2 wd, length = 2 wd, start = end - 2 wd + 1 day?
-☐ Submit Video Flow / Submit Graphics Ref 係咪 separate row？Script Lock / Confirm Graphics Ref 同樣？
-☐ Color/Sound/Subtitle row 喺 doc 入面有冇保留？
-☐ Holiday + weekday cross-check 完成（saturation check 留返 Phase 2 做）
-☐ Preview 嘅 milestone list 同 Calendar push list 係咪 1:1？
-☐ Doc template 嘅 row 同 preview / Calendar 係咪 1:1？
-☐ 任何 skip 咗嘅 milestone 我有冇喺 director discussion 講明？
+☐ Kickstart anchored（today by default，除非用戶 explicit override）
+☐ Final Output = client deadline anchor（冇 → 主動問用戶）
+☐ Step F: Backward-derived milestones 全部 ≥ kickstart_date？任何 past → Compressed-Edge-Case Branch + ⚠️ warning + (a) extend / (b) aggressive recommend
+☐ Cut count 跟 §1 Step D table（≥20 wd = 3 cuts, 14–19 wd = flag trade-off + 問用戶, <14 wd = Pattern J / Compressed）
+☐ 每個非 shooting milestone weekday + non-holiday（hit → push 下一 weekday + cascade）
+☐ Single-Scenario Rule: 只跑 1 scenario（唔好預先 enumerate standard + compressed 對比）
 ```
 
-**全部 ☐ 都係 yes 先可以 finalize。** 任何一個 no → 補返。無法 resolve → escalate Sohling（Pattern J）。
+其餘 detail（VO window math / pre-pro chain spacing / row 1:1 / sub-step ordering / pre-pro 7 milestones enumeration / 無 `[已過]` tagging / pure-post skip pre-pro）由 algorithm 步驟本身保證。如果 algorithm 步驟漏咗某啲 detail → 喺步驟 fix，唔係喺 self-check 補。
+
+**6 條 ☐ 全部 yes 先可以 finalize。** 任何一條 no → 補返。無法 resolve → escalate Sohling（Pattern J）。
 
 **Pre-step F（必須做）：Edge Case Escape Hatch**
 上面任何 pre-step 撞咗無法 standard rule resolve 嘅情況 → 直接走 Pattern J，stop generation + tag Sohling。
