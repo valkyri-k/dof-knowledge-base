@@ -52,6 +52,7 @@
 - **[2026-04-08] J26053 BOC Trendy BTS mograph 未 assign** — 1st Cut BTS (4/23) + Final BTS (5/15) 兩張只 assign 咗 Yik 做 cut，graphics 邊個負責等 Kary x Sohling discussion 結果。BTS editor 都 default 咗 Yik 未確認
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
+- **[2026-05-09] J260ZZ Test Project 3 Phase 1 draft pending** — 3-cut compressed schedule sent (Shoot May 19, Jun 15 FO，17 milestones)，waiting Kary confirm → Phase 2 Calendar push
 
 ---
 
@@ -95,6 +96,9 @@ J26053 方面：加 3rd Cut (#1) May 11 + (#2) May 12。另外喺 J26053 channel
 **Key learning**：Design 類 deliverable → colorId 9 (Blueberry)，唔係 Banana。呢個係 Mugi 之前唔清楚嘅 color rule，而家固定落 memory。
 
 **CLAUDE.md update（Kary 做）**：Per-job log 加咗 "Log-worthiness HARD RULE"——每一次互動（包括 identification reply、quick lookup）都要寫 entry，唔可以 skip。
+
+### 2026-05-09 afternoon session
+主力 test Phase 1 timeline generation workflow（Compressed-Edge-Case Branch）。J260ZZ Test Project 3：1 day shoot + VO + Jun 15 deadline。關鍵發現：May 9 = Saturday（唔係 Friday），effective_kickstart 正確移到 May 11。Standard pre-pro 唔 fit（Script Lock 需要 May 8 < kickstart May 11）→ Compressed-Edge-Case triggered。Compressed pre-pro (2 wd gaps) → Shoot May 19 (Tue)。Post-pro window = 14 wd，落入 14-19 wd range，flagged 2-cut vs 3-cut trade-off，Kary 揀 3-cut compressed（gaps 3+2+3+1+3+2 wd，FB2 = 1 wd 緊）。Phase 1 draft sent，等 confirm push Calendar（Phase 2 pending）。May 25 佛誕翌日 holiday + Saturday kickstart detection 兩個 date-handling checkpoints 都正確處理。
 
 ### 2026-05-08 afternoon/evening session
 今日兩個主要 work streams：job-list 擴展 + J26071 timeline。Job-list 方面：手動 patch 咗 J26071 Button InvestHK（Channel ID 1502220628424396821，Kary 係 Director），之後 Kary 自己喺 Airtable 做咗更大幅度更新——加 Director column + sync 晒所有 Current jobs，仲加咗 J26027 / J26075 / J26077 三條新 job，job-list 由 16 → 19 條。Kary 查 Airtable API 可用性：Mugi 只有 authenticate tools，冇 read/query tools，capability gap logged。
@@ -203,3 +207,6 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-09 | J26071 full timeline: 16 events incl. pre-pro, Rough Cut, client meetings, [16:9] cutdowns, SSD | All 16 pushed ✅ (May 11–Jun 30); flagged Jun 19 holiday → Jun 18 |
 | 2026-05-09 | J26053 add 3rd Cut (#1) May 11 + (#2) May 12 | Created ✅ |
 | 2026-05-09 | J26053 add Cover Design (#1 & 2) May 11 (wrong color Banana → corrected to Blueberry) | Created + colorId corrected ✅; Design color rule saved to memory |
+| 2026-05-09 | J260ZZ Test Project 3 timeline planning (MG + footage, 1-day shoot, VO, Jun 15 deadline) | Phase 1 in progress — asked follow-ups re: filming vs pure-post + shoot days |
+| 2026-05-09 | J260ZZ: confirmed 1-day shoot, propose date | Compressed-Edge-Case triggered (May 9=Sat → kickstart May 11); proposed Shoot May 19; flagged 2-cut vs 3-cut |
+| 2026-05-09 | J260ZZ: Kary chose 3-cut | Full Phase 1 draft sent (17 milestones, 3-cut compressed, gaps 3+2+3+1+3+2 wd); awaiting confirm for Phase 2 |
