@@ -71,6 +71,7 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 - ❌ 假設 filming window length = actual shoot day count（e.g. 「Filming May 18–22」 ≠ 5 日連拍）—— 必須 §3 Step 3 ask
 - ❌ Silent compress 1st Cut（或任何 cut）唔 flag——script `cut_warnings` 入面任何 cut ≤ 3 wd 一律照原樣 echo 落 reply，唔可以 hide
 - ❌ 留 idle window 喺 FB-last 同 Picture Lock 之間（slack 應該 distribute 落 cut gaps，唔好 default 落 trailing buffer）
+- ❌ Shoot date 未 user-confirm 嘅 case，淨 show full timeline 唔 surface candidate list——必須一齊出（§5 combined turn pattern），default 用邊個 candidate 必須 explicit declare
 
 ---
 
@@ -559,13 +560,19 @@ Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或
 - 2–3 日 actual → 多個 separate Shooting milestone rows，每日獨立 colorId 11
 - 真係連拍整個 window → user explicit confirm 先 accept
 
-**關於 #4（shoot date fix status）：** Reactive ask only — Mugi **唔 query Calendar** 確認。User 答有 → 直接用佢提供嘅 date；答冇 → 跟 §5 Shoot Date Planning propose（Phase 1 propose 一樣 zero Calendar API，純粹 holidays MD + weekday math 出 candidate）。
+**關於 #4（shoot date fix status）：** Reactive ask only — Mugi **唔 query Calendar** 確認。
+- User 答「有 fixed shoot date X」→ 直接入 §3 Step 4 Pre-step A，用 X 做 `--shoot-date`
+- User 答「冇」/「propose」/「揀日」/ 留空 → **必須**跟 §5 Shoot Date Planning **combined turn pattern**（candidate phase + full-timeline preview 同一 turn surface）。Default 用 `earliest_safe`，必須喺 reply explicit declare default 用咗邊個 candidate。**唔可以**淨係 silent infer 一個 shoot date 然後直接出 full timeline。
 
 如果 Genre + VO + actual shoot days + shoot date status 用戶已經清楚提到 → 呢步 skip，直接 generate。
 
 ### Step 4: Generate（Two-Phase Document）
 
 **Pre-step A（必須做）：Invoke timeline backward-planning script**
+
+**Precondition — shoot date 必須 user-confirmed 先入呢步：**
+- Shoot date 已 user-confirmed（Step 3 #4 答「有 fixed shoot date X」）→ 直接 invoke 全 timeline script，用 user 提供嘅 date 做 `--shoot-date`
+- Shoot date 未 confirm（Step 3 #4 答「冇」/「propose」/「揀日」）→ **唔好**喺 Pre-step A silent infer 一個 shoot date 直接跑 full timeline。跟 §5 Shoot Date Planning **combined turn pattern**：candidate phase + full-timeline preview（用 default candidate）一齊 surface，default 用邊個 candidate 必須 explicit declare
 
 **唔好再 inline 寫 Python**。所有 backward-planning math（HK holidays load / kickstart push / backward tail / cut chain / pre-pro / Compressed-Edge-Case / Extreme-Squeeze / Pattern J / pure-post）已經由 `scripts/timeline_backward.py` encapsulate。Phase 1 只係 invoke script + parse JSON + 寫 reply。
 
@@ -640,6 +647,8 @@ extreme_squeeze_propositions: [{id, name, detail}, ...] | null（status="extreme
 
 **❌ Anti-patterns（嚴格禁止）：**
 - ❌ Inline 寫 Python（重 implement HK holidays / push_to_weekday / back_wd 邏輯）— **永遠 invoke script**
+- ❌ Inline 揀 candidate shoot date（自己 weekday math / holiday skip）— 永遠 invoke `--propose-shoot-mode`
+- ❌ Shoot date 未 user-confirm 嘅 case 喺 Pre-step A 直接跑 full timeline + silent infer 一個 date — 必須跟 §5 combined turn pattern
 - ❌ Echo script 嘅 stdout JSON 落 reply（user 唔需要見 JSON）
 - ❌ 跑多次 script 對比 scenario（Single-Scenario Rule — script 內部已經自動 fallback standard → compressed-edge-case → extreme-squeeze → Pattern J）
 - ❌ Phase 1 query Calendar API（saturation / conflict 全部留 Phase 2）
@@ -804,16 +813,28 @@ Standard logic resolve 唔到 → **stop generation，直接 escalate**。唔好
 
 ### Shoot Date Planning（拍攝日未 lock 時，主動 propose）
 
-**Trigger：** 用戶話「shoot date 仲未 confirm」/ 想搵日拍 / shoot date 留空。
+**Trigger：** 用戶話「shoot date 仲未 confirm」/ 想搵日拍 / shoot date 留空 / 答「propose」/「揀日」。
 
-**做法：**
-1. 問用戶想 target 邊個 range（冇講就預設今日 + 7 至 14 working days）
+**Combined turn pattern（單一 turn 兩段 script invocation）：**
+
+呢個 case 嘅 reply 必須**一齊 surface**：(a) candidate list、(b) 用 default candidate 跑出嚟嘅 full-timeline preview、(c) explicit declaration 話今次 default 用咗邊個 candidate、(d) CTA 「想要 candidate 2 / 3 → 我 rerun」。
+
+**步驟：**
+
+1. 問用戶想 target 邊個 range（冇講就預設今日 + 7 至 14 working days）—— 如果 user 已經提供 final-output deadline / 上下文夠，就跳過呢步直接落 step 2
 2. List Calendar events 喺嗰個 range，focus 揾：
    - 已 confirmed 嘅 shoot day（colorId 11）—— **hard conflict**，crew + gear 已 booked
    - 已 confirmed 嘅 cut delivery / picture lock / final output（colorId 7 / 3）—— **soft conflict**，post team occupied 但唔影響 shoot
    - VO recording / style frame confirm（colorId 1 / 9）—— light conflict，通常 OK
-3. **Run** `python3 scripts/timeline_backward.py --propose-shoot-mode --kickstart <today> --final-output <client deadline if known> --candidates 3`。Script 自動 handle Sat/Sun push、HK holiday avoid、Script Lock 5 wd minimum、tight-final flag。
-4. Parse JSON → echo candidates 落 reply（每個 date + weekday + wd_from_kickstart + label），加埋 Calendar conflict note（由 step 2 嚟）。Echo `warnings` 同 `holidays_in_window` 入 reply。
+3. **Candidate phase — Run** `python3 scripts/timeline_backward.py --propose-shoot-mode --kickstart <today> --final-output <client deadline if known> --candidates 3`。Script 自動 handle Sat/Sun push、HK holiday avoid、Script Lock 5 wd minimum、tight-final flag。
+4. **Pick default candidate**：
+   - Default = `earliest_safe`
+   - 如果 `earliest_safe` 撞 step 2 嘅 hard conflict（colorId 11） → fall through 落 candidate 2，再撞就落 candidate 3
+   - 揀完一定要喺 reply explicit declare：「Default 用咗 candidate [N] = [date]」
+5. **Full-timeline preview — Run** `python3 scripts/timeline_backward.py --today <today> --final-output <deadline> --shoot-mode standard --shoot-date <picked default> --has-vo <bool> --has-style-frame <bool> --project <name>`（即 §3 Step 4 Pre-step A 嘅 invocation，但 shoot-date 用 step 4 揀出嚟嘅 default）
+6. Parse 兩段 JSON → 寫 reply：candidate list（每個 date + weekday + wd_from_kickstart + label + Calendar conflict note）、explicit default declaration、full-timeline preview（milestones + warnings + cut_warnings 照 §3 Step 4 reply convention echo）、CTA
+
+**Reply template：**
 
 > 「比較順嘅 candidate shoot dates：
 > 1. **[date 1] (weekday)**——`earliest_safe`，Calendar 乾淨；kickstart 後 [N] wd
@@ -822,11 +843,18 @@ Standard logic resolve 唔到 → **stop generation，直接 escalate**。唔好
 >
 > [holidays_in_window 列表 + warnings echo]
 >
-> 你想用邊個？揀完我可以即刻 generate full timeline。」
+> **今次我 default 用咗 candidate [N] = [date]** 行 full timeline preview（如果想用 candidate 2 / 3，講聲我 rerun）：
+>
+> [Full-timeline milestones list + VO window + warnings + cut_warnings — 跟 §3 Step 4 reply convention]
+>
+> OK 唔 OK？OK 我就 push Calendar。」
 
-**重要：唔好幫用戶 lock date——只係 propose，最終決定喺人。**
-
-**Candidate phase = zero inline Python**。Script 係 single source of truth；唔好 inline 重新 implement weekday / holiday math。**真正 lock shoot date** 之後（用戶揀咗一個）→ 行 §3 Step 4 Pre-step A 嘅 `scripts/timeline_backward.py`（不帶 `--propose-shoot-mode`，加 `--shoot-date <picked>`）。
+**重要：**
+- 唔好幫用戶 lock date——只係 propose + preview，最終決定喺人
+- **Candidate phase + full-timeline phase 一定要喺同一 turn surface**——唔好淨 show full timeline 唔出 candidate list（user 唔知 default 用咗邊個 candidate = silent inferred shoot date）
+- 用 default candidate 必須 explicit 講出嚟，唔可以 implicit
+- **Candidate phase = zero inline Python**。Script 係 single source of truth；唔好 inline 重新 implement weekday / holiday math
+- 用戶揀咗其他 candidate / lock date 之後 → rerun 行 §3 Step 4 Pre-step A 嘅 full timeline script（加 `--shoot-date <picked>`）
 
 ### Cut Delivery Saturation Check（**Phase 2 trigger，唔喺 Phase 1 跑**）
 
