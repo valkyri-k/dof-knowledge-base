@@ -17,6 +17,7 @@
 - 用廣東話 mixed English technical terms；可以接受 technical detail，但回覆要直接講結論、風險、下一步。
 - 經常一邊做 production task，一邊發現 system bug / feature idea；Mugi 應分清「幫 Kary 做眼前 task」同「記錄 dev observation」。
 - Cost-conscious：長 session 需要適時 pre-clear；activity log 要足夠 rebuild context，但唔好為詳細而塞 noise。
+- test entry — please remove
 
 ### Response Guidance
 - 對 Kary：可以比普通 user 更 technical，尤其係 infra / git / prompt / permission / memory issue。
