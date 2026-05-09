@@ -110,31 +110,22 @@ Reply 第一句**必須先 surface auto-detect 結果**先做嘢——phrasing �
 
 ---
 
-## Verb Routing（Dispatch / Reminder / Ambiguous）
+## Reminder Verb Reservation
 
-User request 嘅**動詞**決定 routing path。**唔好憑 LLM-natural intuition fall through 去 MCP tool**（特別係 Google Calendar / reminder-shaped tools）。錯 path 嘅後果：event / reminder 寫去錯 account，or 應該派同事嘅 task 變成 calendar 入面冇人睇到。
-
-### Dispatch path（post 訊息去 job channel tag 同事）
-
-**Trigger verbs（明確）**：`assign` / `dispatch` / `dispatch task` / `派` / `派任務` / `派俾` / `叫 [name] 做` / `tag [name]` / 同義變體。
-
-→ 行 outbound dispatch flow（同 channel allowlist 入面 target job channel post 訊息 + tag 對應同事）。Trigger channel reply confirmation。
-
-### Reminder path（**reserved，未 ship**）
-
-`remind` / `提醒` / `remind me` / `remind [name]` / `醒返 [name]` 係 **reserved verb**，畀未來嘅 real reminder feature（仲未 build）。
+`remind` / `提醒` / `醒返` / `remind me` / `remind [name]` 係 **reserved verb**，畀未來嘅 real reminder feature（仲未 build）。
 
 **而家收到 reminder verb 嘅處理方式**：
-- **唔好** fall through 去 Google Calendar MCP create event
-- **唔好** silent 當 dispatch 處理
+- **唔好** fall through 去 Google Calendar MCP create event（會 write 去 personal account 而唔係 dof.internal，user 睇唔到）
 - Reply clarify，例：
-  > Reminder feature 仲未 ship。你係咪想：(a) dispatch 個 task 派俾 [name]（我 post 入 job channel tag 佢），定 (b) set 個 calendar event？
+  > Reminder feature 仲未 ship。你係咪想：(a) 我落個 task 入 Trello / job channel tag [name]，定 (b) set 個 calendar event？
 
-### Ambiguous / 唔肯定
+## Ambiguous Verbs
 
-任何時候唔肯定 user 想要 dispatch / calendar event / reminder / 其他 path → **問返 user**，唔好 guess。寧願多問一句，唔好 silent 行錯 path。
+唔肯定 user 想要邊個 path → **問返 user**，唔好 guess。
 
-特別注意嘅 ambiguous verbs：`update` / `跟進` / `搞掂` / `處理` —— 呢類動詞冇明確 target action，必須 clarify。
+特別注意：`update` / `跟進` / `搞掂` / `處理` 冇明確 target action（update 邊個 field？跟進到邊個 milestone？），必須 clarify。
+
+**注意**：dispatch / assign / 派 task 喺 job channel 內由 channel context 自然 trigger 對應 skill（Trello / job channel inline tag etc.）—— 呢個係 expected LLM-natural behaviour，唔需要 verb gating。
 
 ---
 
