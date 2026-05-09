@@ -175,51 +175,104 @@ def cut_chain_forward(start_anchor: date, cut_count: int, mode: str, holidays: s
 
 # ---------- Slack distribution (Step E) ----------
 
-def distribute_slack(
+def distribute_slack_v2(
     start_anchor: date, picture_lock: date, cut_count: int, mode: str, holidays: set
-) -> list:
+) -> tuple:
     """
-    Build cut chain whose last FB lands ≤ (picture_lock - 1 wd).
-    Distribute slack cut-gap-first, cap 5 wd per gap (standard) / no cap (compressed = MIN only).
-    Return final cut chain list.
-    """
-    if mode != "standard":
-        return cut_chain_forward(start_anchor, cut_count, mode, holidays)
+    Build cut chain forward from start_anchor, target last FB ≤ picture_lock - 1 wd.
 
-    base = cut_chain_forward(start_anchor, cut_count, "standard", holidays)
+    Slack distribution priority: shoot_1st > cut2 > cut3 > fb1 > fb2 > fb3.
+    Per-mode caps for each gap kind:
+      standard:   shoot_1st 5+3=8, cut 3+5=8, fb 3+2=5
+      compressed: shoot_1st 4+2=6, cut 3+3=6, fb 1+2=3
+      extreme:    shoot_1st 2+3=5, cut 2+3=5, fb 1+2=3
+
+    Danger flag: any cut whose incoming gap (shoot→1st, FB1→2nd, FB2→3rd) ≤ 3 wd.
+
+    Returns (chain, cut_warnings, infeasible, deficit_wd) where:
+      chain = list of (label, date) pairs
+      cut_warnings = list of warning strings for cuts ≤ 3 wd
+      infeasible = True if even MIN doesn't fit
+      deficit_wd = wd by which MIN exceeds available (0 if feasible)
+    """
+    mins = {
+        "standard":   {"shoot_1st": 5, "cut": 3, "fb": 3},
+        "compressed": {"shoot_1st": 4, "cut": 3, "fb": 1},
+        "extreme":    {"shoot_1st": 2, "cut": 2, "fb": 1},
+    }[mode]
+    cap_extra = {
+        "standard":   {"shoot_1st": 3, "cut": 5, "fb": 2},
+        "compressed": {"shoot_1st": 2, "cut": 3, "fb": 2},
+        "extreme":    {"shoot_1st": 3, "cut": 3, "fb": 2},
+    }[mode]
+
     target_last_fb = sub_wd(picture_lock, 1, holidays)
-    last_fb_date = base[-1][1]
-    slack = wd_count(last_fb_date, target_last_fb, holidays)
-    if slack <= 0:
-        return base
+    available = wd_count(start_anchor, target_last_fb, holidays)
+    min_span = (
+        mins["shoot_1st"]
+        + cut_count * mins["fb"]
+        + max(0, cut_count - 1) * mins["cut"]
+    )
+    infeasible = available < min_span
+    deficit = max(0, min_span - available)
+    slack = max(0, available - min_span)
 
-    cut_gap_caps = {3: [5, 5], 2: [5]}.get(cut_count, [])
-    extras = [0] * len(cut_gap_caps)
-    while slack > 0 and any(e < cap for e, cap in zip(extras, cut_gap_caps)):
-        for i in range(len(extras)):
-            if slack > 0 and extras[i] < cut_gap_caps[i]:
-                extras[i] += 1
-                slack -= 1
-
-    def gap(mode_, kind):
-        return {"standard": {"shoot_1st": 5, "fb": 3, "cut": 3}}[mode_][kind]
-
-    chain: list = []
-    d = add_wd(start_anchor, gap("standard", "shoot_1st"), holidays)
-    chain.append(("1st Cut", d))
-    d = add_wd(d, gap("standard", "fb"), holidays)
-    chain.append(("Client FB 1", d))
+    # Slot priority order for slack fill
+    priority: list = [("shoot_1st", "shoot_1st")]
     if cut_count >= 2:
-        d = add_wd(d, gap("standard", "cut") + extras[0], holidays)
+        priority.append(("cut2", "cut"))
+    if cut_count >= 3:
+        priority.append(("cut3", "cut"))
+    if cut_count >= 1:
+        priority.append(("fb1", "fb"))
+    if cut_count >= 2:
+        priority.append(("fb2", "fb"))
+    if cut_count >= 3:
+        priority.append(("fb3", "fb"))
+
+    extras = {name: 0 for name, _ in priority}
+    for name, kind in priority:
+        if slack <= 0:
+            break
+        take = min(slack, cap_extra[kind])
+        extras[name] = take
+        slack -= take
+
+    # Build chain + record cut-incoming gaps
+    chain: list = []
+    cut_durations: list = []  # (label, gap_wd)
+
+    sf_gap = mins["shoot_1st"] + extras["shoot_1st"]
+    d = add_wd(start_anchor, sf_gap, holidays)
+    chain.append(("1st Cut", d))
+    cut_durations.append(("1st Cut", sf_gap))
+    if cut_count >= 1:
+        d = add_wd(d, mins["fb"] + extras.get("fb1", 0), holidays)
+        chain.append(("Client FB 1", d))
+    if cut_count >= 2:
+        c2_gap = mins["cut"] + extras.get("cut2", 0)
+        d = add_wd(d, c2_gap, holidays)
         chain.append(("2nd Cut", d))
-        d = add_wd(d, gap("standard", "fb"), holidays)
+        cut_durations.append(("2nd Cut", c2_gap))
+        d = add_wd(d, mins["fb"] + extras.get("fb2", 0), holidays)
         chain.append(("Client FB 2", d))
     if cut_count >= 3:
-        d = add_wd(d, gap("standard", "cut") + extras[1], holidays)
+        c3_gap = mins["cut"] + extras.get("cut3", 0)
+        d = add_wd(d, c3_gap, holidays)
         chain.append(("3rd Cut", d))
-        d = add_wd(d, gap("standard", "fb"), holidays)
+        cut_durations.append(("3rd Cut", c3_gap))
+        d = add_wd(d, mins["fb"] + extras.get("fb3", 0), holidays)
         chain.append(("Client FB 3", d))
-    return chain
+
+    cut_warnings: list = []
+    for label, gap_wd in cut_durations:
+        if gap_wd <= 3:
+            cut_warnings.append(
+                f"⚠️ {label} 只有 {gap_wd} wd（≤ 3 wd 危險水平）— post team 容易頂唔順，"
+                f"建議 director / producer review 條 cut 嘅 scope。"
+            )
+
+    return chain, cut_warnings, infeasible, deficit
 
 
 # ---------- Pre-pro chain backward from Shoot ----------
@@ -438,12 +491,15 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
                 f"= {available_window} wd，連 2-cut compressed 都頂唔順 (MIN 10 wd)。"
                 f"Escalate Sohling for manual judgment."
             ],
+            "cut_warnings": [],
             "milestones": [],
         })
         return
 
     # Build cut chain
-    cut_chain = distribute_slack(shoot_date, tail["picture_lock"], cut_count, cut_mode, holidays)
+    cut_chain, cut_warnings, _infeasible, _deficit = distribute_slack_v2(
+        shoot_date, tail["picture_lock"], cut_count, cut_mode, holidays
+    )
 
     # Pre-pro chain backward from shoot
     pre_pro = pre_pro_standard(shoot_date, has_style_frame, holidays)
@@ -489,6 +545,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
         project=args.project,
         holidays=holidays,
         warnings=warnings,
+        cut_warnings=cut_warnings,
     )
 
 
@@ -525,15 +582,14 @@ def run_compressed_edge_case(args, effective_kickstart, today, final_output, tai
         cut_count = 3
         scenario_label = "Compressed-Edge-Case 3-cut (default)"
 
-    # Build cut chain - extreme mode if even compressed doesn't fit
-    cut_chain = cut_chain_forward(shoot_date, cut_count, "extreme", holidays)
-    last_fb = cut_chain[-1][1]
-    # FB-last must land ≥ 1 wd before picture_lock (Picture Lock is its own milestone)
-    target_pl = sub_wd(tail["picture_lock"], 1, holidays)
+    # Build cut chain — extreme mode floor (compressed branch always uses extreme MIN
+    # for cut/fb gaps, then distribute available slack with priority).
+    cut_chain, cut_warnings, infeasible, deficit = distribute_slack_v2(
+        shoot_date, tail["picture_lock"], cut_count, "extreme", holidays
+    )
 
-    if last_fb > target_pl:
-        # Even Compressed-Edge-Case extreme config can't fit → Extreme-Squeeze Tier
-        deficit = wd_count(target_pl, last_fb, holidays)
+    if infeasible:
+        # Even Compressed-Edge-Case extreme MIN config can't fit → Extreme-Squeeze Tier
         return emit_extreme_squeeze(
             args, effective_kickstart, final_output, shoot_date, tail,
             available_window, deficit, holidays, warnings
@@ -558,6 +614,7 @@ def run_compressed_edge_case(args, effective_kickstart, today, final_output, tai
         project=project,
         holidays=holidays,
         warnings=warnings,
+        cut_warnings=cut_warnings,
     )
 
 
@@ -580,11 +637,14 @@ def run_pure_post(args, effective_kickstart, today, final_output, fc_start,
                 f"({tail['picture_lock'].isoformat()}) = {available_window} wd，"
                 f"連 2-cut compressed 都頂唔順。Escalate Sohling。"
             ],
+            "cut_warnings": [],
             "milestones": [],
         })
         return
 
-    cut_chain = distribute_slack(fc_start, tail["picture_lock"], cut_count, cut_mode, holidays)
+    cut_chain, cut_warnings, _infeasible, _deficit = distribute_slack_v2(
+        fc_start, tail["picture_lock"], cut_count, cut_mode, holidays
+    )
 
     return build_output(
         status="pure_post" if cut_mode == "standard" else "pure_post_compressed",
@@ -605,6 +665,7 @@ def run_pure_post(args, effective_kickstart, today, final_output, fc_start,
         holidays=holidays,
         warnings=warnings,
         first_cut_start=fc_start,
+        cut_warnings=cut_warnings,
     )
 
 
@@ -643,6 +704,7 @@ def emit_extreme_squeeze(args, effective_kickstart, final_output, shoot_date, ta
             f"呢個 case 變數太多，Mugi judge 唔到，建議交俾導演 call。"
             f"@director 入嚟睇下：揀邊個方向？"
         ],
+        "cut_warnings": [],
         "milestones": [],
     })
 
@@ -651,7 +713,7 @@ def build_output(*, status, scenario_label, effective_kickstart, final_output,
                  shoot_date, shoot_days, available_window, cut_count,
                  pre_pro, cut_chain, tail, has_vo, has_style_frame,
                  compressed_style_frame_in_post, project, holidays, warnings,
-                 first_cut_start=None):
+                 first_cut_start=None, cut_warnings=None):
     """Assemble final milestones list and emit JSON."""
     milestones: list = []
     order = 1
@@ -771,6 +833,7 @@ def build_output(*, status, scenario_label, effective_kickstart, final_output,
         "vo_window": vo_window,
         "has_style_frame": has_style_frame,
         "warnings": warnings,
+        "cut_warnings": cut_warnings or [],
         "extreme_squeeze_propositions": None,
     }
     emit(payload)
