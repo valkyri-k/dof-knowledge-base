@@ -315,26 +315,6 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 
 ### Step 3: Minimal Follow-up
 
-#### Director Auto-detection（先做，唔使問）
-
-收到 timeline request 之前，先對 sender 嘅 Discord User ID 對返 CLAUDE.md Team table：
-
-| Discord User ID | 係邊位 | 係導演？ |
-|----------------|--------|---------|
-| `1328602029303791646` | Kary | ✅ Director |
-| `1221464062085562441` | Benjy | ✅ Director |
-| 其他 ID | 唔係導演 | ❌ |
-
-**如果 sender 係導演（Kary 或 Benjy）：**
-- **`Director` field 自動填入 sender 嘅名**，唔使問
-- 整個 timeline 當係「導演幫自己 plan」——Mugi 跳過問「邊個負責」
-- Director Discussion 嘅 patterns（A-J）直接 address 嗰位導演
-
-**如果 sender 唔係導演（其他同事）：**
-- Director field 留空，generate 完喺 Pattern C（缺嘢未填）remind：「Director 我唔知係邊位，你睇完 doc 自己填返。」
-
----
-
 **Mandatory asks**（如 request / Calendar 冇明確提供）：
 
 **一次過問晒，唔好一條一條問：**
@@ -676,7 +656,7 @@ docs_service.documents().batchUpdate(
 **Template Field Semantics：**
 | Field | 點 fill | 例子 ✅ | 反例 ❌ |
 |-------|---------|--------|---------|
-| Director | DOF director 名——**由 sender Discord ID 自動 detect**（見 Step 3 Director Auto-detection） | `Kary` / `Benjy` | 留空 |
+| Director | DOF director 名——由 channel context（`job-list.md` Director column）自動拎；該 column 冇 value 先留空 | `Kary` / `Benjy` | 留空（job-list.md 有 value 但冇填入 doc） |
 | Job Number | J-number | `J26015` | `26015` |
 | Project Name | Project shorthand | `HSUHK Student` | `Recruitment Video` |
 
