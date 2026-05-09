@@ -120,6 +120,9 @@ Fresh session after clear。主力係 J260YY Test Project 2 timeline test（兩�
 ### 2026-05-09 evening session
 Post-clear mini-session。Kary 喺 Discord 查詢 Pre-Clear Sequence 而家有幾多 step（答：7 steps）同 Step 5 係咩（Profile candidate detection）。跟住 Kary 指出頭先 pre-clear 冇跑足 7 steps——Steps 4+5 冇明確執行，只係 silent skip。Mugi 承認：Step 4（cross-update logs）是 valid skip（冇 bug/gap），但冇記錄 skip 原因；Step 5（profile candidate detection）報「0」但冇 explicitly run 過 criteria check。**Decision：下次 pre-clear 必須明確 run + document 每個 step，即使 skip 都要講原因。**
 
+### 2026-05-09 late night session (J26071 Trello assign verb test)
+極短 session。Kary 喺 J26071 channel 發「assign Kary to send first cut tomorrow」測試 assign verb routing。Mugi 正確 route 去 Trello（唔係 Discord dispatch）——建立新 list「J26071 Button InvestHK」+ card「Send 1st Cut」，assigned Kary，due 2026-05-10，冇 label（director member + task 唔 match DIRECTOR_LABEL_MAP）。Kary 即確認係 test only → revert。Card archived，per-job log + user activity log entries 移除。**Observation：assign verb 喺 job channel context 正確 fall 去 Trello path（Skills Dispatch table），唔係 Discord dispatch path（Verb Routing table）——兩個 table 都有 assign keyword，Skills Dispatch 嘅 Trello trigger 覆蓋 Verb Routing 嘅 dispatch trigger，呢個 routing priority 係隱性嘅，日後如果有 conflict 可能要 clarify。**
+
 ### 2026-05-09 quick test session (J26071 remind verb)
 Kary 喺 J26071 channel 測試 `remind` verb 行為。Mugi 落錯 path——直接 create Google Calendar event（「Remind: Send 1st Cut — InvestHK」2026-05-10 09:00 HKT），但按 kb/CLAUDE.md Verb Routing section，`remind` 係 reserved verb，應該 clarify 而唔係 fall through 去 Calendar。Kary 確認係 test only → 指示 revert。Calendar event deleted + activity log entries removed。Session 淨係 2 個 Discord messages + revert，冇實質 production change。**Key observation：Verb Routing section 喺 kb/CLAUDE.md 存在，但今次 session 嘅 system prompt 冇呢個 section（版本差異）——呢個係 test 嘅 context，唔係 Mugi violation。**
 
@@ -247,3 +250,4 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-09 | J260AA: confirmed 1-day shoot + propose date + style frame = yes | Ran timeline_backward.py → Compressed-Edge-Case 3-cut (Shoot May 18, 17 milestones, VO Jun 10-11, FO Jun 15); Phase 1 draft sent; awaiting Kary confirm |
 | 2026-05-09 | J26071 test: "remind Kary to send first cut tomorrow" | Mugi created Calendar reminder event (wrong path — should clarify per Verb Routing rule); Kary: test only → revert |
 | 2026-05-09 | Revert test: delete Calendar event + activity log entries | Calendar event tgq8568jmv65lr5139fcv5rdq4 deleted; log entries removed ✅ |
+| 2026-05-09 | J26071 Trello assign verb test: 「assign Kary to send first cut tomorrow」 | Routed to Trello: new list + card created → Kary: test only → card archived + log entries removed ✅ |
