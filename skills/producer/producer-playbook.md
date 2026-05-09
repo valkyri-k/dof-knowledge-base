@@ -80,23 +80,27 @@ Pre-pro total：T0 → Shoot ≈ **17–18 wd (~3.5 週)**
 
 ### Post-Production
 
-| # | Milestone | Calendar Title | Party | colorId | 由 previous 算起 |
-|---|-----------|---------------|-------|---------|----------------|
-| 9 | Submit 1st Cut | `1st Cut - [Project]` | DOF | 7 (Peacock) | **Shoot + 5 wd** |
-| 10 | Feedback on 1st Cut | `Client FB 1 - [Project]` | Client | 2 (Sage) | **#9 + 3 wd** |
-| 11 | Submit 2nd Cut | `2nd Cut - [Project]` | DOF | 7 (Peacock) | **#10 + 3–5 wd** |
-| 12 | Feedback on 2nd Cut | `Client FB 2 - [Project]` | Client | 2 (Sage) | **#11 + 3 wd** |
-| 13 | Submit 3rd Cut（optional）| `3rd Cut - [Project]` | DOF | 7 (Peacock) | **#12 + 3 wd** |
-| 14 | Feedback on 3rd Cut（optional）| `Client FB 3 - [Project]` | Client | 2 (Sage) | **#13 + 3 wd** |
-| 15 | Picture Lock | `Picture Lock - [Project]` | Both | 7 (Peacock) | #14 approve（or #12 if Option B skip 咗 #13/#14） |
+⚠️ **下面表入面嘅 cut / FB gap 係 MINIMUM**——實際 distribute slack 嘅 logic 喺 §1 **Post-Production Backward-Planning from Final Delivery Anchor** 講。Final Output 係 hard anchor，唔係由 #9 forward chain 推出嚟。
+
+| # | Milestone | Calendar Title | Party | colorId | 由 previous 算起（MIN） |
+|---|-----------|---------------|-------|---------|---------------------|
+| 9 | Submit 1st Cut | `1st Cut - [Project]` | DOF | 7 (Peacock) | **Shoot + 5 wd**（pure-post：由 1st Cut start anchor 開始） |
+| 10 | Feedback on 1st Cut | `Client FB 1 - [Project]` | Client | 2 (Sage) | **#9 + 3 wd MIN** |
+| 11 | Submit 2nd Cut | `2nd Cut - [Project]` | DOF | 7 (Peacock) | **#10 + 3 wd MIN**（slack distribute 加上去，cap 5 wd） |
+| 12 | Feedback on 2nd Cut | `Client FB 2 - [Project]` | Client | 2 (Sage) | **#11 + 3 wd MIN** |
+| 13 | Submit 3rd Cut（optional）| `3rd Cut - [Project]` | DOF | 7 (Peacock) | **#12 + 3 wd MIN** |
+| 14 | Feedback on 3rd Cut（optional）| `Client FB 3 - [Project]` | Client | 2 (Sage) | **#13 + 3 wd MIN** |
+| 15 | Picture Lock | `Picture Lock - [Project]` | Both | 7 (Peacock) | **Backward-derived**：VO window start - 1 wd（有 VO）/ #17 - 1 wd（冇 VO）。**唔係**由 #14 forward chain。 |
 
 ### Delivery
 
+⚠️ Delivery tail 全部 **backward-derived from Final Output anchor**。
+
 | # | Milestone | Calendar Title | Party | colorId | 點計 |
 |---|-----------|---------------|-------|---------|------|
-| 16 | VO Recording (window) | `([N] Days) VO Recording - [Project]` | DOF | 1 (Lavender) | **Window**：開始 = #15 + 1 wd；長度 = 2 wd；結束 ≤ #18 - 2 wd。**Optional**——冇 VO recording / 用 AI VO 就 skip |
-| 17 | Color, Sound Mixing, Subtitle | `Color/Sound/Subtitle - [Project]` | DOF | 7 (Peacock) | **#16 window 結束之後 +1 wd**（如冇 VO 就 #15 + 1 wd）。Doc 必須保留，Calendar 亦 push |
-| 18 | Final Output | `Final Output - [Project]` | DOF | 3 (Grape) | **#17 + 1 wd** |
+| 16 | VO Recording (window) | `([N] Days) VO Recording - [Project]` | DOF | 1 (Lavender) | **Backward-derived**：window end ≤ #18 - 2 wd；長度 2 wd；start = end - 2 wd + 1 day。**Optional**——冇 VO recording / 用 AI VO 就 skip |
+| 17 | Color, Sound Mixing, Subtitle | `Color/Sound/Subtitle - [Project]` | DOF | 7 (Peacock) | **Backward-derived**：#18 - 1 wd。Doc 必須保留，Calendar 亦 push |
+| 18 | Final Output | `Final Output - [Project]` | DOF | 3 (Grape) | **Client deadline anchor**——hard anchor，**永遠唔向前 pull**（見下文 Backward-Planning）。冇 client deadline → 主動問用戶。 |
 
 ### VO Recording Window 詳細 logic
 
@@ -127,9 +131,87 @@ Mugi explain 俾導演聽**點解某個 milestone 排嗰日**：
 - Calendar：4 separate events
 - Doc / preview：4 independent rows
 
+### Post-Production Backward-Planning from Final Delivery Anchor
+
+**核心原則：Final Delivery Date 係 HARD ANCHOR，永遠唔向前 pull。**
+
+當 client 有明確 final delivery date（e.g.「6月15日交片」），呢個 date 就係 anchor：
+- ✅ 由 Final Output 倒推返 C/S → VO → Picture Lock
+- ✅ 多出嚟嘅時間擺去 cut iterations / cut gaps（俾 post team buffer）
+- ❌ **唔可以**因為 timeline 寬鬆／壓到 2 cuts 就 pull Final Output 早過 client deadline
+- ❌ **唔可以**「forward-chain from Shoot」噉計到 Final Output = 6月11日（早過 client 6月15日）
+
+**冇 client deadline 嘅情況（必須主動問）：**
+> 「Client 嗰邊有冇 confirm final delivery date？呢個係 anchor，timeline 由佢倒推。冇 confirm 嘅話我可以用 default forward-chain 計，但建議你 check 返先。」
+
+#### Backward-Planning Algorithm（適用 standard shoot+post + pure-post）
+
+**Step A — Anchor Final Output**
+`final_output_date = client_deadline`（hard anchor，唔郁）。
+
+**Step B — Backward tail（fixed-duration milestones 反推）**
+1. `cs_subtitle_date = final_output - 1 wd`（Color/Sound/Subtitle）
+2. 如有 VO Recording window：
+   - `vo_window_latest_end = cs_subtitle_date - 1 wd`（即 final - 2 wd）
+   - `vo_window_length = 2 wd`
+   - `vo_window_start = vo_window_latest_end - 2 wd + 1 day`
+   - `picture_lock_date = vo_window_start - 1 wd`
+3. 冇 VO：`picture_lock_date = cs_subtitle_date - 1 wd`
+
+**Step C — Forward minimum from Shoot anchor**
+由 Shoot date（pure-post：由 1st Cut start anchor 開始）forward chain 出最少需要嘅 cut chain（用 standard MIN gap 3 wd 計）：
+- `min_1st_cut = shoot + 5 wd`（standard shoot+post）/ user 指定（pure-post）
+- `min_fb_1 = min_1st_cut + 3 wd`
+- 3 cuts: `min_picture_lock_3cut = min_1st_cut + (3+3+3+3+3) wd = min_1st_cut + 15 wd`
+- 2 cuts: `min_picture_lock_2cut = min_1st_cut + (3+3+3) wd = min_1st_cut + 9 wd`
+
+**Step D — Decide cut count（基於 available window）**
+
+`available_window = picture_lock_date - shoot_date`（standard shoot+post）/ `picture_lock_date - 1st_cut_start_date`（pure-post）
+
+| `available_window`（從 Step B 反推到 picture_lock 起算） | Decision |
+|---|---|
+| ≥ 20 wd | **3 cuts standard**——slack distribute 落 cut gaps（cap 4–5 wd per gap） |
+| 14–19 wd | **2 cuts standard**（穩陣，slack 寬鬆）/ 或 **3 cuts compressed**（gap 3 wd MIN，feedback 1 wd）—— Mugi flag trade-off + 問用戶（見下） |
+| 10–13 wd | **2 cuts compressed**（Shoot→1st Cut 4 wd，FB 1 wd，2nd Cut gap 3 wd）—— flag tight + 同 client 講明 feedback 收緊 |
+| < 10 wd | 連 2-cut compressed 都頂唔順 → **Pattern J，escalate Sohling** |
+
+**Senior approval exception：** 用戶 / client 明講「2nd cut 之後要 senior approval / 走管理層 review，FB2 最少 X wd」 → 即使 window ≥ 20 wd 都行 **2 cuts**，FB2 攞到 X wd，剩餘 slack 落 1st cut → FB1 / FB1 → 2nd cut。
+
+**3-cut compressed vs 2-cut full slack 嘅 trade-off：**
+Window 14–19 wd 嗰下 Mugi 主動 flag，**唔好默默 silent decide**：
+> 「依家 Shoot 到 final delivery 中間有 [N] working days。
+> - 行 **3 cuts compressed**：每個 cut gap 3 wd MIN、feedback 1 wd。Iteration 多但 client feedback 時間少。
+> - 行 **2 cuts**：cut gap 拎到 [M] wd、feedback 3 wd 寬鬆。Iteration 少但每輪夠時間。
+>
+> 你想點？」
+
+**Step E — Distribute slack（cut-gap-first，cap 4–5 wd per gap）**
+
+`slack = available_window - min_required_for_chosen_cut_count`
+
+優先級：
+1. **Cut production gaps first**（FB1 → 2nd Cut / FB2 → 3rd Cut，3-cut 都 distribute；Shoot → 1st Cut 通常維持 5 wd 唔加）—— 每個 cap **5 wd**，超過就 cap 住停
+2. **Feedback rounds last**（FB1 / FB2 / FB3）—— 默認 3 wd MIN；cut gaps 全部 cap 後仲有 slack 先加去 feedback
+3. 仲有剩 slack（cut gaps 同 feedback 都填滿）→ **留喺 cut gap**（俾 post team 多日 buffer），**唔可以** pull Final Output 早
+
+**點解 cut-gap-first：** 每個 cut delivery 需要 DOF post team 真實 production time。Compressing cut production = 直接 burn out post team。Compressing feedback = client-facing trade-off，client 自己決定。3 cuts 嘅情況下我哋會 frame 俾 client：「3 輪 iteration 即係每輪 feedback time 緊啲」。
+
+---
+
 ### Compression Rules（**only when explicitly triggered**）
 
-**Default 計 timeline = standard。唔好預先同時計 compressed。** Compressed 數字得喺以下 trigger 滿足先行用：
+**Default 計 timeline = standard。唔好預先同時計 compressed。** Compressed 數字得喺以下 trigger 滿足先行用。
+
+**Post-production 嘅 fallback sequence（嚴格按次序試）：**
+1. **Try 3-cut standard**（gap MIN 3 wd，slack distribute cut-gap-first cap 5 wd）
+2. **Drop to 2-cut**（如 3-cut min 都頂唔順 available window）
+3. **Compress edges**（用下面 Compressed minimums 表 — Shoot→1st Cut 4 wd / FB 1 wd 等）—— 只喺 2-cut standard 都頂唔順先試
+4. **Pattern J，escalate Sohling**（連 2-cut compressed 都 miss final deadline）
+
+⚠️ **永遠唔好** pull Final Output 早過 client deadline 嚟「fit」cut chain——drop cut / compress edge / escalate，三個之中揀一個。
+
+Compressed 數字得喺以下 trigger 滿足先行用：
 
 | Trigger | Compressed minimums |
 |---------|---------------------|
@@ -333,8 +415,24 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 **Pre-step A（必須做）：Fetch HK Public Holidays**
 開始 enumerate 之前，先 fetch 整個 planning range 嘅 HK public holidays（用 §2 Rule 1 嘅 standard Python query）。攞返 `holiday_dates` set + `holiday_names_by_date` map，cache in-memory。
 
-**Pre-step B（必須做）：Enumerate Milestone List**
-跟 §1 Standard Milestone Set，逐個列出所有 milestones。每個 milestone 有獨立日期、獨立 colorId、獨立 row。**唔可以揈做 date range，唔可以默默 drop pre-pro。**
+**Pre-step B（必須做）：Enumerate Milestone List via Backward-Planning**
+
+跟 §1 Standard Milestone Set + **§1 Post-Production Backward-Planning from Final Delivery Anchor** algorithm。**核心 ordering：由 Final Output anchor 倒推，唔好 forward-chain from Shoot 然後 derive Final Output。**
+
+執行次序：
+
+1. **確認 Final Output anchor**——client deadline 明唔明？冇 → 主動問用戶（見 §1 Backward-Planning subsection）
+2. **Step A：Anchor `final_output_date = client_deadline`**
+3. **Step B：Backward tail** — 計 C/S（final-1 wd）、VO window（end ≤ final-2 wd, length 2 wd）、Picture Lock（VO start - 1 wd 或 C/S - 1 wd）
+4. **Step C：Forward MIN from Shoot**（standard）/ from 1st Cut start（pure-post）—— 計 3-cut MIN 同 2-cut MIN
+5. **Step D：Decide cut count** — 用 Step B 推出嚟嘅 `picture_lock_date` 同 Shoot 之間嘅 available window 對住 §1 cut count table（≥20 = 3 cuts，14–19 = flag trade-off + 問用戶，<14 = Pattern J）
+6. **Step E：Distribute slack cut-gap-first**（cap 4–5 wd per gap，feedback rounds last，剩 slack 留 cut gap 唔 pull final 早）
+7. **Pre-pro chain**（standard shoot+post only）：由 Shoot back-calculate Script Lock (-7 wd) → Submit Video Flow (-5 wd) → Script Received (-5–6 wd)
+8. **Enumerate 全部 milestones**——每個獨立日期、獨立 colorId、獨立 row。**唔可以揈做 date range，唔可以默默 drop pre-pro。**
+
+**Senior approval exception：** 用戶提到 2nd cut 後要 senior approval / 走管理層 review → 強制 2 cuts，FB2 拎用戶指定嘅長度，剩 slack 落上游。
+
+**Pure-post：** Skip Step 7（pre-pro chain）+ skip Shoot anchor。1st Cut start anchor 由用戶提供（材料 ready 嗰日）。Backward-from-final logic 一樣 apply。
 
 **Pre-step C（必須做）：Holiday + Weekend Cross Check**
 對每個非 shooting milestone 嘅 candidate date 對住 weekday rule + holiday set check。任何一個 hit weekend / holiday → 自動 push 去下一個 weekday + non-holiday，cascade 後續 milestone 同步調整。Surface 俾用戶睇 push 咗咩。
@@ -351,14 +449,19 @@ Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Py
 ```
 ☐ HK public holidays 我有冇 fetch 咗？
 ☐ 我係咪只跑咗 1 個 scenario？（Single-Scenario Rule — 唔好預先 enumerate standard + compressed 對比）
-☐ Pure-post job？係 → pre-pro + Shooting 已經 skip 晒，唔好計 pre-pro chain（見 §3 Step 2 keyword detection）
+☐ Final Output = client deadline anchor？冇 pull 早過 deadline？（§1 Backward-Planning core rule）
+☐ 冇 client deadline 嘅話我有冇主動問？
+☐ Backward tail 反推啱：C/S = Final - 1 wd？VO window end ≤ Final - 2 wd？Picture Lock = VO start - 1 wd（或 C/S - 1 wd 冇 VO）？
+☐ Cut count decision 跟 §1 Step D table（≥20 = 3, 14–19 = flag trade-off, <14 = Pattern J）？
+☐ Slack distribution 跟 cut-gap-first（cap 4–5 wd）—— 唔係 silent compress feedback or pull final 早？
+☐ Pure-post job？係 → pre-pro + Shooting 已經 skip 晒，唔好計 pre-pro chain（見 §3 Step 2 keyword detection）；backward-from-final logic 仍然 apply
 ☐ Pre-pro milestones 我有冇 enumerate 晒？（預設 7 個：Script Received / Submit Video Flow / Submit Graphics Ref / Script Lock / Confirm Graphics Ref / Submit Style Frame / Confirm Style Frame，除非用戶明確話冇 graphics / pure post）
 ☐ Submit Video Flow 同 Script Received 之間有冇 5–6 wd？（compressed 3–4 wd 淨喺 §1 Compression Rules trigger fired 先用）
 ☐ Script Lock 同 Submit Video Flow 之間有冇 5 wd？
 ☐ Script Lock 同 Shoot 之間有冇 7 wd？（compressed 3 wd 同上條件）
 ☐ 每個非 shooting milestone 都喺 weekday + non-holiday？
 ☐ 每個 milestone 有冇獨立日期？（冇 date range collapse）
-☐ VO Recording 係咪 multi-day window？Window start = PicLock + 1 wd, length = 2 wd, end ≤ Final Output - 2 wd?
+☐ VO Recording 係咪 multi-day window？Window end ≤ Final - 2 wd, length = 2 wd, start = end - 2 wd + 1 day?
 ☐ Submit Video Flow / Submit Graphics Ref 係咪 separate row？Script Lock / Confirm Graphics Ref 同樣？
 ☐ Color/Sound/Subtitle row 喺 doc 入面有冇保留？
 ☐ Holiday + weekday cross-check 完成（saturation check 留返 Phase 2 做）
@@ -489,17 +592,21 @@ Standard logic resolve 唔到 → **stop generation，直接 escalate**。唔好
 
 #### ❌ Anti-patterns
 
-| ❌ 錯 | ✅ 啱 |
-|------|------|
-| `Pre-Pro (Script Received / Video Flow / ...) \| Apr 8 – May 1 \| ~3.5 週 OK` | 7 行獨立 milestone，每行有自己嘅 date |
-| Submit Video Flow 排喺 Script Received 之後 1–2 wd | 5–6 wd（standard）/ 3–4 wd（compressed） |
-| Script Lock 排喺 Submit Video Flow 之後 1–2 wd | 5 wd——client review 通常要一個禮拜 |
-| Script Lock 同 Shoot 之間得 2–3 wd | 7 wd（standard）/ 3 wd（min） |
-| Preview 有 Pre-Pro，Calendar push list 由 Shooting 開始 | Preview 同 Calendar push 完全 1:1 |
-| VO Recording 變成單一 day | VO 係 multi-day window |
-| Submit Video Flow + Submit Graphics Ref 變成 1 row | 兩個 separate row / Calendar event |
-| Office milestone 排到 weekend 或 HK 公眾假期 | Default 排 weekday + non-holiday；撞到就 cross check + push 走 |
-| 將 Color/Sound/Subtitle 喺 doc 入面 delete 咗 | Doc 一定要保留（client transparency） |
+| ❌ 錯                                                                          | ✅ 啱                                                                                            |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `Pre-Pro (Script Received / Video Flow / ...) \| Apr 8 – May 1 \| ~3.5 週 OK` | 7 行獨立 milestone，每行有自己嘅 date                                                                    |
+| Submit Video Flow 排喺 Script Received 之後 1–2 wd                               | 5–6 wd（standard）/ 3–4 wd（compressed）                                                           |
+| Script Lock 排喺 Submit Video Flow 之後 1–2 wd                                   | 5 wd——client review 通常要一個禮拜                                                                    |
+| Script Lock 同 Shoot 之間得 2–3 wd                                               | 7 wd（standard）/ 3 wd（min）                                                                      |
+| Preview 有 Pre-Pro，Calendar push list 由 Shooting 開始                           | Preview 同 Calendar push 完全 1:1                                                                 |
+| VO Recording 變成單一 day                                                        | VO 係 multi-day window                                                                          |
+| Submit Video Flow + Submit Graphics Ref 變成 1 row                             | 兩個 separate row / Calendar event                                                               |
+| Office milestone 排到 weekend 或 HK 公眾假期                                        | Default 排 weekday + non-holiday；撞到就 cross check + push 走                                       |
+| 將 Color/Sound/Subtitle 喺 doc 入面 delete 咗                                     | Doc 一定要保留（client transparency）                                                                 |
+| Final Output 早過 client deadline（forward-chain from Shoot 推出嚟）                | Final Output = client deadline anchor，由 final 倒推 C/S → VO → Picture Lock。多出嚟嘅 slack 落 cut gaps |
+| Drop 3rd cut → silent pull Final Output 早                                    | Drop cut 時 Final Output 唔郁，slack 改落 1st/2nd cut gap 同 feedback                                 |
+| Window 14–19 wd silent decide 行 2-cut 或 3-cut compressed                     | Mugi 主動 flag trade-off + 問用戶                                                                   |
+| 冇 client deadline 直接 forward-chain 計到 Final Output                           | 主動問 client 嗰邊有冇 confirm final delivery date                                                    |
 
 ---
 
