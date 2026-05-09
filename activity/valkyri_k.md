@@ -53,6 +53,7 @@
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
 - **[2026-05-09] J260ZZ Test Project 3 Phase 1 draft pending** — 3-cut compressed schedule sent (Shoot May 19, Jun 15 FO，17 milestones)，waiting Kary confirm → Phase 2 Calendar push
+- **[2026-05-09] J260AA Test Project 3 Phase 1 draft pending** — Compressed-Edge-Case 3-cut sent (Shoot May 18, VO Jun 10-11, FO Jun 15, 17 milestones，style frame parallel 1st Cut)，waiting Kary confirm → Phase 2 Calendar push
 - **[2026-05-09] root-owned kb files recurring bug** — `scripts/timeline_backward.py` root-owned pattern（estimate: 由 Kary Claude Code local session 改 file 以 root process 跑）；dev-log `2026-05-09 14:53` logged；awaiting permanent fix decision。Cross-ref: `activity/kary-dev-log.md` 2026-05-09 14:53 entry
 
 ---
@@ -112,6 +113,9 @@ Profile Correction Protocol test：Kary 測試 add + remove test entry，兩步�
 
 ### 2026-05-09 night session
 Fresh session after clear。主力係 J260YY Test Project 2 timeline test（兩輪），中間 Kary updated producer playbook。兩輪 setup 完全一樣：1-day shoot May 18，VO，style frame，Final Output Jun 15。兩次都跑出 Compressed-Edge-Case 3-cut（Script Received May 11，Shoot May 18，17 milestones，VO Jun 10-11，FO Jun 15），結果完全一致——playbook update 冇改變 script 輸出。Kary 兩次都確認「test passed, won't push」。值得記錄：Mugi 今晚 silent reply failure 一次——Working Style 答案打咗喺 terminal 但冇 send Discord reply，俾 Kary 發現（「你又做完嘢唔答我啦」）。**Lesson：Discord input 必須 Discord reply，唔可以只喺 terminal 完成，即使回覆已經喺 Claude Code output 入面。**
+
+### 2026-05-09 post-night session
+又一輪 Compressed-Edge-Case timeline test，今次係 J260AA Test Project 3（MG + footage, 1-day shoot, VO, style frame, Jun 15 deadline）。Flow 同 J260YY/J260ZZ 基本一樣：parse client schedule image → ask filming vs pure-post + shoot days → Kary confirm 1-day shoot + propose date + style frame → `timeline_backward.py` 跑出 Compressed-Edge-Case 3-cut (Script Received May 11, Shoot May 18, 17 milestones, VO Jun 10-11, FO Jun 15) → Phase 1 draft sent。Kary 即 clear，Phase 2 未執行。呢個 test pattern（新 session post-clear 馬上測同一 scenario）係 Kary 確認 playbook 更新後 script 輸出穩定嘅標準做法。
 
 ### 2026-05-09 evening session
 Post-clear mini-session。Kary 喺 Discord 查詢 Pre-Clear Sequence 而家有幾多 step（答：7 steps）同 Step 5 係咩（Profile candidate detection）。跟住 Kary 指出頭先 pre-clear 冇跑足 7 steps——Steps 4+5 冇明確執行，只係 silent skip。Mugi 承認：Step 4（cross-update logs）是 valid skip（冇 bug/gap），但冇記錄 skip 原因；Step 5（profile candidate detection）報「0」但冇 explicitly run 過 criteria check。**Decision：下次 pre-clear 必須明確 run + document 每個 step，即使 skip 都要講原因。**
@@ -236,3 +240,5 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-09 | J260YY Test 1: timeline (fresh session, client schedule image, 1-day shoot, May 18) | Compressed-Edge-Case 3-cut Phase 1 draft sent; Kary: test passed, won't push |
 | 2026-05-09 | Working Style query | Silent reply failure (terminal only); Kary caught it; resent Discord reply ✅ |
 | 2026-05-09 | J260YY Test 2: playbook updated, re-run same parameters | Same output (Compressed-Edge-Case 3-cut, identical milestones); Kary: test passed, won't push |
+| 2026-05-09 | J260AA Test Project 3 timeline (MG + footage, 1-day shoot, VO, style frame, Jun 15 deadline) | Parsed client schedule image (Pre-pro→May15, Filming May18-22, FO Jun 15); asked filming vs pure-post + shoot days |
+| 2026-05-09 | J260AA: confirmed 1-day shoot + propose date + style frame = yes | Ran timeline_backward.py → Compressed-Edge-Case 3-cut (Shoot May 18, 17 milestones, VO Jun 10-11, FO Jun 15); Phase 1 draft sent; awaiting Kary confirm |
