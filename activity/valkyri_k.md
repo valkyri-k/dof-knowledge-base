@@ -120,6 +120,9 @@ Fresh session after clear。主力係 J260YY Test Project 2 timeline test（兩�
 ### 2026-05-09 evening session
 Post-clear mini-session。Kary 喺 Discord 查詢 Pre-Clear Sequence 而家有幾多 step（答：7 steps）同 Step 5 係咩（Profile candidate detection）。跟住 Kary 指出頭先 pre-clear 冇跑足 7 steps——Steps 4+5 冇明確執行，只係 silent skip。Mugi 承認：Step 4（cross-update logs）是 valid skip（冇 bug/gap），但冇記錄 skip 原因；Step 5（profile candidate detection）報「0」但冇 explicitly run 過 criteria check。**Decision：下次 pre-clear 必須明確 run + document 每個 step，即使 skip 都要講原因。**
 
+### 2026-05-09 quick test session (J26071 remind verb)
+Kary 喺 J26071 channel 測試 `remind` verb 行為。Mugi 落錯 path——直接 create Google Calendar event（「Remind: Send 1st Cut — InvestHK」2026-05-10 09:00 HKT），但按 kb/CLAUDE.md Verb Routing section，`remind` 係 reserved verb，應該 clarify 而唔係 fall through 去 Calendar。Kary 確認係 test only → 指示 revert。Calendar event deleted + activity log entries removed。Session 淨係 2 個 Discord messages + revert，冇實質 production change。**Key observation：Verb Routing section 喺 kb/CLAUDE.md 存在，但今次 session 嘅 system prompt 冇呢個 section（版本差異）——呢個係 test 嘅 context，唔係 Mugi violation。**
+
 ### 2026-05-08 afternoon/evening session
 今日兩個主要 work streams：job-list 擴展 + J26071 timeline。Job-list 方面：手動 patch 咗 J26071 Button InvestHK（Channel ID 1502220628424396821，Kary 係 Director），之後 Kary 自己喺 Airtable 做咗更大幅度更新——加 Director column + sync 晒所有 Current jobs，仲加咗 J26027 / J26075 / J26077 三條新 job，job-list 由 16 → 19 條。Kary 查 Airtable API 可用性：Mugi 只有 authenticate tools，冇 read/query tools，capability gap logged。
 
@@ -242,3 +245,5 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-09 | J260YY Test 2: playbook updated, re-run same parameters | Same output (Compressed-Edge-Case 3-cut, identical milestones); Kary: test passed, won't push |
 | 2026-05-09 | J260AA Test Project 3 timeline (MG + footage, 1-day shoot, VO, style frame, Jun 15 deadline) | Parsed client schedule image (Pre-pro→May15, Filming May18-22, FO Jun 15); asked filming vs pure-post + shoot days |
 | 2026-05-09 | J260AA: confirmed 1-day shoot + propose date + style frame = yes | Ran timeline_backward.py → Compressed-Edge-Case 3-cut (Shoot May 18, 17 milestones, VO Jun 10-11, FO Jun 15); Phase 1 draft sent; awaiting Kary confirm |
+| 2026-05-09 | J26071 test: "remind Kary to send first cut tomorrow" | Mugi created Calendar reminder event (wrong path — should clarify per Verb Routing rule); Kary: test only → revert |
+| 2026-05-09 | Revert test: delete Calendar event + activity log entries | Calendar event tgq8568jmv65lr5139fcv5rdq4 deleted; log entries removed ✅ |
