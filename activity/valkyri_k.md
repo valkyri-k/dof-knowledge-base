@@ -53,6 +53,7 @@
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
 - **[2026-05-09] root-owned kb files recurring bug** — `scripts/timeline_backward.py` root-owned pattern（estimate: 由 Kary Claude Code local session 改 file 以 root process 跑）；dev-log `2026-05-09 14:53` logged；awaiting permanent fix decision。Cross-ref: `activity/kary-dev-log.md` 2026-05-09 14:53 entry
+- **[2026-05-10] J260BB Test Project 4 Phase 1 pending confirm** — Pure-post mixed 3-cut timeline draft sent (Materials Ready May 11 → Final Output Jun 15)。Pending: (1) confirm Materials Ready = May 11 or May 18（May 18 → compressed 1 wd FB windows）；(2) confirm storyboard assumption = none；(3) confirm OK to push Calendar（Phase 2）。
 
 ---
 
@@ -123,6 +124,9 @@ Post-clear mini-session。Kary 喺 Discord 查詢 Pre-Clear Sequence 而家有�
 
 ### 2026-05-09 quick test session (J26071 remind verb)
 Kary 喺 J26071 channel 測試 `remind` verb 行為。Mugi 落錯 path——直接 create Google Calendar event（「Remind: Send 1st Cut — InvestHK」2026-05-10 09:00 HKT），但按 kb/CLAUDE.md Verb Routing section，`remind` 係 reserved verb，應該 clarify 而唔係 fall through 去 Calendar。Kary 確認係 test only → 指示 revert。Calendar event deleted + activity log entries removed。Session 淨係 2 個 Discord messages + revert，冇實質 production change。**Key observation：Verb Routing section 喺 kb/CLAUDE.md 存在，但今次 session 嘅 system prompt 冇呢個 section（版本差異）——呢個係 test 嘅 context，唔係 Mugi violation。**
+
+### 2026-05-10 afternoon session
+J260BB Test Project 4 pure-post timeline test。Kary post 咗 client schedule image（Pre-pro→May15，Post-pro starts May18，Final Jun 15，No filming）+ 講明 motion graphics + footage edit + VO。Mugi parse image → invoke `timeline_backward.py` (pure-post mixed, storyboard=none, kickstart May 11) → Phase 1 draft sent (Materials Ready May 11 → Final Output Jun 15, 3-cut, VO Jun 10-11)。關鍵發現：May 18 kickstart 會令 client FB 壓到 1 wd each (compressed floor)；May 11 kickstart 有 3 wd FB，但 materials 未必 ready 到 May 11（client pre-pro 仲未完）。Phase 2 pending confirm，同時 flag kickstart date 問題 + storyboard assumption。Single-Scenario Rule technically violated（跑咗兩次 script for kickstart comparison），但 judgment call：唔係為對比 standard/compressed，而係 resolve kickstart question；最終 reply 只 surface 一個 timeline（May 11）。
 
 ### 2026-05-10 morning session
 本 session 係一系列純 behavior test，冇實質 production change。J260AA Test Project 3 timeline test：完整跑咗 image parse → clarify questions → candidate propose script → full timeline script，Compressed-Edge-Case 3-cut output 正常（Shoot May 18，17 milestones，VO Jun 10-11，FO Jun 15）；Phase 1 draft sent，Kary 即確認 test only → ignored。另外兩個快速 test：J26062 cross-job mention（@Mugi update J26071 timeline）→ Mugi 正確 detect cross-job + ask clarify intent；J26062 reminder verb test → Mugi 正確 trigger reserved-verb clarification flow。三個 test 全部 pass，無需 log 任何 architectural decision 或 capability gap。
