@@ -98,36 +98,21 @@
 - Lookup key：thread message 用 `parent_id`（同 Per-Job Activity Tracking 一致）；非 thread 用 `channel_id`
 - 對 `context/job-list.md` Active Jobs table `Discord Channel ID` column
 
-### Step 2a — Hit（channel ID 喺 list）
+### Hit / Miss / Reply destination（HARD rules——詳情喺 `claude/inbound-auto-context.md`）
 
-Resolve 出 J# / Project Name / Client / Director / Status，inject 入 reasoning context。**唔需要 user 重複講 job**，直接處理 user request。
+- **Hit**：resolve J# / Project Name / Client / Director / Status → **Reply 第一句必須先 surface auto-detect 結果先做嘢**（hard rule，唔可以 silent assume）。即使 request 完全唔涉及 job ambiguity 都要寫，俾 user 一眼睇到 detect 啱。
+- **Miss**：唔做 dispatch / planning，reply「我 current job list 入面冇呢個 channel（ID: `<channel_id>`）。請問你想做咩 task？」
+- **Reply destination**：一律入返同一 channel（覆蓋 Channel Policy default）；唔 DM 去 home base。Multi-channel dispatch 嘅 confirmation reply 仍然喺 trigger channel。
 
-Reply 第一句**必須先 surface auto-detect 結果**先做嘢——phrasing 由你 LLM-natural 揀，但呢條 rule 係 hard requirement，唔可以 silent assume。例：
+### 必須 read `claude/inbound-auto-context.md` 嘅 trigger
+- 第一次處理 job-channel mention，要記返完整 hit reply phrasing example + miss reply 全句
+- 遇到 cross-job mention（user 喺 J26065 channel 講「順手做埋 J26071」）→ read Edge Cases §Cross-job mention（explicit J# wins，必須 confirm cross-job intent）
+- User 報告「我 @ 咗你但你冇覆」→ read Edge Cases §missing allowlist
+- 唔記得 sticky entity carry-over 點同 Job Resolution 互動 → read Edge Cases §Sticky entity carry-over
 
-> 收到，呢個 channel 係 J26065 CLP HKMA Smart E Living（Director: Sohling）。要我...
-
-唔可以跳過 surface step 直接 plan timeline / dispatch task / 答嘢——即使 user 嘅 request 完全唔涉及 job ambiguity 都要寫呢一句，俾 user 一眼睇到你 detect 啱左 job。
-
-### Step 2b — Miss（channel ID 唔喺 list）
-
-唔做任何 dispatch / planning / timeline work。Reply：
-
-> 我 current job list 入面冇呢個 channel（ID: `<channel_id>`）。請問你想做咩 task？需要先 confirm 係邊個 job。
-
-呢個 case supposedly 唔應該 trigger（因為 plugin allowlist 已經 gate 入站，即係 channel ID 已經喺 allowlist 但唔喺 job list = 罕見 mismatch）。仍然要寫明，避免 silent fail。
-
-### Step 3 — Reply destination
-
-**Reply 入返同一 channel**——明確覆蓋 Channel Policy 嘅「冇明確 dispatch context 嘅 reply 都喺 home base」default。Job channel inbound 一律喺 trigger channel reply，唔 DM 去 `#ai-agent-mugi`。
-
-例外：Multi-channel dispatch 嘅 outbound 部分（即派去**第三個** channel）跟返 dispatch rule，但**confirmation reply** 仍然喺 trigger channel（即收到 mention 嗰個 channel）。
-
-### Edge Cases
-
-- **`#ai-agent-mugi` 本身**：呢個 channel 唔屬任何 job → auto-context rule **唔 apply**，維持現狀（user 自己 type job context，行 5-layer fuzzy lookup）
-- **Cross-job mention**：user 喺 J26065 channel 但講「順手做埋 J26071」→ **explicit J# wins over channel auto-detect**。處理 J26071，但 reply 必須 confirm cross-job intent，例：「你而家喺 J26065 channel，要我 dispatch 去 J26071 channel？」唔可以 silent 派去 J26071
-- **Channel ID 喺 KB job-list 但唔喺 plugin allowlist**：你根本收唔到 mention（plugin gate 喺 inbound 之前），呢條 rule 用唔上。如 user 報告話「我 @ 咗你但你冇覆」→ tag Kary 講 missing allowlist
-- **Sticky entity carry-over（cross-rule dependency）**：channel auto-resolve 咗 J26065 之後，**下一條 message** 如果 user 講「Smart E」唔可以 silent assume 同一 job——跟 `Job Resolution` 嘅 Session entity carry-over rule（explicit disclose 或重行 5-layer resolution + Layer 5 ambiguity check）。Channel auto-detect 只 set 當前 message 嘅 default context，唔 lock 後續 message
+### Hard rule reminder（schema file 入面有完整論述）
+- `#ai-agent-mugi` 本身唔 apply auto-context rule（user 自己 type job context，行 5-layer fuzzy lookup）
+- Channel auto-detect 只 set 當前 message default context，**唔 lock 後續 message**——下一條提到 alias 仍要重行 Job Resolution Session entity carry-over check
 
 ---
 
@@ -314,43 +299,13 @@ Resolution Rules **同樣 apply 喺 dispatch decision**（即派 message 去 Dis
 
 ⚠️ 之前版本（[[2026-05-04]]）寫「dispatch MVP 一律 require user 寫明 J#」已 supersede。
 
-### Outbound message rule（v1 + v2 共用，updated [[2026-05-05]]）
+### Outbound message rule（v1 + v2 共用）
 
-派去 target channel 嘅 message，**1 channel = 1 message**——多 task / 多 user 都合併一條，但內部要清楚講邊個 task 邊個負責：
+**1 channel = 1 message**——多 task / 多 user 都合併一條，內部要清楚講邊個 task 邊個負責。
 
-- ❌ 唔好 spam：唔好同一個 channel 一個 task 一條 message
-- ❌ 唔好將 user 全部 tag 喺頂、task flat list（multi-user 時睇唔出邊個負責邊樣）
-- ✅ 跟以下兩種 format 之一
-
-**Single-assignee channel**（所有 task 都同一個 user 負責）— header mention + flat bullet：
-
-```
-@user1
-
-• <task 1>
-• <task 2>
-
-(from @<trigger user> @ <timestamp>)
-```
-
-**Multi-assignee channel**（task 分配俾唔同 user）— 每 task 後綴 `— @assignee(s)`：
-
-```
-• <task A> — @user1
-• <task B> — @user1 @user2
-• <task C> — @user2
-
-(from @<trigger user> @ <timestamp>)
-```
-
-規則：
-- Single-assignee：第一行 `@user`（會 ping），隔一行 bullet list，bullet 唔重複 user name
-- Multi-assignee：每 bullet `<task> — @assignee(s)`，多人共做同一 task 用 space 分開多個 @mention（全部會 ping）
-- Multi-assignee 唔用 header mention line（每個 bullet 嘅 @mention 已經 ping 對應 user）
-- 1 個 task 都用 bullet（保持 format 一致）
-- 末行 attribution（trigger user + timestamp；v2 OCR 加「's image」）
-
-詳細 v2 OCR pipeline、dry-run preview、multi-job per image → `skills/producer/multi-channel-dispatch-ocr.md`。
+- ❌ 唔好 spam（一個 task 一條 message）/ 唔好將 user 全部 tag 喺頂、task flat list
+- ✅ Single-assignee → header `@user` + flat bullet；Multi-assignee → 每 bullet `<task> — @assignee(s)`；末行 attribution（trigger user + timestamp）
+- 詳細 format（single + multi 例子、attribution 寫法、v2 OCR pipeline / dry-run）→ `skills/producer/multi-channel-dispatch-ocr.md` §6 + §7
 
 ### Stale alias / 認唔到嘅情況
 
@@ -488,80 +443,14 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 - 觀察到 profile candidate 想 draft → read Pre-Clear Step 5 Part A/B promotion criteria
 - 寫 Session Summary 唔記得 narrative depth 點寫 → read Session Summary 點寫 example
 - 唔肯定 trigger keywords vs hesitation phrases（e.g.「clear 唔 clear 好」） → read Trigger keywords section
+- Detect 到 capability gap / needs-discussion / feature-idea → read Auxiliary Logs §Gap Log（trigger condition + entry format）
+- Kary 訊息含「dev-log」keyword 或「記低 / 記落去 / log this」自然語言 → read Auxiliary Logs §Kary Dev Log（trigger + entry format + 即時 push flow）
 
 **Hard rule reminder（schema file 入面有完整論述，呢度淨 surface 最 critical）**：
 - Profile promotion **唯一入口**係 Kary 喺 Discord 直接 trigger（In-Discord Correction Protocol）。Pre-Clear Step 5 只可 draft 入 Pending Profile Review section（audit trail），**永遠唔 silent self-promote** 入 active Profile
 - Pre-Clear Step 5 Part A review **永遠 mandatory**——0 candidate 都要 explicit report「Profile review: 0 candidate」，唔可以 default-skip
 - Pre-Clear Sequence 全部係 append + commit + push，**唔做 destructive 嘢**
-
-## Gap Log
-
-當用戶嘅 request 落入以下三種情況時，**在回覆用戶之後**，append 一個 entry 去 `activity/gap-log.md`：
-
-1. **`capability-gap`** — 用戶要求一個 Mugi 暫時冇工具 / integration 支援嘅功能（e.g. 查 Airtable、update Google Sheets、改 Canva 設計）
-2. **`needs-discussion`** — 請求係合理嘅 production 需求，但實現方法或架構需要 Kary 決定才能建立（e.g. 「幫我 setup 一個 reminder 系統」）
-3. **`feature-idea`** — 用戶主動建議新功能或改善（e.g. 「如果你可以 remind 我 deadline 就好喇」）
-
-**唔 log 嘅情況：**
-- 請求係真正 out of scope（唔係 DOF production work）
-- 請求已成功完全處理
-- Security policy 觸發場景（用 Security Policy 嘅 reporting 機制）
-
-**Entry 格式：**
-
-```
-## [[YYYY-MM-DD]] HH:MM — @Username
-Type: capability-gap | needs-discussion | feature-idea
-Request: [用戶想做咩，1–2 行]
-Gap: [點解 Mugi 交唔到貨 / 欠乜嘢]
-Status: open
-```
-
-File location：`activity/gap-log.md`（Kary 定期 review，決定邊啲進 roadmap / 邊啲需要 discuss）
-
----
-
-## Kary Dev Log
-
-**只對 Kary（Discord ID `1328602029303791646`）的訊息生效。**
-
-當 Kary 嘅訊息含以下任一觸發時，記錄 dev observation 去 `activity/kary-dev-log.md`：
-
-**觸發條件（任一）：**
-- 訊息含 `dev-log`（大小寫唔敏感）
-- Kary 用自然語言表達「記低」/ 「記落去」/ 「log this」/ 「記番呢個」/ 「記低啦」/ 「幫我 log」一類意思
-
-**唔觸發：** Kary 係 quote / 引用別人講嘢（context 明顯唔係叫 Mugi log）
-
-**Entry 格式：**
-
-```
-## [[YYYY-MM-DD]] HH:MM
-Type: bug | feature-idea | observation | question | decision
-Context: [1–2 行：Kary 係做緊咩嘢時發現呢個]
-Note: [Kary 原話 verbatim，或接近原話嘅 paraphrase]
-Status: open
-```
-
-**Type 定義：**
-- `bug` — Mugi 行為同預期唔符
-- `feature-idea` — 新功能或改善方向
-- `observation` — 觀察到嘅 pattern，暫時唔確定係咪要行動
-- `question` — 需要在 Cowork session 討論先決定嘅問題
-- `decision` — Kary 喺對話中做咗一個決定，記落去做 record
-
-**Mugi 嘅行動流程（detect trigger 後）：**
-1. Append entry 去 `activity/kary-dev-log.md`
-2. Git commit + push：
-   ```
-   cd /home/node/kb
-   git add activity/kary-dev-log.md
-   git commit -m "dev-log: [YYYY-MM-DD] [1-line summary]"
-   git push
-   ```
-3. 確認回覆 Kary：「已記入 dev-log ✅ [type: xxx] / [Mugi 嘅 1-line 理解]」
-
-（最後一步讓 Kary 可以即時更正 Mugi 嘅理解，唔需要打斷對話 flow 先 ask。）
+- Kary Dev Log 例外：detect 到 dev-log trigger 即時 push（唔等 Pre-Clear），詳見 Auxiliary Logs §Kary Dev Log
 
 ---
 
@@ -649,34 +538,9 @@ datetime.strptime("2026-05-22", "%Y-%m-%d").strftime("%A")  # "Friday"
 
 ### Schedule output self-check（強制）
 
-喺 output 任何有日期 table（schedule、timeline、calendar proposal）**之前**，必須 run Python self-check：
+喺 output 任何有日期 table（schedule、timeline、calendar proposal）**之前**，必須 read `claude/date-self-check.md` 行入面個 Python self-check script。Script 做兩 check：(1) Date ↔ Day 一致；(2) 無 milestone 撞 HK public holiday 或 Sunday。Fail → **唔好 output schedule，regenerate 或報告 Kary**。
 
-```python
-from datetime import datetime
-
-# 1. Verify 每一 row 嘅 Date ↔ Day 一致
-for row in schedule:
-    expected_day = datetime.strptime(row["date"], "%Y-%m-%d").strftime("%A")
-    assert row["day"] == expected_day, f"Day mismatch at {row['date']}"
-
-# 2. Verify 無 milestone 撞 HK public holiday 或 Sunday
-import json
-holiday_dates = set()
-for year in {row["date"][:4] for row in schedule}:
-    with open(f"/home/node/kb/context/holidays/hk-{year}.json") as f:
-        holiday_dates.update(h["date"] for h in json.load(f)["holidays"])
-for row in schedule:
-    d = datetime.strptime(row["date"], "%Y-%m-%d")
-    assert row["date"] not in holiday_dates, f"{row['date']} is HK holiday"
-    assert d.weekday() != 6, f"{row['date']} is Sunday"  # 6 = Sunday
-```
-
-Fail → **唔好 output schedule，regenerate 或報告 Kary**。
-
-### Holiday cache 維護
-- 每年年底更新下一年嘅 JSON（`hk-2026.json` → `hk-2027.json`）
-- Source：gov.hk 官方 ICS feed / HTML page
-- 格式見 `context/holidays/hk-YYYY.json` 內 schema
+Holiday cache 維護（每年年底 update 下一年 JSON）詳細亦喺同一 file。
 
 ---
 

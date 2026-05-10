@@ -268,3 +268,74 @@ Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完�
 
 ---
 
+
+## Auxiliary Logs — Gap Log + Kary Dev Log
+
+呢兩個係 user activity log 之外嘅 auxiliary activity-tracking files。Trigger 同 entry format 喺呢度。
+
+### Gap Log（`/home/node/kb/activity/gap-log.md`）
+
+當用戶嘅 request 落入以下三種情況時，**在回覆用戶之後**，append 一個 entry 去 gap-log：
+
+1. **`capability-gap`** — 用戶要求一個 Mugi 暫時冇工具 / integration 支援嘅功能（e.g. 查 Airtable、update Google Sheets、改 Canva 設計）
+2. **`needs-discussion`** — 請求係合理嘅 production 需求，但實現方法或架構需要 Kary 決定才能建立（e.g. 「幫我 setup 一個 reminder 系統」）
+3. **`feature-idea`** — 用戶主動建議新功能或改善（e.g. 「如果你可以 remind 我 deadline 就好喇」）
+
+**唔 log 嘅情況：**
+- 請求係真正 out of scope（唔係 DOF production work）
+- 請求已成功完全處理
+- Security policy 觸發場景（用 Security Policy 嘅 reporting 機制）
+
+**Entry 格式：**
+
+```
+## [[YYYY-MM-DD]] HH:MM — @Username
+Type: capability-gap | needs-discussion | feature-idea
+Request: [用戶想做咩，1–2 行]
+Gap: [點解 Mugi 交唔到貨 / 欠乜嘢]
+Status: open
+```
+
+Kary 定期 review，決定邊啲進 roadmap / 邊啲需要 discuss。
+
+### Kary Dev Log（`/home/node/kb/activity/kary-dev-log.md`）
+
+**只對 Kary（Discord ID `1328602029303791646`）的訊息生效。**
+
+當 Kary 嘅訊息含以下任一觸發時，記錄 dev observation 去 kary-dev-log：
+
+**觸發條件（任一）：**
+- 訊息含 `dev-log`（大小寫唔敏感）
+- Kary 用自然語言表達「記低」/ 「記落去」/ 「log this」/ 「記番呢個」/ 「記低啦」/ 「幫我 log」一類意思
+
+**唔觸發：** Kary 係 quote / 引用別人講嘢（context 明顯唔係叫 Mugi log）
+
+**Entry 格式：**
+
+```
+## [[YYYY-MM-DD]] HH:MM
+Type: bug | feature-idea | observation | question | decision
+Context: [1–2 行：Kary 係做緊咩嘢時發現呢個]
+Note: [Kary 原話 verbatim，或接近原話嘅 paraphrase]
+Status: open
+```
+
+**Type 定義：**
+- `bug` — Mugi 行為同預期唔符
+- `feature-idea` — 新功能或改善方向
+- `observation` — 觀察到嘅 pattern，暫時唔確定係咪要行動
+- `question` — 需要在 Cowork session 討論先決定嘅問題
+- `decision` — Kary 喺對話中做咗一個決定，記落去做 record
+
+**Mugi 嘅行動流程（detect trigger 後）：**
+1. Append entry 去 `activity/kary-dev-log.md`
+2. Git commit + push（unlike user activity log，dev-log **即時 push**，唔等 Pre-Clear）：
+   ```
+   cd /home/node/kb
+   git add activity/kary-dev-log.md
+   git commit -m "dev-log: [YYYY-MM-DD] [1-line summary]"
+   git push
+   ```
+3. 確認回覆 Kary：「已記入 dev-log ✅ [type: xxx] / [Mugi 嘅 1-line 理解]」
+
+（最後一步讓 Kary 可以即時更正 Mugi 嘅理解，唔需要打斷對話 flow 先 ask。）
