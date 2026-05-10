@@ -570,20 +570,21 @@ Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或
 
 > 「Mugi 冇參與 kick-off meeting，需要 director 同步少少 context 至排到 timeline：
 >
-> 1. **Pre-production 同客人傾成點？** 而家 stage 去到邊？同客人 align 咗啲乜（direction / aesthetic / 改動方向 / workflow）？仲有咩 pending？
-> 2. **客人預期幾時俾嘢我哋？** 按組成需要嘅 deliverables：
->    - Animation → script / reference / 任何 client-provided documents 或 workflow
->    - Mixed → footage + graphics raw assets / client documents / workflow
->    - Edit → footage + 客人提供嘅 video flow（how they expect to edit）—— edit mode 嘅 video flow 已經 cover 客人對 edit 嘅 direction，所以 chain 入面冇 rough cut alignment stage
+> 1. **Pre-production 同客人傾成點？** 而家 stage 去到邊？同客人 align 咗啲乜（direction / aesthetic / 改動方向 / workflow）？**Script 同 video flow 嘅情況**——係 client 提供，定要 DOF 寫 / 整？仲有咩 pending？
+> 2. **客人預期幾時俾嘢我哋？** 例如 **Video flow、Script（如果 client 提供）、footage、graphics raw assets、reference、其他 client documents 或 workflow** —— 每樣預期幾時到手？最遲嗰樣幾時齊？
 >
->    每樣嘢預期幾時齊？最遲嗰樣幾時到手？
+>    （按組成 deliverables 通常包括：Animation → script + reference；Mixed → footage + graphics raw + script；Edit → footage + client video flow。Edit mode 嘅 video flow 已經 cover 客人對 edit 嘅 direction，所以 chain 入面冇 rough cut alignment stage。）
+>
+> 3. **如果 script / video flow 係 DOF 寫 / 整：** 預計幾時 draft 完？幾時送俾 client confirm？呢個會多咗 milestone（DOF script 寫 → client 確認），唔可以當「等 client 俾嘢」處理。
 >
 > 同時 confirm：
 >
-> 3. **製作組成**：Animation / Mixed（MG + footage）/ Edit（純 footage edit）？
-> 4. **Storyboard stage**：DOF 整（we-make）/ Client 提供（client-provides）/ 唔需要（none）？
+> 4. **製作組成**：Animation / Mixed（MG + footage）/ Edit（純 footage edit）？
+> 5. **Storyboard stage**：DOF 整（we-make）/ Client 提供（client-provides）/ 唔需要（none）？
 >    - `mixed` / `edit` 必須答（script 強制 require）
 >    - `animation` 自動 ignore（chain 已 built-in animatic stage）」
+
+**Named examples 點解必要：** Q2 一定要 list 出「Video flow / Script / footage / graphics raw / reference」呢類具體例子做 hint。Director / user 經常自己漏咗講某樣嘢（最常漏 = script）—— 如果 Mugi 只問「客人預期幾時俾嘢」冇 list 例子，user 可能淨係答 footage date，漏咗 script，搞到 timeline 漏咗 script 相關 milestone。
 
 **Alignment stage（mandatory，唔向 user offer skip）：** 三個 mode 各自有自己嘅 client alignment 機制，**全部係 mandatory default**：
 
@@ -595,11 +596,15 @@ Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或
 
 Reply 入面**唔可以**將 Rough Cut / Animatic 描述為 optional / "你 OK 保留，唔 OK 我可以 skip"——呢個係 mandatory client alignment stage。
 
-**Effective kickstart = 最遲一樣 client deliverable 預期到手嘅 date**（即 Q2 入面 latest expected delivery date）—— 呢個 date 至係 pass 落 script `--today` flag 嘅 value，**唔係**用 system today silent default。如果 Q1 答嘅 pre-pro context 顯示有 outstanding alignment session 未開（罕見，因為通常 hand off 嗰陣已 align），亦要計埋嗰個 expected date。
+**Effective kickstart = 最遲一樣 deliverable ready / confirmed 嘅 date**：
+- Client-provided deliverables（footage / graphics raw / video flow / client script 等）→ 用 client 預期 delivery date
+- DOF-written / DOF-made deliverables（DOF 寫 script / DOF 整 video flow）→ 用 **client confirm date**（唔係 DOF draft 完嗰日，因為要等 client 認可先 unblock 落手做下一步）
+- 揀晒以上所有 date 之中**最遲嗰個**做 `--today` flag value，**唔係**用 system today silent default
+- 如果 Q1 pre-pro context 顯示仲有 outstanding alignment session 未開（罕見），亦要計埋嗰個 expected date
 
 **如果 user 答「未知 / 客人未覆 / 仲等緊」：** 唔好 silent fallback 用今日做 kickstart 跑 timeline。Reply 直接話而家排唔到，要 user 同客人 chase 返 expected dates 先 invoke script。
 
-如果 Genre + VO + actual shoot days + shoot date status（shoot+post）/ readiness gates + composition + storyboard（pure-post）用戶已經清楚提到 → 呢步 skip，直接 generate。
+如果 Genre + VO + actual shoot days + shoot date status（shoot+post）/ pre-pro context + deliverables expected dates + script source + composition + storyboard（pure-post）用戶已經清楚提到 → 呢步 skip，直接 generate。
 
 ### Step 4: Generate（Two-Phase Document）
 
@@ -633,7 +638,7 @@ python3 scripts/timeline_backward.py \
 - `mixed` — animation + live footage 混合
 - `edit` — 純 live footage edit
 
-**`--storyboard {we-make|client-provides|none}` 對應 §3 Step 3 Pure-Post 分支 Q4：**
+**`--storyboard {we-make|client-provides|none}` 對應 §3 Step 3 Pure-Post 分支 Q5：**
 - `mixed` 同 `edit` **必須加**（script 強制 require — 冇加會 error out）
 - `animation` 自動 ignore（chain 已 built-in animatic stage）
 
