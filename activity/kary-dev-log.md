@@ -399,3 +399,12 @@ Type: feature-idea
 Context: J260YY Test Project 2 timeline planning session。Shoot date 未 lock，Mugi 跟 §5 flow propose candidates，手寫 inline Python 計 Script Lock back-dates + post window sizes。Kary 問點解唔直接跑 scripts/timeline_backward.py。
 Note: `timeline_backward.py` 需要 `--shoot-date` 作為 input，shoot date 未決定前跑唔到。Inline Python 係 shoot date candidate proposal 嘅過渡計算（§5 flow），唔係 timeline generation 本身。但如果 script 支援 proposal mode（e.g. `--propose-shoot-from DATE --propose-shoot-to DATE`），呢步可以整合入去，避免 ad-hoc inline Python。
 Status: open
+
+## [[2026-05-10]] — Discord reply tool wrong param names（silent fail bug）
+
+- **Type:** `bug`
+- **Status:** `done` ✅（CLAUDE.md updated mid-session by Kary）
+- **Context:** J260BB Test Project 4 timeline session。Mugi 多次嘗試 send Discord reply，全部 silent fail，Kary 喺 Discord 收唔到任何回覆。React 成功（確認 channel ID valid），但 reply 一直報 `reply failed: undefined is not an object (evaluating 'text.length')`。
+- **Root cause:** Mugi 用咗 `content` / `message_id` 作為 Discord reply tool 嘅 param names，但 Discord plugin 要求 `text` / `reply_to`（Telegram 嘅 convention 唔同 Discord 嘅 convention）。Plugin 收到 `text=undefined` → 內部 `chunk(undefined, ...)` crash。
+- **Fix:** Kary 更新 CLAUDE.md，加入「Discord reply tool — args 命名」section（`text` + `reply_to`，唔好用 `content` / `message_id`）。Mugi 即時 apply → 用正確 params 成功 send reply。
+- **Note:** Plugin code 已加 alias 做 safety net，但 schema-correct args 係 first choice。未來 Mugi 必須用 `text` / `reply_to` for Discord plugin replies。
