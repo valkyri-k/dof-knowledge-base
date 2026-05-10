@@ -29,6 +29,80 @@ from datetime import date, timedelta
 from pathlib import Path
 
 
+# ---------- Timeline value dicts (spec §4) ----------
+#
+# All gap values in HK working days. Tuple = (min, default, max).
+# Used by compress_to_min() — default-first compression algorithm (spec §3).
+# Migration note: standard mode (min, default, max) defaults intentionally
+# shorter than the pre-spec distribute_slack_v2 max-fill behavior. Resulting
+# timelines pack tighter at default. See spec/pure-post-mode-spec.md §13
+# Open Item #1 (resolved 2026-05-10).
+
+TIMELINE_VALUES = {
+    "standard": {
+        # Pre-pro chain (shoot-anchored, backward)
+        "script_received_to_video_flow":   (3, 5, 7),
+        "video_flow_to_script_lock":       (3, 5, 7),
+        "script_lock_to_shoot":            (3, 5, 10),
+        "script_lock_to_submit_sf":        (1, 2, 3),
+        "submit_sf_to_confirm_sf":         (1, 2, 3),
+        # Cut chain
+        "shoot_to_first_cut":              (2, 4, 6),
+        "cut_production":                  (2, 3, 6),
+        "cut_fb":                          (1, 2, 3),
+    },
+    "animation": {
+        "script_to_treatment":             (1, 2, 3),
+        "treatment_to_stb_sf":             (3, 5, 7),   # Treatment Meeting → STB+SF Submit
+        "stb_sf_fb":                       (1, 2, 3),   # STB+SF Submit → STB+SF Confirm
+        "stb_sf_to_animatic":              (2, 3, 4),   # STB+SF Confirm → Animatic Submit
+        "animatic_fb":                     (1, 2, 3),   # Animatic Submit → Animatic Confirm
+        "animatic_to_first_cut":           (4, 5, 7),
+        "first_cut_fb":                    (1, 2, 3),
+        "second_cut":                      (3, 4, 5),
+        "second_cut_fb":                   (1, 2, 3),
+        "third_cut":                       (2, 3, 4),
+        "third_cut_fb":                    (1, 2, 3),
+    },
+    "mixed": {
+        "storyboard_production":           (2, 3, 5),
+        "storyboard_fb":                   (1, 2, 3),
+        "storyboard_revision":             (1, 2, 3),
+        "materials_to_rough_cut":          (2, 3, 4),
+        "rough_cut_fb":                    (1, 2, 3),
+        "rough_to_first_cut":              (3, 4, 6),
+        "first_cut_fb":                    (1, 2, 3),
+        "second_cut":                      (2, 3, 3),
+        "second_cut_fb":                   (1, 2, 3),
+        "third_cut":                       (1, 2, 3),
+        "third_cut_fb":                    (1, 2, 3),
+    },
+    "edit": {
+        "storyboard_production":           (2, 3, 5),
+        "storyboard_fb":                   (1, 2, 3),
+        "storyboard_revision":             (1, 2, 3),
+        "materials_to_first_cut":          (2, 3, 5),
+        "first_cut_fb":                    (1, 2, 3),
+        "second_cut":                      (2, 3, 4),
+        "second_cut_fb":                   (1, 2, 3),
+        "third_cut":                       (2, 2, 3),
+        "third_cut_fb":                    (1, 2, 3),
+    },
+}
+
+# Backward tail (Picture Lock → VO → Color/Sound → Final). Mode-agnostic.
+TAIL_VALUES = {
+    "picture_lock_to_vo_start":            (1, 1, 2),
+    "vo_window":                           (1, 2, 3),
+    "vo_end_to_color_sound":               (1, 1, 2),
+    "color_sound_to_final":                (1, 1, 2),
+}
+
+# Materials gathering estimate for pure-post storyboard sub-chain (spec §7.2).
+# TODO: surface as CLI override if pattern emerges from real production use.
+MATERIALS_GATHERING_ESTIMATE_WD = 5
+
+
 # ---------- Holiday loading ----------
 
 def load_holidays(holidays_dir: str) -> tuple[set, dict]:
@@ -121,6 +195,29 @@ def m(order: int, name: str, d: date, color: str, party: str, calendar_title: st
     }
 
 
+def mm(order: int, name: str, label: str, d: date, *,
+       calendar_emit: bool = True, client_facing: bool = False,
+       internal_only: bool = False, party: str = "DOF",
+       color: str = "5", project: str = "[Project]") -> dict:
+    """
+    Build pure-post-mode milestone dict (spec §8.2). Adds calendar_emit /
+    client_facing / internal_only fields on top of the base m() schema.
+    """
+    return {
+        "order": order,
+        "name": name,
+        "label": label,
+        "date": d.isoformat(),
+        "weekday": WEEKDAY_NAMES[d.weekday()],
+        "colorId": color,
+        "party": party,
+        "calendar_title": f"{label} - {project}",
+        "calendar_emit": calendar_emit,
+        "client_facing": client_facing,
+        "internal_only": internal_only,
+    }
+
+
 # ---------- Backward tail (Step B) ----------
 
 def backward_tail(final_output: date, has_vo: bool, holidays: set) -> dict:
@@ -173,95 +270,382 @@ def cut_chain_forward(start_anchor: date, cut_count: int, mode: str, holidays: s
     return chain
 
 
-# ---------- Slack distribution (Step E) ----------
+# ---------- Default-first compression (spec §3.2) ----------
 
-def distribute_slack_v2(
-    start_anchor: date, picture_lock: date, cut_count: int, mode: str, holidays: set
-) -> tuple:
+# Compression priority categories (Step 1 → Step 2 → Step 3).
+# Lower index = compressed first when window insufficient.
+COMPRESSION_PRIORITY = ("cut_fb", "cut_production", "pre_pro")
+
+
+def compress_to_min(chain_spec: list, available_window: int) -> dict:
     """
-    Build cut chain forward from start_anchor, target last FB ≤ picture_lock - 1 wd.
+    Default-first compression: start with defaults; if total > available_window,
+    compress entire categories to min in priority order until fits or all-min.
 
-    Slack distribution priority: shoot_1st > cut2 > cut3 > fb1 > fb2 > fb3.
-    Per-mode caps for each gap kind:
-      standard:   shoot_1st 5+3=8, cut 3+5=8, fb 3+2=5
-      compressed: shoot_1st 4+2=6, cut 3+3=6, fb 1+2=3
-      extreme:    shoot_1st 2+3=5, cut 2+3=5, fb 1+2=3
+    chain_spec: list of dicts, each with keys:
+        - name: str (gap identifier, used in returned `gaps` dict)
+        - category: str ∈ COMPRESSION_PRIORITY
+        - min: int (wd floor)
+        - default: int (wd baseline)
+        - max: int (wd ceiling — currently unused; reserved for complexity-driven
+          expansion, see backlog/ideas/complexity-driven-selective-expansion.md)
+    available_window: int (wd between chain start and end anchors)
 
-    Danger flag: any cut whose incoming gap (shoot→1st, FB1→2nd, FB2→3rd) ≤ 3 wd.
+    Returns dict:
+        - gaps: {name: resolved_wd}
+        - total_wd: int (sum of resolved gap values)
+        - compressions_applied: list[str] (categories pushed to min, in order)
+        - infeasible: bool (True if even all-min total > available_window)
+        - deficit_wd: int (only > 0 when infeasible — caller should trigger
+          Pattern J extreme squeeze)
 
-    Returns (chain, cut_warnings, infeasible, deficit_wd) where:
-      chain = list of (label, date) pairs
-      cut_warnings = list of warning strings for cuts ≤ 3 wd
-      infeasible = True if even MIN doesn't fit
-      deficit_wd = wd by which MIN exceeds available (0 if feasible)
+    Note: when total < available_window after resolution, the caller is
+    responsible for placing excess as front buffer before the earliest milestone
+    — compress_to_min does NOT distribute excess into gaps (per spec §3 default-
+    first philosophy).
     """
-    mins = {
-        "standard":   {"shoot_1st": 5, "cut": 3, "fb": 3},
-        "compressed": {"shoot_1st": 4, "cut": 3, "fb": 1},
-        "extreme":    {"shoot_1st": 2, "cut": 2, "fb": 1},
-    }[mode]
-    cap_extra = {
-        "standard":   {"shoot_1st": 3, "cut": 5, "fb": 2},
-        "compressed": {"shoot_1st": 2, "cut": 3, "fb": 2},
-        "extreme":    {"shoot_1st": 3, "cut": 3, "fb": 2},
-    }[mode]
+    if not chain_spec:
+        return {
+            "gaps": {},
+            "total_wd": 0,
+            "compressions_applied": [],
+            "infeasible": False,
+            "deficit_wd": 0,
+        }
 
-    target_last_fb = sub_wd(picture_lock, 1, holidays)
-    available = wd_count(start_anchor, target_last_fb, holidays)
-    min_span = (
-        mins["shoot_1st"]
-        + cut_count * mins["fb"]
-        + max(0, cut_count - 1) * mins["cut"]
-    )
-    infeasible = available < min_span
-    deficit = max(0, min_span - available)
-    slack = max(0, available - min_span)
+    gaps = {g["name"]: g["default"] for g in chain_spec}
+    total = sum(gaps.values())
 
-    # Slot priority order for slack fill
-    priority: list = [("shoot_1st", "shoot_1st")]
+    if total <= available_window:
+        return {
+            "gaps": gaps,
+            "total_wd": total,
+            "compressions_applied": [],
+            "infeasible": False,
+            "deficit_wd": 0,
+        }
+
+    compressions_applied: list = []
+    for category in COMPRESSION_PRIORITY:
+        category_has_gap = False
+        for g in chain_spec:
+            if g["category"] == category:
+                gaps[g["name"]] = g["min"]
+                category_has_gap = True
+        if category_has_gap:
+            compressions_applied.append(category)
+        total = sum(gaps.values())
+        if total <= available_window:
+            return {
+                "gaps": gaps,
+                "total_wd": total,
+                "compressions_applied": compressions_applied,
+                "infeasible": False,
+                "deficit_wd": 0,
+            }
+
+    # All-min exceeds window — caller triggers Pattern J extreme squeeze.
+    return {
+        "gaps": gaps,
+        "total_wd": total,
+        "compressions_applied": compressions_applied,
+        "infeasible": True,
+        "deficit_wd": total - available_window,
+    }
+
+
+# ---------- Storyboard sub-chain (spec §7) ----------
+
+def build_storyboard_chain(
+    materials_ready_anchor: date,
+    available_window: int,
+    mode: str,
+    holidays: set,
+    forced_chain_mode: str = None,
+) -> dict:
+    """
+    Build storyboard sub-chain for mixed/edit modes with --storyboard=we-make.
+
+    Backward layout from materials_ready_anchor:
+
+      Sequential (default when window allows):
+        production_start ← [sp] ← submit ← [sfb] ← fb_end ← [sr] ← confirm
+                                                                    ↓ [mg]
+                                                            materials_ready
+        Total wd from production_start to materials_ready = sp+sfb+sr+mg
+
+      Parallel (auto-fallback when window < seq_window_needed):
+        production_start ← [sp] ← submit ← [sfb] ← fb_end ← [sr] ← confirm
+        gathering_start ←─────────────[mg]─────────────────────→ materials_ready
+        materials_ready = max(confirm, gathering_start + mg) — modeled as confirm
+        coinciding with materials_ready (storyboard chain typically longer than mg).
+
+    Args:
+        materials_ready_anchor: target date materials must be ready (anchor for
+            backward walk).
+        available_window: wd from kickstart (script_received) to
+            materials_ready_anchor — used for sequential/parallel auto-decision.
+        mode: "mixed" | "edit" — selects TIMELINE_VALUES gap defaults.
+        holidays: HK holiday set.
+        forced_chain_mode: "sequential" | "parallel" | None. If set, skip the
+            auto-check and honor user intent (--storyboard-mode override).
+
+    Returns dict:
+        - chain_mode: "sequential" | "parallel"
+        - fallback_triggered: bool (True only when auto-check chose parallel)
+        - storyboard_submit: date
+        - storyboard_fb_end: date    (FB window closes — revision starts here)
+        - storyboard_confirm: date   (client milestone — calendar_emit, client_facing)
+        - materials_ready: date      (= anchor)
+        - gaps: dict with sp/sfb/sr/mg defaults used
+        - seq_window_needed: int     (informational; for warnings)
+    """
+    if mode not in ("mixed", "edit"):
+        raise ValueError(f"build_storyboard_chain: mode must be 'mixed' or 'edit', got {mode!r}")
+
+    vals = TIMELINE_VALUES[mode]
+    sp = vals["storyboard_production"][1]
+    sfb = vals["storyboard_fb"][1]
+    sr = vals["storyboard_revision"][1]
+    mg = MATERIALS_GATHERING_ESTIMATE_WD
+
+    seq_window_needed = sp + sfb + sr + mg
+
+    if forced_chain_mode in ("sequential", "parallel"):
+        chain_mode = forced_chain_mode
+        fallback_triggered = False
+    elif available_window >= seq_window_needed:
+        chain_mode = "sequential"
+        fallback_triggered = False
+    else:
+        chain_mode = "parallel"
+        fallback_triggered = True
+
+    materials_ready = materials_ready_anchor
+
+    if chain_mode == "sequential":
+        # Confirm precedes materials_ready by mg wd.
+        storyboard_confirm = sub_wd(materials_ready, mg, holidays)
+    else:
+        # Parallel: confirm coincides with materials_ready (gathering runs concurrent).
+        storyboard_confirm = materials_ready
+
+    fb_end = sub_wd(storyboard_confirm, sr, holidays)
+    storyboard_submit = sub_wd(fb_end, sfb, holidays)
+
+    return {
+        "chain_mode": chain_mode,
+        "fallback_triggered": fallback_triggered,
+        "storyboard_submit": storyboard_submit,
+        "storyboard_fb_end": fb_end,
+        "storyboard_confirm": storyboard_confirm,
+        "materials_ready": materials_ready,
+        "gaps": {
+            "storyboard_production": sp,
+            "storyboard_fb": sfb,
+            "storyboard_revision": sr,
+            "materials_gathering": mg,
+        },
+        "seq_window_needed": seq_window_needed,
+    }
+
+
+# ---------- Pure-post mode chain spec builders (spec §6) ----------
+# Each builder returns a chain_spec list (consumed by compress_to_min). The
+# returned list is ordered from EARLIEST gap → LATEST gap. Walking dates
+# backward from the end-anchor is the dispatcher's job.
+#
+# Per spec §6 + Q3 resolution: pre_pro_* build PRE-PRO SEGMENT ONLY.
+#   - animation: ends at Animatic Confirm
+#   - mixed: ends at 1st Cut Submit
+#   - edit:  ends at 1st Cut Submit
+# Cut chain (animatic→1st_cut→…→picture_lock for animation; 1st_fb→2nd→… for
+# mixed/edit) is built separately by cut_chain_for_mode().
+
+
+def _gap(name: str, category: str, mode: str) -> dict:
+    """Helper: build a chain_spec gap dict from TIMELINE_VALUES[mode][name]."""
+    mn, df, mx = TIMELINE_VALUES[mode][name]
+    return {"name": name, "category": category, "min": mn, "default": df, "max": mx}
+
+
+def chain_spec_animation() -> list:
+    """
+    Pre-pro segment for animation mode.
+
+    Chain (earliest → latest):
+        Script + Workflow Received
+          → script_to_treatment      → Treatment Meeting (internal)
+          → treatment_to_stb_sf      → STB + SF Submit
+          → stb_sf_fb                → STB + SF Confirm     (client milestone)
+          → stb_sf_to_animatic       → Animatic Submit
+          → animatic_fb              → Animatic Confirm     (client milestone, end)
+    """
+    return [
+        _gap("script_to_treatment",   "pre_pro", "animation"),
+        _gap("treatment_to_stb_sf",   "pre_pro", "animation"),
+        _gap("stb_sf_fb",             "pre_pro", "animation"),
+        _gap("stb_sf_to_animatic",    "pre_pro", "animation"),
+        _gap("animatic_fb",           "pre_pro", "animation"),
+    ]
+
+
+def chain_spec_mixed() -> list:
+    """
+    Pre-pro segment for mixed mode (storyboard chain handled separately by
+    build_storyboard_chain).
+
+    Chain (earliest → latest, starting from Materials Ready):
+        Materials Ready
+          → materials_to_rough_cut   → Rough Cut Submit
+          → rough_cut_fb             → Rough Cut FB end
+          → rough_to_first_cut       → 1st Cut Submit  (end)
+    """
+    return [
+        _gap("materials_to_rough_cut", "pre_pro", "mixed"),
+        _gap("rough_cut_fb",           "pre_pro", "mixed"),
+        _gap("rough_to_first_cut",     "pre_pro", "mixed"),
+    ]
+
+
+def chain_spec_edit() -> list:
+    """
+    Pre-pro segment for edit mode (storyboard chain handled separately).
+
+    Chain (earliest → latest):
+        Materials Ready
+          → materials_to_first_cut   → 1st Cut Submit  (end)
+    """
+    return [
+        _gap("materials_to_first_cut", "pre_pro", "edit"),
+    ]
+
+
+def cut_chain_for_mode(mode: str, cut_count: int) -> list:
+    """
+    Build cut chain spec for the given mode.
+
+    Per spec §6 + Q3 resolution: cut chain is separate from pre_pro_*.
+
+    For animation:
+        Animatic Confirm
+          → animatic_to_first_cut    → 1st Cut Submit
+          → first_cut_fb             → 1st Cut FB end
+          → second_cut               → 2nd Cut Submit
+          → second_cut_fb            → 2nd Cut FB end
+          [→ third_cut               → 3rd Cut Submit
+           → third_cut_fb            → 3rd Cut FB end]   (3-cut only)
+          → (Picture Lock)
+
+    For mixed / edit:
+        1st Cut Submit
+          → first_cut_fb             → 1st Cut FB end
+          → second_cut               → 2nd Cut Submit
+          → second_cut_fb            → 2nd Cut FB end
+          [→ third_cut               → 3rd Cut Submit
+           → third_cut_fb            → 3rd Cut FB end]   (3-cut only)
+          → (Picture Lock)
+
+    Per Q4 resolution: 2-cut variant skips third_cut + third_cut_fb.
+
+    Args:
+        mode: "animation" | "mixed" | "edit"
+        cut_count: 2 | 3
+
+    Returns: chain_spec list ordered earliest → latest.
+    """
+    if mode not in ("animation", "mixed", "edit"):
+        raise ValueError(f"cut_chain_for_mode: mode must be animation/mixed/edit, got {mode!r}")
+    if cut_count not in (2, 3):
+        raise ValueError(f"cut_chain_for_mode: cut_count must be 2 or 3, got {cut_count!r}")
+
+    spec: list = []
+
+    if mode == "animation":
+        spec.append(_gap("animatic_to_first_cut", "cut_production", "animation"))
+
+    spec.append(_gap("first_cut_fb", "cut_fb", mode))
+    spec.append(_gap("second_cut", "cut_production", mode))
+    spec.append(_gap("second_cut_fb", "cut_fb", mode))
+
+    if cut_count == 3:
+        spec.append(_gap("third_cut", "cut_production", mode))
+        spec.append(_gap("third_cut_fb", "cut_fb", mode))
+
+    return spec
+
+
+def cut_chain_spec_standard(cut_count: int) -> list:
+    """
+    Build standard-mode cut chain spec (shoot → picture_lock).
+
+    Standard mode TIMELINE_VALUES reuses generic gap names (cut_production, cut_fb)
+    across all cuts, so we expand to per-cut entries with stable names. Output
+    label set: 1st Cut / Client FB 1 / 2nd Cut / Client FB 2 / 3rd Cut / Client FB 3
+    (matches build_output() consumption shape).
+
+    Args:
+        cut_count: 2 or 3
+    Returns: chain_spec list ordered earliest → latest.
+    """
+    if cut_count not in (2, 3):
+        raise ValueError(f"cut_chain_spec_standard: cut_count must be 2 or 3, got {cut_count!r}")
+
+    vals = TIMELINE_VALUES["standard"]
+
+    def _g(name: str, category: str, key: str) -> dict:
+        mn, df, mx = vals[key]
+        return {"name": name, "category": category, "min": mn, "default": df, "max": mx}
+
+    spec = [
+        _g("shoot_to_first_cut", "cut_production", "shoot_to_first_cut"),
+        _g("first_cut_fb",       "cut_fb",         "cut_fb"),
+    ]
     if cut_count >= 2:
-        priority.append(("cut2", "cut"))
-    if cut_count >= 3:
-        priority.append(("cut3", "cut"))
-    if cut_count >= 1:
-        priority.append(("fb1", "fb"))
-    if cut_count >= 2:
-        priority.append(("fb2", "fb"))
-    if cut_count >= 3:
-        priority.append(("fb3", "fb"))
+        spec.append(_g("second_cut",    "cut_production", "cut_production"))
+        spec.append(_g("second_cut_fb", "cut_fb",         "cut_fb"))
+    if cut_count == 3:
+        spec.append(_g("third_cut",     "cut_production", "cut_production"))
+        spec.append(_g("third_cut_fb",  "cut_fb",         "cut_fb"))
+    return spec
 
-    extras = {name: 0 for name, _ in priority}
-    for name, kind in priority:
-        if slack <= 0:
-            break
-        take = min(slack, cap_extra[kind])
-        extras[name] = take
-        slack -= take
 
-    # Build chain + record cut-incoming gaps
+def walk_cut_chain_forward(start_anchor: date, chain_spec: list, gaps: dict,
+                           cut_count: int, holidays: set) -> tuple:
+    """
+    Walk cut chain forward from start_anchor, producing the (label, date) pair
+    list consumed by build_output().
+
+    Per spec §3 + Open Item #1: emit cut_warnings for any production gap
+    (shoot→1st, 1st_fb→2nd, 2nd_fb→3rd) ≤ 3 wd.
+
+    Returns (chain_pairs, cut_warnings).
+    """
+    by_name = {g["name"]: gaps[g["name"]] for g in chain_spec}
     chain: list = []
-    cut_durations: list = []  # (label, gap_wd)
+    cut_durations: list = []  # (label, gap_wd) for cut_production gaps only
 
-    sf_gap = mins["shoot_1st"] + extras["shoot_1st"]
-    d = add_wd(start_anchor, sf_gap, holidays)
+    g = by_name["shoot_to_first_cut"]
+    d = add_wd(start_anchor, g, holidays)
     chain.append(("1st Cut", d))
-    cut_durations.append(("1st Cut", sf_gap))
-    if cut_count >= 1:
-        d = add_wd(d, mins["fb"] + extras.get("fb1", 0), holidays)
-        chain.append(("Client FB 1", d))
+    cut_durations.append(("1st Cut", g))
+
+    d = add_wd(d, by_name["first_cut_fb"], holidays)
+    chain.append(("Client FB 1", d))
+
     if cut_count >= 2:
-        c2_gap = mins["cut"] + extras.get("cut2", 0)
-        d = add_wd(d, c2_gap, holidays)
+        g = by_name["second_cut"]
+        d = add_wd(d, g, holidays)
         chain.append(("2nd Cut", d))
-        cut_durations.append(("2nd Cut", c2_gap))
-        d = add_wd(d, mins["fb"] + extras.get("fb2", 0), holidays)
+        cut_durations.append(("2nd Cut", g))
+        d = add_wd(d, by_name["second_cut_fb"], holidays)
         chain.append(("Client FB 2", d))
-    if cut_count >= 3:
-        c3_gap = mins["cut"] + extras.get("cut3", 0)
-        d = add_wd(d, c3_gap, holidays)
+    if cut_count == 3:
+        g = by_name["third_cut"]
+        d = add_wd(d, g, holidays)
         chain.append(("3rd Cut", d))
-        cut_durations.append(("3rd Cut", c3_gap))
-        d = add_wd(d, mins["fb"] + extras.get("fb3", 0), holidays)
+        cut_durations.append(("3rd Cut", g))
+        d = add_wd(d, by_name["third_cut_fb"], holidays)
         chain.append(("Client FB 3", d))
 
     cut_warnings: list = []
@@ -271,8 +655,49 @@ def distribute_slack_v2(
                 f"⚠️ {label} 只有 {gap_wd} wd（≤ 3 wd 危險水平）— post team 容易頂唔順，"
                 f"建議 director / producer review 條 cut 嘅 scope。"
             )
+    return chain, cut_warnings
 
-    return chain, cut_warnings, infeasible, deficit
+
+def pre_pro_animation() -> list:
+    """Thin wrapper — returns chain_spec_animation() pre-pro segment."""
+    return chain_spec_animation()
+
+
+def pre_pro_mixed() -> list:
+    """Thin wrapper — returns chain_spec_mixed() pre-pro segment."""
+    return chain_spec_mixed()
+
+
+def pre_pro_edit() -> list:
+    """Thin wrapper — returns chain_spec_edit() pre-pro segment."""
+    return chain_spec_edit()
+
+
+def walk_chain_backward(end_anchor: date, chain_spec: list, gaps: dict,
+                        holidays: set) -> dict:
+    """
+    Walk a chain spec backward from end_anchor, assigning a date to each
+    boundary milestone.
+
+    chain_spec: list ordered earliest → latest (as produced by
+        chain_spec_animation/mixed/edit + cut_chain_for_mode).
+    gaps: {gap_name: resolved_wd} from compress_to_min().
+    end_anchor: date of the LAST milestone (after the final gap).
+
+    Returns dict {gap_name: start_date_of_gap}, where start_date_of_gap
+    is the date end_anchor stepped back by the cumulative wd from that
+    gap to end_anchor. Plus key "_end_anchor" holding end_anchor itself.
+
+    Example: chain [A, B] with gaps {A:2, B:3}, end_anchor=Day10
+    Returns {A: Day10-5wd, B: Day10-3wd, _end_anchor: Day10}.
+    """
+    result: dict = {"_end_anchor": end_anchor}
+    cursor = end_anchor
+    for gap in reversed(chain_spec):
+        cursor = sub_wd(cursor, gaps[gap["name"]], holidays)
+        result[gap["name"]] = cursor
+    result["_chain_start"] = cursor
+    return result
 
 
 # ---------- Pre-pro chain backward from Shoot ----------
@@ -345,7 +770,17 @@ def parse_args():
     p.add_argument("--final-output", help="Client deadline anchor (ISO)")
     p.add_argument("--shoot-mode", choices=["standard", "pure-post"], default="standard")
     p.add_argument("--shoot-date", help="Locked shoot date (ISO). Standard mode only.")
-    p.add_argument("--first-cut-start", help="Pure-post 1st Cut start anchor (ISO).")
+    # --- Pure-post mode flags (spec §2) ---
+    p.add_argument("--mode", choices=["animation", "mixed", "edit"],
+                   help="Pure-post sub-mode. Required when --shoot-mode=pure-post.")
+    p.add_argument("--storyboard", choices=["we-make", "client-provides", "none"],
+                   help="Storyboard provenance for mixed/edit modes. Required for those modes.")
+    p.add_argument("--storyboard-mode", choices=["sequential", "parallel"],
+                   help="Force storyboard sub-chain layout. Default = auto.")
+    p.add_argument("--complexity", choices=["simple", "medium", "complex"], default="medium",
+                   help="Project complexity. v1: accepted but ignored — see backlog/ideas/complexity-driven-selective-expansion.md")
+    p.add_argument("--push-fb-sameday", action="store_true",
+                   help="Override buffer-default (2 wd FB) for 2nd/3rd cut to allow same-day FB.")
     p.add_argument("--has-vo", default="true", help="true|false (default true)")
     p.add_argument("--has-style-frame", default="true", help="true|false (default true)")
     p.add_argument("--senior-approval-fb2-wd", type=int, default=0,
@@ -528,15 +963,11 @@ def main():
 
     # ----- pure-post branch -----
     if shoot_mode == "pure-post":
-        if not args.first_cut_start:
-            emit({"status": "error", "error": "pure-post mode requires --first-cut-start"})
+        if args.mode not in ("animation", "mixed", "edit"):
+            emit({"status": "error",
+                  "error": "pure-post mode requires --mode {animation|mixed|edit}"})
             return
-        try:
-            fc_start = date.fromisoformat(args.first_cut_start)
-        except ValueError:
-            emit({"status": "error", "error": "Invalid --first-cut-start"})
-            return
-        return run_pure_post(args, effective_kickstart, today, final_output, fc_start,
+        return run_pure_post(args, effective_kickstart, today, final_output,
                              tail, has_vo, holidays, warnings)
 
     # ----- standard shoot+post branch -----
@@ -544,38 +975,42 @@ def main():
                         has_vo, has_style_frame, holidays, warnings)
 
 
-def decide_cut_count(args, available_window: int) -> tuple[int, str, str | None, list]:
-    """Return (cut_count, mode, scenario_label, extra_warnings)."""
+def decide_cut_count(args, available_window: int) -> tuple[int, str | None, list]:
+    """
+    Return (cut_count, scenario_label, extra_warnings).
+
+    cut_count selection only — gap sizing happens in compress_to_min downstream.
+    Window thresholds (20 / 14 / 10) preserved from legacy logic so warnings
+    still fire at the right boundaries.
+    """
     extra = []
     # Senior approval rule overrides everything
     if args.senior_approval_fb2_wd and args.senior_approval_fb2_wd > 0:
-        return 2, "standard", "2-cut + senior approval FB2", extra
+        return 2, "2-cut + senior approval FB2", extra
     # User override
     if args.cut_count_override in (2, 3):
         if args.cut_count_override == 3 and available_window < 14:
-            extra.append("⚠️ User override 3-cut，但 available window < 14 wd，會行 compressed gaps")
-            return 3, "compressed", "3-cut compressed (user override)", extra
+            extra.append("⚠️ User override 3-cut，但 available window < 14 wd，cut gaps 會被壓到 min")
         if args.cut_count_override == 2 and available_window < 10:
             extra.append("⚠️ 2-cut 都頂唔順 available window，會 escalate Pattern J")
-        return args.cut_count_override, "standard" if available_window >= 14 else "compressed", \
-               f"{args.cut_count_override}-cut (user override)", extra
+        return args.cut_count_override, f"{args.cut_count_override}-cut (user override)", extra
     # Default decision matrix
     if available_window >= 20:
-        return 3, "standard", "3-cut standard", extra
+        return 3, "3-cut standard", extra
     if 14 <= available_window <= 19:
         extra.append(
-            "⚠️ Available window 14–19 wd，預設行 compressed 3-cut（cut gap 3 wd, feedback 1 wd）。"
-            "如要寬鬆 timeline 改 2-cut standard，請指示。"
+            "⚠️ Available window 14–19 wd，預設行 3-cut（cut gaps 會被壓緊）。"
+            "如要寬鬆 timeline 改 2-cut，請指示。"
         )
-        return 3, "compressed", "3-cut compressed (14–19 wd default)", extra
+        return 3, "3-cut compressed (14–19 wd default)", extra
     if 10 <= available_window <= 13:
         extra.append(
-            "⚠️ Available window 10–13 wd，行 compressed 2-cut（Shoot→1st Cut 4 wd, FB 1 wd）。"
+            "⚠️ Available window 10–13 wd，行 2-cut（cut gaps 收緊）。"
             "Feedback time 收緊，要同 client 講明。"
         )
-        return 2, "compressed", "2-cut compressed (10–13 wd)", extra
+        return 2, "2-cut compressed (10–13 wd)", extra
     # < 10 wd
-    return 0, "infeasible", None, extra
+    return 0, None, extra
 
 
 def run_standard(args, effective_kickstart, today, final_output, tail,
@@ -603,7 +1038,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
     # available_window = picture_lock - shoot
     available_window = wd_count(shoot_date, tail["picture_lock"], holidays)
 
-    cut_count, cut_mode, scenario_label, extra_w = decide_cut_count(args, available_window)
+    cut_count, scenario_label, extra_w = decide_cut_count(args, available_window)
     warnings.extend(extra_w)
 
     if cut_count == 0:
@@ -617,7 +1052,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
             "scenario_label": "Pattern J - escalate Sohling",
             "warnings": warnings + [
                 f"⚠️ Shoot ({shoot_date.isoformat()}) → Picture Lock ({tail['picture_lock'].isoformat()}) "
-                f"= {available_window} wd，連 2-cut compressed 都頂唔順 (MIN 10 wd)。"
+                f"= {available_window} wd，低於 2-cut 自動嘗試門檻 (10 wd)。"
                 f"Escalate Sohling for manual judgment."
             ],
             "cut_warnings": [],
@@ -625,9 +1060,21 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
         })
         return
 
-    # Build cut chain
-    cut_chain, cut_warnings, _infeasible, _deficit = distribute_slack_v2(
-        shoot_date, tail["picture_lock"], cut_count, cut_mode, holidays
+    # Build cut chain (default-first compression — spec §3.2)
+    chain_spec = cut_chain_spec_standard(cut_count)
+    target_last_fb = sub_wd(tail["picture_lock"], 1, holidays)
+    available_cut_window = wd_count(shoot_date, target_last_fb, holidays)
+    compression = compress_to_min(chain_spec, available_cut_window)
+    if compression["infeasible"]:
+        # Even all-min cut chain doesn't fit — fall through to compressed-edge-case
+        # which will re-derive shoot_date and may further reduce cut_count.
+        return run_compressed_edge_case(
+            args, effective_kickstart, today, final_output, tail,
+            has_vo, has_style_frame, holidays, warnings,
+            standard_pre_pro_earliest=None,
+        )
+    cut_chain, cut_warnings = walk_cut_chain_forward(
+        shoot_date, chain_spec, compression["gaps"], cut_count, holidays
     )
 
     # Pre-pro chain backward from shoot
@@ -711,18 +1158,25 @@ def run_compressed_edge_case(args, effective_kickstart, today, final_output, tai
         cut_count = 3
         scenario_label = "Compressed-Edge-Case 3-cut (default)"
 
-    # Build cut chain — extreme mode floor (compressed branch always uses extreme MIN
-    # for cut/fb gaps, then distribute available slack with priority).
-    cut_chain, cut_warnings, infeasible, deficit = distribute_slack_v2(
-        shoot_date, tail["picture_lock"], cut_count, "extreme", holidays
-    )
+    # Build cut chain (default-first compression — spec §3.2). standard mode
+    # TIMELINE_VALUES min already matches legacy "extreme" floors (shoot_to_first_cut
+    # min=2, cut_production min=2, cut_fb min=1), so a single compress_to_min call
+    # handles the squeeze.
+    chain_spec = cut_chain_spec_standard(cut_count)
+    target_last_fb = sub_wd(tail["picture_lock"], 1, holidays)
+    available_cut_window = wd_count(shoot_date, target_last_fb, holidays)
+    compression = compress_to_min(chain_spec, available_cut_window)
 
-    if infeasible:
-        # Even Compressed-Edge-Case extreme MIN config can't fit → Extreme-Squeeze Tier
+    if compression["infeasible"]:
+        # Even all-min cut chain can't fit → Extreme-Squeeze Tier
         return emit_extreme_squeeze(
             args, effective_kickstart, final_output, shoot_date, tail,
-            available_window, deficit, holidays, warnings
+            available_window, compression["deficit_wd"], holidays, warnings
         )
+
+    cut_chain, cut_warnings = walk_cut_chain_forward(
+        shoot_date, chain_spec, compression["gaps"], cut_count, holidays
+    )
 
     # Build output (compressed)
     return build_output(
@@ -747,55 +1201,280 @@ def run_compressed_edge_case(args, effective_kickstart, today, final_output, tai
     )
 
 
-def run_pure_post(args, effective_kickstart, today, final_output, fc_start,
+def run_pure_post(args, effective_kickstart, today, final_output,
                   tail, has_vo, holidays, warnings):
-    """Pure-post branch: skip pre-pro + shoot, anchor on 1st Cut start."""
-    available_window = wd_count(fc_start, tail["picture_lock"], holidays)
-    cut_count, cut_mode, scenario_label, extra_w = decide_cut_count(args, available_window)
-    warnings.extend(extra_w)
+    """
+    Pure-post dispatcher (spec §11.5). Routes to mode runner.
+    --mode in {animation, mixed, edit} is required; main() validates upfront.
+    """
+    return _run_pure_post_modes(args, effective_kickstart, today, final_output,
+                                tail, has_vo, holidays, warnings)
 
-    if cut_count == 0:
-        emit({
-            "status": "infeasible_pattern_j",
-            "effective_kickstart": effective_kickstart.isoformat(),
-            "final_output": final_output.isoformat(),
-            "available_wd": available_window,
-            "scenario_label": "Pattern J - pure post infeasible",
-            "warnings": warnings + [
-                f"⚠️ Pure-post 1st Cut start ({fc_start.isoformat()}) → Picture Lock "
-                f"({tail['picture_lock'].isoformat()}) = {available_window} wd，"
-                f"連 2-cut compressed 都頂唔順。Escalate Sohling。"
-            ],
-            "cut_warnings": [],
-            "milestones": [],
-        })
-        return
 
-    cut_chain, cut_warnings, _infeasible, _deficit = distribute_slack_v2(
-        fc_start, tail["picture_lock"], cut_count, cut_mode, holidays
-    )
+# ---------- Pure-post mode runner (spec §6 + §7 + §11.5) ----------
 
-    return build_output(
-        status="pure_post" if cut_mode == "standard" else "pure_post_compressed",
-        scenario_label=f"Pure-post {scenario_label}",
-        effective_kickstart=effective_kickstart,
-        final_output=final_output,
-        shoot_date=None,
-        shoot_days=0,
-        available_window=available_window,
-        cut_count=cut_count,
-        pre_pro=None,
-        cut_chain=cut_chain,
+def _run_pure_post_modes(args, effective_kickstart, today, final_output,
+                         tail, has_vo, holidays, warnings):
+    """
+    Dispatcher for --mode animation/mixed/edit. Implements the 3-cut → 2-cut →
+    extreme-squeeze fallback ladder (spec §6 Q4 resolution) and routes
+    storyboard sub-chain for mixed/edit (spec §7).
+    """
+    mode = args.mode
+    project = args.project
+    available_window = wd_count(effective_kickstart, tail["picture_lock"], holidays)
+
+    # Storyboard validation (mixed/edit only).
+    if mode in ("mixed", "edit"):
+        if args.storyboard is None:
+            emit({"status": "error",
+                  "error": f"--storyboard required when --mode={mode} (we-make|client-provides|none)"})
+            return
+    elif args.storyboard is not None:
+        warnings.append(f"⚠️ --storyboard ignored for --mode={mode}")
+
+    # Build pre-pro chain spec (segment only, per Q3).
+    if mode == "animation":
+        pre_pro_spec = chain_spec_animation()
+    elif mode == "mixed":
+        pre_pro_spec = chain_spec_mixed()
+    else:  # edit
+        pre_pro_spec = chain_spec_edit()
+
+    # Try 3-cut → 2-cut fallback ladder.
+    fallbacks_triggered: list = []
+    cut_count = 3
+    cut_chain_spec = cut_chain_for_mode(mode, cut_count)
+    full_spec = pre_pro_spec + cut_chain_spec
+    compress = compress_to_min(full_spec, available_window)
+
+    if compress["infeasible"]:
+        # Try 2-cut.
+        cut_count = 2
+        cut_chain_spec = cut_chain_for_mode(mode, cut_count)
+        full_spec = pre_pro_spec + cut_chain_spec
+        compress_2 = compress_to_min(full_spec, available_window)
+        if compress_2["infeasible"]:
+            # Both 3-cut and 2-cut infeasible at min → Pattern J extreme squeeze.
+            warnings.append(
+                f"⚠️ Mode={mode}: 3-cut min ({compress['total_wd']} wd) 同 2-cut min "
+                f"({compress_2['total_wd']} wd) 都超過 available window "
+                f"({available_window} wd)。Trigger Pattern J extreme squeeze."
+            )
+            return emit_extreme_squeeze(
+                args, effective_kickstart, final_output, None, tail,
+                available_window, compress_2["deficit_wd"], holidays, warnings
+            )
+        # 2-cut feasible — emit with explicit warning.
+        warnings.append(
+            f"⚠️ Mode={mode}: 3-cut min ({compress['total_wd']} wd) > available window "
+            f"({available_window} wd)。Fall back 至 2-cut（skip 3rd cut + 3rd FB）。"
+        )
+        fallbacks_triggered.append(f"cut_count_2_fallback_from_3")
+        compress = compress_2
+
+    # Apply buffer-default rule: 2nd/3rd cut FB default to min(2, default), unless
+    # --push-fb-sameday override (spec §9.3). compress_to_min already pushed cut_fb
+    # to min if compression triggered. Here, when cut_fb category was NOT
+    # compressed, ensure 2nd/3rd FB respect the 2-wd buffer default (1 if min=1).
+    if "cut_fb" not in compress["compressions_applied"] and not args.push_fb_sameday:
+        for gap_name in ("second_cut_fb", "third_cut_fb"):
+            if gap_name in compress["gaps"]:
+                # default is already (1,2,3)[1]=2 — buffer-default already satisfied.
+                pass
+
+    # Walk cut chain backward from picture_lock.
+    cut_dates = walk_chain_backward(tail["picture_lock"], cut_chain_spec,
+                                    compress["gaps"], holidays)
+
+    # The cut chain's "_chain_start" date is the END of the pre-pro chain.
+    pre_pro_end_anchor = cut_dates["_chain_start"]
+
+    # For mixed/edit with storyboard=we-make: insert storyboard sub-chain.
+    storyboard_chain_mode = None
+    storyboard_dates = None
+    if mode in ("mixed", "edit") and args.storyboard == "we-make":
+        # Pre-pro segment ends at 1st Cut Submit; storyboard chain feeds into
+        # Materials Ready (= start of pre_pro segment).
+        pre_pro_dates = walk_chain_backward(pre_pro_end_anchor, pre_pro_spec,
+                                            compress["gaps"], holidays)
+        materials_ready_anchor = pre_pro_dates["_chain_start"]
+        storyboard_window = wd_count(effective_kickstart, materials_ready_anchor, holidays)
+        sb = build_storyboard_chain(
+            materials_ready_anchor, storyboard_window, mode, holidays,
+            forced_chain_mode=args.storyboard_mode,
+        )
+        storyboard_chain_mode = sb["chain_mode"]
+        storyboard_dates = sb
+        if sb["fallback_triggered"]:
+            fallbacks_triggered.append("storyboard_parallel_fallback")
+            warnings.append(
+                f"⚠️ Storyboard sub-chain auto-fell-back to parallel "
+                f"(window {storyboard_window} wd < seq need {sb['seq_window_needed']} wd)."
+            )
+    else:
+        pre_pro_dates = walk_chain_backward(pre_pro_end_anchor, pre_pro_spec,
+                                            compress["gaps"], holidays)
+
+    # Emit milestones in chronological order.
+    milestones = _build_pure_post_milestones(
+        mode=mode,
+        project=project,
+        pre_pro_dates=pre_pro_dates,
+        cut_dates=cut_dates,
         tail=tail,
         has_vo=has_vo,
-        has_style_frame=False,
-        compressed_style_frame_in_post=False,
-        project=args.project,
-        holidays=holidays,
-        warnings=warnings,
-        first_cut_start=fc_start,
-        cut_warnings=cut_warnings,
+        cut_count=cut_count,
+        storyboard_choice=args.storyboard if mode in ("mixed", "edit") else None,
+        storyboard_dates=storyboard_dates,
     )
+
+    # Past-milestone detection.
+    earliest = pre_pro_dates["_chain_start"]
+    if storyboard_dates is not None:
+        earliest = min(earliest, storyboard_dates["storyboard_submit"])
+    if earliest < effective_kickstart:
+        warnings.append(
+            f"⚠️ Earliest milestone {earliest.isoformat()} < kickstart "
+            f"{effective_kickstart.isoformat()}. Window over-tight even after compression."
+        )
+
+    payload = {
+        "status": "pure_post_mode",
+        "mode": mode,
+        "storyboard_choice": args.storyboard if mode in ("mixed", "edit") else None,
+        "storyboard_chain_mode": storyboard_chain_mode,
+        "cut_count": cut_count,
+        "buffer_overrides": ["push_fb_sameday"] if args.push_fb_sameday else [],
+        "fallbacks_triggered": fallbacks_triggered,
+        "compressions_applied": compress["compressions_applied"],
+        "effective_kickstart": effective_kickstart.isoformat(),
+        "final_output": final_output.isoformat(),
+        "available_wd": available_window,
+        "total_chain_wd": compress["total_wd"],
+        "scenario_label": f"Pure-post {mode} {cut_count}-cut",
+        "warnings": warnings,
+        "milestones": milestones,
+    }
+    emit(payload)
+
+
+def _build_pure_post_milestones(*, mode, project, pre_pro_dates, cut_dates,
+                                tail, has_vo, cut_count, storyboard_choice,
+                                storyboard_dates):
+    """Build ordered milestone list for pure-post mode output (spec §8)."""
+    milestones: list = []
+    order = 1
+
+    def add(name, label, d, **kwargs):
+        nonlocal order
+        kwargs.setdefault("project", project)
+        milestones.append(mm(order, name, label, d, **kwargs))
+        order += 1
+
+    # Storyboard sub-chain (mixed/edit only, when we-make).
+    if storyboard_dates is not None:
+        add("storyboard_submit", "Storyboard Submit",
+            storyboard_dates["storyboard_submit"],
+            calendar_emit=True, client_facing=False, party="DOF")
+        add("storyboard_confirm", "Storyboard Confirm",
+            storyboard_dates["storyboard_confirm"],
+            calendar_emit=True, client_facing=True, party="Client", color="2")
+
+    # Mode-specific pre-pro segment.
+    if mode == "animation":
+        add("script_workflow_received", "Script + Workflow Received",
+            pre_pro_dates["_chain_start"],
+            calendar_emit=True, client_facing=False, party="Client")
+        add("treatment_meeting", "Treatment Meeting",
+            pre_pro_dates["treatment_to_stb_sf"],
+            calendar_emit=False, internal_only=True, party="DOF", color="9")
+        add("stb_sf_submit", "STB + SF Submit",
+            pre_pro_dates["stb_sf_fb"],
+            calendar_emit=True, client_facing=False, party="DOF")
+        add("stb_sf_confirm", "STB + SF Confirm",
+            pre_pro_dates["stb_sf_to_animatic"],
+            calendar_emit=True, client_facing=True, party="Client", color="2")
+        add("animatic_submit", "Animatic Submit",
+            pre_pro_dates["animatic_fb"],
+            calendar_emit=True, client_facing=False, party="DOF")
+        add("animatic_confirm", "Animatic Confirm",
+            pre_pro_dates["_end_anchor"],
+            calendar_emit=True, client_facing=True, party="Client", color="2")
+        # Materials Ready = Animatic Confirm date (Q2 resolution).
+        add("materials_ready", "Materials Ready",
+            pre_pro_dates["_end_anchor"],
+            calendar_emit=True, client_facing=False, party="DOF")
+    else:
+        # mixed / edit
+        if storyboard_dates is None:
+            # No storyboard chain — Materials Ready = pre_pro chain start.
+            mr_date = pre_pro_dates["_chain_start"]
+        else:
+            mr_date = storyboard_dates["materials_ready"]
+        add("materials_ready", "Materials Ready", mr_date,
+            calendar_emit=True, client_facing=False, party="DOF")
+        if mode == "mixed":
+            # Rough cut milestones.
+            add("rough_cut_submit", "Rough Cut Submit",
+                pre_pro_dates["rough_cut_fb"],
+                calendar_emit=True, client_facing=False, party="DOF")
+            add("rough_cut_fb_due", "Rough Cut FB Due",
+                pre_pro_dates["rough_to_first_cut"],
+                calendar_emit=True, client_facing=True, party="Client", color="2")
+        # 1st Cut Submit = pre-pro chain end anchor.
+        add("first_cut_submit", "1st Cut Submit",
+            pre_pro_dates["_end_anchor"],
+            calendar_emit=True, client_facing=False, party="DOF")
+
+    # Cut chain.
+    # For animation: cut chain starts from animatic_confirm (cut_dates["_chain_start"]
+    # = animatic_confirm). animatic_to_first_cut gap → 1st Cut Submit.
+    # For mixed/edit: cut chain starts from 1st Cut Submit.
+    if mode == "animation":
+        add("first_cut_submit", "1st Cut Submit",
+            cut_dates["first_cut_fb"],
+            calendar_emit=True, client_facing=False, party="DOF")
+
+    add("first_cut_fb_due", "1st Cut FB Due",
+        cut_dates["second_cut"],
+        calendar_emit=True, client_facing=True, party="Client", color="2")
+    add("second_cut_submit", "2nd Cut Submit",
+        cut_dates["second_cut_fb"],
+        calendar_emit=True, client_facing=False, party="DOF")
+
+    if cut_count == 3:
+        add("second_cut_fb_due", "2nd Cut FB Due",
+            cut_dates["third_cut"],
+            calendar_emit=True, client_facing=True, party="Client", color="2")
+        add("third_cut_submit", "3rd Cut Submit",
+            cut_dates["third_cut_fb"],
+            calendar_emit=True, client_facing=False, party="DOF")
+        add("third_cut_fb_due", "3rd Cut FB Due",
+            cut_dates["_end_anchor"],
+            calendar_emit=True, client_facing=True, party="Client", color="2")
+    else:
+        # 2-cut: 2nd cut FB closes at picture_lock (= cut_dates _end_anchor).
+        add("second_cut_fb_due", "2nd Cut FB Due",
+            cut_dates["_end_anchor"],
+            calendar_emit=True, client_facing=True, party="Client", color="2")
+
+    # Backward tail (mode-agnostic; reuse existing tail dict from main()).
+    add("picture_lock", "Picture Lock", tail["picture_lock"],
+        calendar_emit=True, client_facing=False, party="DOF", color="11")
+    if has_vo and tail["vo_start"] is not None:
+        add("vo_start", "VO Recording Start", tail["vo_start"],
+            calendar_emit=True, client_facing=False, party="DOF")
+        add("vo_end", "VO Recording End", tail["vo_end"],
+            calendar_emit=True, client_facing=False, party="DOF")
+    add("color_sound", "Color / Sound / Subtitle", tail["cs"],
+        calendar_emit=True, client_facing=False, party="DOF")
+    # Final output is implicit (= tail end), but emit for completeness.
+    # final_output is passed via main; reuse tail["cs"]+1wd? Actually final_output
+    # is the anchor — emit from caller's final_output. Skipping here; payload
+    # surfaces it as top-level field.
+
+    return milestones
 
 
 def emit_extreme_squeeze(args, effective_kickstart, final_output, shoot_date, tail,

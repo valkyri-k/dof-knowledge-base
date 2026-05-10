@@ -120,7 +120,7 @@ Pre-pro total：T0 → Shoot ≈ **17–18 wd (~3.5 週)**
 
 | # | Milestone | Calendar Title | Party | colorId | 由 previous 算起（MIN） |
 |---|-----------|---------------|-------|---------|---------------------|
-| 9 | Submit 1st Cut | `1st Cut - [Project]` | DOF | 7 (Peacock) | **Shoot + 5 wd**（pure-post：由 1st Cut start anchor 開始） |
+| 9 | Submit 1st Cut | `1st Cut - [Project]` | DOF | 7 (Peacock) | **Shoot + 5 wd**（pure-post：唔適用，pure-post 用 `--mode {animation\|mixed\|edit}` 由 picture_lock backward chain，milestone names 唔同） |
 | 10 | Feedback on 1st Cut | `Client FB 1 - [Project]` | Client | 2 (Sage) | **#9 + 3 wd MIN** |
 | 11 | Submit 2nd Cut | `2nd Cut - [Project]` | DOF | 7 (Peacock) | **#10 + 3 wd MIN**（slack distribute 加上去，cap 5 wd） |
 | 12 | Feedback on 2nd Cut | `Client FB 2 - [Project]` | Client | 2 (Sage) | **#11 + 3 wd MIN** |
@@ -197,16 +197,16 @@ Mugi explain 俾導演聽**點解某個 milestone 排嗰日**：
    - `picture_lock_date = vo_window_start - 1 wd`
 3. 冇 VO：`picture_lock_date = cs_subtitle_date - 1 wd`
 
-**Step C — Forward minimum from Shoot anchor**
-由 Shoot date（pure-post：由 1st Cut start anchor 開始）forward chain 出最少需要嘅 cut chain（用 standard MIN gap 3 wd 計）：
-- `min_1st_cut = shoot + 5 wd`（standard shoot+post）/ user 指定（pure-post）
+**Step C — Forward minimum from Shoot anchor**（standard shoot+post only — pure-post 用獨立 sub-mode chains，由 `--mode` flag dispatch，唔行呢個 step）
+由 Shoot date forward chain 出最少需要嘅 cut chain（用 standard MIN gap 3 wd 計）：
+- `min_1st_cut = shoot + 5 wd`
 - `min_fb_1 = min_1st_cut + 3 wd`
 - 3 cuts: `min_picture_lock_3cut = min_1st_cut + (3+3+3+3+3) wd = min_1st_cut + 15 wd`
 - 2 cuts: `min_picture_lock_2cut = min_1st_cut + (3+3+3) wd = min_1st_cut + 9 wd`
 
-**Step D — Decide cut count（基於 available window）**
+**Step D — Decide cut count（基於 available window，standard shoot+post only）**
 
-`available_window = picture_lock_date - shoot_date`（standard shoot+post）/ `picture_lock_date - 1st_cut_start_date`（pure-post）
+`available_window = picture_lock_date - shoot_date`
 
 | `available_window`（從 Step B 反推到 picture_lock 起算） | Decision |
 |---|---|
@@ -589,14 +589,30 @@ python3 scripts/timeline_backward.py \
   --project "J26XXX-Project-Name"
 ```
 
-**Pure-post（材料 ready 嗰日做 1st Cut start anchor）：**
+**Pure-post（無 shoot — 由 picture_lock backward 行）：**
+
+必須加 `--mode {animation|mixed|edit}` sub-mode flag：
+- `animation` — 純 animation / motion graphics，唔 import live footage
+- `mixed` — animation + live footage 混合
+- `edit` — 純 live footage edit（需另加 `--storyboard {we-make|client-provides|none}`）
 
 ```bash
+# Animation mode
 python3 scripts/timeline_backward.py \
   --today 2026-05-09 \
   --final-output 2026-07-15 \
   --shoot-mode pure-post \
-  --first-cut-start 2026-05-20 \
+  --mode animation \
+  --has-vo true \
+  --project "J26XXX-Project-Name"
+
+# Edit mode (需要 --storyboard)
+python3 scripts/timeline_backward.py \
+  --today 2026-05-09 \
+  --final-output 2026-07-15 \
+  --shoot-mode pure-post \
+  --mode edit \
+  --storyboard client-provides \
   --has-vo true \
   --project "J26XXX-Project-Name"
 ```
