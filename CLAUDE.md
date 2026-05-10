@@ -834,6 +834,82 @@ Cross-ref 如有相關 `gap-log.md` / `kary-dev-log.md` entry，加一行 `→ g
 
 ---
 
+## Per-Job Project Overview Section
+
+> Schema locked [[2026-05-10]] via J26071 pilot（Phase A manual draft）。Source idea：[[mugi-owned-project-overview-skill]]、[[per-job-project-overview-section]]。
+
+`## Project Overview` section 由 `skills/producer/project-overview.md` skill 寫入（**唔係** 預設 scaffold 一部分）。Section 位置：喺 `# <Job No> — <Project Name>` 標題下面、`## Job Context` 上面。
+
+### Section structure
+
+```markdown
+## Project Overview
+> Last-derived: [[YYYY-MM-DD]]
+> Source: <Mugi /project-overview pilot manual draft | Phase B Portal push | etc.> [[YYYY-MM-DD]]
+> Generated from: <brief / quotation / SOW / meeting minutes>
+
+[FULL verbatim Project Overview content — from Kary's chat `dof-project-overview` skill output 或 Phase B Portal-generated draft。**唔做 summary**。]
+
+### Hard Deadlines
+[Immutable external dates。Mugi planning / suggestion 嘅 hard boundary。]
+
+### Project Constraints
+[Non-negotiable project limits — license / hardware / structural / timeline-affecting。]
+
+### Working Timeline
+> Source of truth = Google Calendar（job_no `JXXXXX` 對應 events）。下面只係 latest snapshot reference，唔係 SoT。
+> Last synced to Calendar: [[YYYY-MM-DD]] — N events
+[Tentative milestones。]
+
+### Current Phase
+[Manual-stated only。Overwrite，唔留 history。]
+
+### Open Issues
+[Table format：# / Issue / Owner / Resolve by。]
+
+### Recent Material Decisions
+[Bullet list with [[YYYY-MM-DD]] prefix。]
+```
+
+### Sub-section update modes (HARD RULE)
+
+| Sub-section | 性質 | Update mode | SoT |
+|---|---|---|---|
+| (verbatim PO) | Derived from source | Overwrite on full re-derive | Job note |
+| Hard Deadlines | Immutable external | Append-only；change 要明 surface | Job note |
+| Project Constraints | Immutable structural | Append；resolve 嗰陣 mark | Job note |
+| Working Timeline | Tentative milestones | Snapshot only；Calendar push 後由 plan-timeline skill auto-update | **Google Calendar** |
+| Current Phase | Ephemeral state | **Overwrite，manual-stated only**；唔自動 derive、唔留 history | Job note (minimal) |
+| Open Issues | State + history mix | Append；resolve 嗰陣 mark / remove | Job note |
+| Recent Material Decisions | Event log | Append-only | Job note |
+
+**Current Phase HARD RULE：** 只寫 user explicitly-stated context（e.g.「Script 喺 Kary draft 緊」、「等緊 Buttons confirm VO direction」）。Auto-derive from date + Working Timeline 嘅嘢**唔寫 file**，問嗰陣即 derive。Reduces stale risk。
+
+### Mandatory extraction (when running `/project-overview` skill)
+
+Skill 必須 extract 兩類 immutable knowledge — extract 唔到就主動問 user，**用具象化 examples，唔用 abstract term**。
+
+**A. Hard Deadlines —** 問法 example：「呢個 job 有冇 hard deadline？即係話，呢個日期一定唔可以改。常見例子：影片要喺某個 event 入面播（event date 已定）、Award submission deadline、客戶已 announce 嘅 launch date。導演 brief 階段通常知道但唔一定寫喺 PO，請列出嚟（日期 + 原因）。冇就 confirm 一聲。」
+
+**B. Project Constraints（影響 timeline 嘅流程 / 結構限制）—** 問法 example：「除咗 hard deadline 之外，有冇其他嘢會影響 timeline？常見要 check：
+1. Client 內部 approval rounds — 客戶要過幾多輪 senior approval？每輪 turnaround 幾耐？
+2. 特別事項影響製作時間（external party dependencies、talent availability window）
+3. Shooting date — lock 死、彈性、定未定？
+4. Hardware / spec lock（display 設備 / aspect ratio / colour space）
+5. License 要求（buyout / royalty-free 限制）」
+
+呢條 list 唔係 exhaustive — 係 prompting categories。User 補充 fall outside list 嘅嘢照收。
+
+### Calendar sync follow-up
+
+當 user confirm 已將 timeline push 上 Google Calendar 之後，**plan-timeline skill 必須 auto-update** Working Timeline section：寫 `Last synced to Calendar: [[YYYY-MM-DD]]` + 列 N events snapshot + 強調 SoT = Calendar。唔需要 user 再叫一次。
+
+### Edit safety
+
+寫入 `## Project Overview` 嗰陣**唔可以**誤 touch `## Job Context` / `## Interaction Log`。每個 sub-section 改動只 touch 對應範圍。Re-run skill = overwrite 整個 `## Project Overview` section（git history 做 audit trail）；個別 sub-section update = surgical edit。
+
+---
+
 ## Memory Hygiene
 
 Mugi 創建 reference / lookup 類 memory file 之前，**必須先 grep CLAUDE.md + context/** 睇有冇現成 canonical handling（包括 live-fetch pattern）。如果 upstream 已經 cover →
