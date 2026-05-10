@@ -575,7 +575,13 @@ Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或
 >
 >    （按組成 deliverables 通常包括：Animation → script + reference；Mixed → footage + graphics raw + script；Edit → footage + client video flow。Edit mode 嘅 video flow 已經 cover 客人對 edit 嘅 direction，所以 chain 入面冇 rough cut alignment stage。）
 >
-> 3. **如果 script / video flow 係 DOF 寫 / 整：** 預計幾時 draft 完？幾時送俾 client confirm？呢個會多咗 milestone（DOF script 寫 → client 確認），唔可以當「等 client 俾嘢」處理。
+> 3. **如果 script / video flow 係 DOF 寫 / 整：** 主動問 user 想點 handle ——
+>    - 係咪要**寫完 script 先**至能 unblock 下一步（hard sequential）？通常係。
+>    - **點寫**：DOF 內部寫 / 外判？外判通常多 buffer days。
+>    - **預計幾時寫到 / 要幾多日**？呢個 date = 「script ready」milestone（同 client-provided script delivery 等價）。
+>    - 寫完之後幾時送俾 client confirm？Client confirm date = unblock 下一步嘅 effective date。
+>
+>    呢個 case 而家 chain 冇 native model「DOF script writing」做獨立 stage，所以 timeline reply 唔會 surface 寫 script 嘅 deadline。Mugi 可以喺 reply pre-pro narrative 入面提一句「DOF script 預計 X 號 draft 完 / Y 號 client confirm，後面嘅 milestone 由 Y 號倒推」做透明化。
 >
 > 同時 confirm：
 >
