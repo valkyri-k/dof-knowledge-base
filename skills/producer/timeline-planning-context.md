@@ -59,6 +59,18 @@
    - 用 video flow（corporate shoot 嘅 default align tool） → Standard shoot+post
    - 唔需要 align（brief 已齊 / event 太 fast-paced） → Edit-only / Event highlight / Pure post
 
+### Pure-post sub-mode alignment mechanism
+
+Pure-post mode 內部仲分子類，每個用唔同 expression 做 client-facing alignment touch point：
+
+| Pure-post sub-mode | Alignment expression | 點 work |
+|---|---|---|
+| **Animation pure-post** | Animatic | Pre-pro 階段已決定 visual，align touch point 喺 animatic |
+| **Mixed pure-post** | Rough Cut | Live + animation 混合，rough cut 出嚟先 align |
+| **Edit-only** | Materials Ready | Client 通常已 embed video flow / brief 入 footage handover；DOF 唔需要再做 align tool |
+
+呢個影響 chain 入面「邊個 milestone 做 client alignment」。
+
 ---
 
 ## 2. Pre-Timeline-Planning Checklist（要 confirm 嘅 dimension）
@@ -67,6 +79,7 @@ Mode 揀好之後，落手排之前要 confirm 嘅 dimension。**呢個 list 唔
 
 | Dimension | Question to ask | 影響 |
 |---|---|---|
+| **Pure-post readiness gates** | (1) client brief ready？(2) director-client alignment done？(3) materials ready？三條 gate 都齊未？ | `effective_kickstart = max(brief_date, alignment_date, materials_date)`——任何一條未齊都 zero-progress |
 | **Materials ready date** | Footage / graphics raw assets 幾時齊？仲有 pending 嗎？ | Effective kickstart 嘅 component |
 | **Final delivery hardness** | Final Output 係 hard event-driven deadline（e.g. launch day, gala）定 soft 內部 target？ | Compression lever 揀法（hard = lock final + squeeze feedback；soft = first lever 係 propose final slip） |
 | **DOF-made deliverable scope** | Script 邊個寫（client / DOF internal / DOF outsourced）？要唔要 storyboard / video flow？ | Effective kickstart 計法 + chain 加新 stage（見 §3） |
@@ -77,6 +90,10 @@ Mode 揀好之後，落手排之前要 confirm 嘅 dimension。**呢個 list 唔
 | **Cut count** | 2 cut 定 3 cut？（Option B = tight schedule 接受 2 cut） | 3rd Cut + FB 3 出唔出 |
 
 **Mugi 嘅 default**：以上任何一個 dimension 用戶 hand off 入面冇 explicit 講 → mandatory ask，唔可以 silent default。
+
+### Anchor push rule（weekend / public holiday）
+
+如果 `today` 落喺週末或者 HK public holiday，**唔可以**直接攞嚟做 anchor。Effective kickstart anchor 自動 push 去下一個 weekday + non-holiday。Chain script 已 enforce，但 user-facing reply 要用 push 之後嘅 date 講嘢，唔好 raw `today`。
 
 ---
 
@@ -99,6 +116,16 @@ DOF 喺 pre-pro 階段可能要做嘅嘢，每個都係 **DOF 整 → submit 俾
 - **Animation**：淨係做 Storyboard，唔做 Video Flow（storyboard 已 cover align 需求）
 - **Edit-only / Re-edit / Event highlight**：兩者都唔會出現（client brief 已齊，唔需要再 align）
 - **Standard shoot+post**：通常 Video Flow（除非 client 加錢要 Storyboard）
+
+### Storyboard 三選一 prompt（mixed / edit-only mode）
+
+Mixed 同 edit-only mode 落手前 **mandatory** 要問 user 三選一——因為三條路 chain shape 完全唔同：
+
+1. **DOF 出 storyboard** → 加 storyboard stage 入 chain（`--dof-pre-pro-deliverables script,storyboard` 或 `storyboard` only）
+2. **Client 俾 storyboard** → storyboard 計入 materials ready date，唔出獨立 stage
+3. **唔需要 storyboard** → skip，依賴 video flow 或 rough cut 做 align
+
+唔可以 silent default。
 
 ### Sequencing rule（real-world prerequisite）
 
@@ -176,6 +203,40 @@ Final Output 可以 push 幾日。
 
 （已 codify 入 producer-playbook Final Delivery Hardness sub-section）
 
+### Cut count rationale
+
+Default 3-cut 嘅 reasoning（唔係 arbitrary）：
+
+- **1st cut** = working-level alignment（DOF 內部 + client team review）
+- **2nd cut** = senior approval（client 側老闆睇）
+- **3rd cut** = client final tweaks（**~99% case 都需要**）
+
+Compressed mode 唔應該自動 force 2-cut——drop 3rd cut 等於拎走 client final tweaks window，係 hidden creative cost。
+
+### Compressed branch governing rules
+
+Compressed mode 落 chain 嘅三條規則：
+
+1. **Sequential, NOT zero-gap parallel**——Script → Video Flow / Storyboard 仍然要 sequential，最少 1–2 wd gap。Script 同 VF / STB 撞同一日做違反 dependency（script confirm 之前 VF / STB 起唔到）。
+2. **Buffer-default for FB**——2nd / 3rd cut feedback default = 2 wd。Same-day 係 extreme squeeze case，唔係 default。
+3. **Compression order**——squeeze gap + feedback first，drop cut last resort。
+
+### Extreme-Squeeze Tier（Compressed 都 hit 唔到 deadline 時）
+
+Compressed mode 計完 feasible window 仍然 hit 唔到 deadline → escalate 上 **Extreme-Squeeze Tier**。3 propositions：
+
+1. **Compress feedback turnaround**（< 2 wd）
+2. **Negotiate cut count**（drop 3rd cut——明知拎走 final tweaks window）
+3. **Compress 1st cut window**（壓 post 內部時間）
+
+**Decision authority：director**（唔係 Sohling）——因為 trade-off 係 creative，唔係 resource。
+
+**Pattern J 對比：**
+- **Pattern J**（post saturation——同期 jobs 太多） → escalate **Sohling**（resource trade-off）
+- **Extreme-Squeeze**（creative window 拉爆） → escalate **director**（creative trade-off）
+
+兩者唔好溝亂——升錯人決定錯。
+
 ---
 
 ## 5. Common Pitfalls（observed bugs）
@@ -188,6 +249,10 @@ Final Output 可以 push 幾日。
 | **Hardness 冇問** | Reply 直接出 timeline，未 confirm hardness | §2 mandatory dimension + playbook Q6 |
 | **Silent default cut count / VO scope** | 用戶冇明講就 default 3 cut + VO，未 confirm 客側 scope | §2 mandatory check + playbook §3 Step 3 |
 | **將 contradiction hide 入 ⚠️ flags** | Detect 到 ordering violation 但放入 flags 一條，繼續 propose timeline | Pattern K：stop generation, surface user-facing 3 options |
+| **Raw `today` used in milestone math** | `today` 落週末 / HK PH 但直接攞嚟做 anchor，milestone date 全部 shift 錯 | §2 anchor push rule + chain script auto-push to next weekday + non-holiday |
+| **Zero-gap parallel pre-pro in compressed mode** | Compressed mode 將 script + video flow / storyboard 排同一日做，違反 dependency | §4 Compressed branch rules：sequential 1–2 wd min gap |
+| **Force 2-cut as compressed default** | Compressed 自動 drop 3rd cut，但 3rd cut = client final tweaks（~99% 需要）；hidden creative cost | §4 cut count rationale + default 3-cut；唔夠就升 Extreme-Squeeze Tier 等 director 決定 |
+| **Pattern J vs Extreme-Squeeze 溝亂** | Creative window 拉爆當 post saturation 嚟升 Sohling，or post saturation 當 creative trade-off 升 director | §4 Pattern J 對比：resource trade-off → Sohling；creative trade-off → director |
 
 ---
 
