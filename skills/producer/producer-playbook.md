@@ -564,7 +564,41 @@ Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或
 - User 答「有 fixed shoot date X」→ 直接入 §3 Step 4 Pre-step A，用 X 做 `--shoot-date`
 - User 答「冇」/「propose」/「揀日」/ 留空 → **必須**跟 §5 Shoot Date Planning **combined turn pattern**（candidate phase + full-timeline preview 同一 turn surface）。Default 用 `earliest_safe`，必須喺 reply explicit declare default 用咗邊個 candidate。**唔可以**淨係 silent infer 一個 shoot date 然後直接出 full timeline。
 
-如果 Genre + VO + actual shoot days + shoot date status 用戶已經清楚提到 → 呢步 skip，直接 generate。
+**關於 #1 答 Pure Post（純後期）嘅分支：** Pure-post 冇拍攝，Q3 (shoot days) / Q4 (shoot date) 唔適用。**唔可以**用上面嘅 mandatory asks 跑落 Step 4——必須改問三個 readiness gate + composition + storyboard：
+
+> 「Pure-post 排 timeline 之前要 confirm readiness：
+>
+> 1. **Client brief 收咗未？** 邊日收？冇收 → 邊日預期收？
+> 2. **Director × Client alignment 傾咗未？** 導演同客人 align 過 direction / 改動 / aesthetic 未？冇 → 預期幾時做 alignment session？
+> 3. **Materials 齊未？**（按組成分）
+>    - Animation → script + reference assets
+>    - Mixed → footage + graphics raw assets
+>    - Edit → footage + 客人提供嘅 video flow（how they expect to edit）—— edit mode 嘅 video flow 已經 cover 客人對 edit 嘅 direction，所以 chain 入面冇 rough cut alignment stage
+>
+>    幾時齊？
+>
+> 同時要 confirm：
+>
+> 4. **製作組成**：Animation / Mixed（MG + footage）/ Edit（純 footage edit）？
+> 5. **Storyboard stage**：DOF 整（we-make）/ Client 提供（client-provides）/ 唔需要（none）？
+>    - `mixed` / `edit` 必須答（script 強制 require）
+>    - `animation` 自動 ignore（chain 已 built-in animatic stage）」
+
+**Alignment stage（mandatory，唔向 user offer skip）：** 三個 mode 各自有自己嘅 client alignment 機制，**全部係 mandatory default**：
+
+| Mode | Alignment 機制 |
+|---|---|
+| `animation` | Animatic Submit + Animatic Confirm（chain 入面有）|
+| `mixed` | Rough Cut Submit + Rough Cut FB（chain 入面有）|
+| `edit` | Materials Ready 已包括客人提供嘅 video flow（client direction 已 baked in，所以唔需要 rough cut）|
+
+Reply 入面**唔可以**將 Rough Cut / Animatic 描述為 optional / "你 OK 保留，唔 OK 我可以 skip"——呢個係 mandatory client alignment stage。
+
+**Effective kickstart = max(client_brief_date, alignment_date, materials_date)** — 呢個 date 至係 pass 落 script `--today` flag 嘅 value，**唔係**用 system today silent default。
+
+**如果 user 答「都未 ready / 唔肯定 / 仲未收 brief」：** 唔好 silent fallback 用今日做 kickstart 跑 timeline。Reply 解釋三個 gate，要 user 提供 expected dates 至 invoke script。
+
+如果 Genre + VO + actual shoot days + shoot date status（shoot+post）/ readiness gates + composition + storyboard（pure-post）用戶已經清楚提到 → 呢步 skip，直接 generate。
 
 ### Step 4: Generate（Two-Phase Document）
 
@@ -591,10 +625,16 @@ python3 scripts/timeline_backward.py \
 
 **Pure-post（無 shoot — 由 picture_lock backward 行）：**
 
+**Precondition：** Step 3 Pure-Post 分支三個 readiness gate（client brief / alignment / materials）已 user-confirmed，`--today` 用 max(三個 date)，**唔係** system today。
+
 必須加 `--mode {animation|mixed|edit}` sub-mode flag：
 - `animation` — 純 animation / motion graphics，唔 import live footage
 - `mixed` — animation + live footage 混合
-- `edit` — 純 live footage edit（需另加 `--storyboard {we-make|client-provides|none}`）
+- `edit` — 純 live footage edit
+
+**`--storyboard {we-make|client-provides|none}` 對應 §3 Step 3 Pure-Post 分支 Q5：**
+- `mixed` 同 `edit` **必須加**（script 強制 require — 冇加會 error out）
+- `animation` 自動 ignore（chain 已 built-in animatic stage）
 
 ```bash
 # Animation mode
@@ -603,6 +643,16 @@ python3 scripts/timeline_backward.py \
   --final-output 2026-07-15 \
   --shoot-mode pure-post \
   --mode animation \
+  --has-vo true \
+  --project "J26XXX-Project-Name"
+
+# Mixed mode (需要 --storyboard)
+python3 scripts/timeline_backward.py \
+  --today 2026-05-11 \
+  --final-output 2026-06-15 \
+  --shoot-mode pure-post \
+  --mode mixed \
+  --storyboard none \
   --has-vo true \
   --project "J26XXX-Project-Name"
 
@@ -668,6 +718,9 @@ extreme_squeeze_propositions: [{id, name, detail}, ...] | null（status="extreme
 - ❌ Echo script 嘅 stdout JSON 落 reply（user 唔需要見 JSON）
 - ❌ 跑多次 script 對比 scenario（Single-Scenario Rule — script 內部已經自動 fallback standard → compressed-edge-case → extreme-squeeze → Pattern J）
 - ❌ Phase 1 query Calendar API（saturation / conflict 全部留 Phase 2）
+- ❌ **Pure-post effective kickstart silent default 用 `today`** — 必須先 confirm client brief / director-client alignment / materials 三個 readiness gate（§3 Step 3 Pure-Post 分支），揀 max(三個 date) 做 kickstart pass 落 `--today` flag
+- ❌ **Script return `--storyboard required` / `--mode required` error 嗰陣 silent retry 加 default flag**（e.g. 自動補 `--storyboard none`）— 必須 stop 返去問 user，唔好自己揀
+- ❌ **Reply 入面將 Rough Cut（mixed）/ Animatic（animation）描述為 optional / "OK 保留，唔 OK skip"** — 呢個係 mandatory client alignment stage，唔向 user offer skip
 
 **Pre-step B（必須做）：Pre-flight Self-Check（mental，唔 echo）**
 
