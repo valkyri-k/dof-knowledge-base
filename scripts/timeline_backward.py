@@ -799,6 +799,31 @@ def parse_args():
     p.add_argument("--kickstart", help="Kickstart date (ISO). Defaults to --today.")
     p.add_argument("--candidates", type=int, default=3,
                    help="Number of candidate shoot dates (default 3)")
+    # --- DOF-made pre-pro deliverables (Script / Video Flow / Storyboard) ---
+    # When DOF writes script (or makes Video Flow / Storyboard) before client
+    # can sign off and unblock production, effective_kickstart must be pushed
+    # past the last client confirm date — not anchored to today. See
+    # dof/workflows/timeline-planning-considerations.md (vault) or
+    # skills/producer/timeline-planning-context.md (KB mirror).
+    p.add_argument("--dof-pre-pro-deliverables", default="",
+                   help="Comma-list of DOF-made pre-pro deliverables to prepend "
+                        "into the chain. Valid: script, video-flow, storyboard. "
+                        "Sequencing: Script → Video Flow OR Storyboard "
+                        "(VF and STB mutually exclusive; if both supplied, "
+                        "Video Flow is dropped in favor of Storyboard).")
+    p.add_argument("--script-write-days", type=int, default=3,
+                   help="DOF script writing days (default 3 wd; internal 2-3, outsourced 2-4).")
+    p.add_argument("--script-confirm-wd", type=int, default=3,
+                   help="Client script confirm turnaround (default 3 wd; needs senior approval).")
+    p.add_argument("--video-flow-write-days", type=int, default=3,
+                   help="DOF Video Flow drafting days (default 3 wd; range 1-3).")
+    p.add_argument("--video-flow-confirm-wd", type=int, default=2,
+                   help="Client Video Flow confirm turnaround (default 2 wd; range 1-3).")
+    p.add_argument("--storyboard-write-days", type=int, default=5,
+                   help="DOF Storyboard production days (default 5 wd; range 3-6; "
+                        "mixed extreme 1-2; full animation min 3).")
+    p.add_argument("--storyboard-confirm-wd", type=int, default=2,
+                   help="Client Storyboard confirm turnaround (default 2 wd; range 1-3).")
     return p.parse_args()
 
 
@@ -904,6 +929,108 @@ def propose_shoot_dates(kickstart: date, final_output: date | None,
     }
 
 
+def compute_dof_pre_pro_chain(today: date, args, holidays: set) -> tuple:
+    """
+    Compute the forward chain of DOF-made pre-pro deliverables (Script /
+    Video Flow / Storyboard) starting from today. Pushes effective_kickstart
+    past the last client confirm date so downstream chain math doesn't anchor
+    materials_ready / shoot prep to a date when client haven't yet unblocked.
+
+    Returns (new_effective_kickstart, deliverable_entries, warnings).
+
+    deliverable_entries = list of dicts:
+        {
+            "kind": "submit" | "confirm",
+            "deliverable": "Script" | "Video Flow" | "Storyboard",
+            "label": display label (e.g. "DOF Script Submit"),
+            "date": date,
+            "party": "DOF" | "Client",
+            "color": "9" | "2",
+        }
+    Each output path adapts these into m()/mm() format and prepends to its
+    milestone list.
+
+    Sequencing rule: Script → (Video Flow OR Storyboard). VF and STB are
+    mutually exclusive (DOF only does one align doc). If both supplied,
+    drop Video Flow with a warning.
+    """
+    today_pushed = push_to_wd(today, holidays)
+    raw_input = (args.dof_pre_pro_deliverables or "").strip()
+    if not raw_input:
+        return today_pushed, [], []
+
+    raw = [s.strip().lower() for s in raw_input.split(",") if s.strip()]
+    valid = {"script", "video-flow", "storyboard"}
+    warnings: list = []
+    deliverables: list = []
+    for d in raw:
+        if d not in valid:
+            warnings.append(
+                f"⚠️ --dof-pre-pro-deliverables: 唔識 '{d}'，"
+                f"valid 值係 script/video-flow/storyboard，已 ignore。"
+            )
+            continue
+        if d not in deliverables:
+            deliverables.append(d)
+
+    if "video-flow" in deliverables and "storyboard" in deliverables:
+        warnings.append(
+            "⚠️ Video Flow 同 Storyboard 互斥（DOF 只做其中一個 align doc）。"
+            "已自動移除 Video Flow，跟 Storyboard 行。"
+        )
+        deliverables = [d for d in deliverables if d != "video-flow"]
+
+    if not deliverables:
+        return today_pushed, [], warnings
+
+    # Enforce canonical ordering: Script first, then Video Flow OR Storyboard.
+    canonical_order = ["script", "video-flow", "storyboard"]
+    deliverables = [d for d in canonical_order if d in deliverables]
+
+    SPEC = {
+        "script":     ("Script",     args.script_write_days,     args.script_confirm_wd),
+        "video-flow": ("Video Flow", args.video_flow_write_days, args.video_flow_confirm_wd),
+        "storyboard": ("Storyboard", args.storyboard_write_days, args.storyboard_confirm_wd),
+    }
+
+    entries: list = []
+    cursor = today_pushed
+    for key in deliverables:
+        label, wd_write, wd_fb = SPEC[key]
+        if wd_write < 1 or wd_fb < 1:
+            warnings.append(
+                f"⚠️ {label}: write_days={wd_write}, confirm_wd={wd_fb} — 兩者都應 ≥ 1 wd。"
+            )
+        submit_d = add_wd(cursor, max(wd_write, 1), holidays)
+        confirm_d = add_wd(submit_d, max(wd_fb, 1), holidays)
+        entries.append({
+            "kind": "submit",
+            "deliverable": label,
+            "label": f"DOF {label} Submit",
+            "date": submit_d,
+            "party": "DOF",
+            "color": "9",
+        })
+        entries.append({
+            "kind": "confirm",
+            "deliverable": label,
+            "label": f"Client {label} Confirm",
+            "date": confirm_d,
+            "party": "Client",
+            "color": "2",
+        })
+        cursor = confirm_d
+
+    new_kickstart = cursor
+    pretty = " → ".join(SPEC[d][0] for d in deliverables)
+    warnings.append(
+        f"DOF 寫嘅 pre-pro deliverables ({pretty}) 推 effective kickstart 由 "
+        f"{today_pushed.isoformat()} → {new_kickstart.isoformat()} (= last client confirm date)。"
+        f" Materials ready / shoot prep 唔可以早過呢個日期。"
+    )
+    return new_kickstart, entries, warnings
+
+
 def main():
     args = parse_args()
 
@@ -955,8 +1082,14 @@ def main():
     has_style_frame = to_bool(args.has_style_frame)
     shoot_mode = args.shoot_mode
 
-    # Step 0: effective kickstart
-    effective_kickstart = push_to_wd(today, holidays)
+    # Step 0: effective kickstart.
+    # If DOF makes pre-pro deliverables (Script / Video Flow / Storyboard)
+    # before client can sign off, push effective_kickstart past the last
+    # client confirm date. Otherwise default = push_to_wd(today).
+    effective_kickstart, dof_pre_pro_entries, dof_pre_pro_warnings = (
+        compute_dof_pre_pro_chain(today, args, holidays)
+    )
+    warnings.extend(dof_pre_pro_warnings)
 
     # Step B: backward tail
     tail = backward_tail(final_output, has_vo, holidays)
@@ -968,11 +1101,13 @@ def main():
                   "error": "pure-post mode requires --mode {animation|mixed|edit}"})
             return
         return run_pure_post(args, effective_kickstart, today, final_output,
-                             tail, has_vo, holidays, warnings)
+                             tail, has_vo, holidays, warnings,
+                             dof_pre_pro_entries=dof_pre_pro_entries)
 
     # ----- standard shoot+post branch -----
     return run_standard(args, effective_kickstart, today, final_output, tail,
-                        has_vo, has_style_frame, holidays, warnings)
+                        has_vo, has_style_frame, holidays, warnings,
+                        dof_pre_pro_entries=dof_pre_pro_entries)
 
 
 def decide_cut_count(args, available_window: int) -> tuple[int, str | None, list]:
@@ -1014,7 +1149,8 @@ def decide_cut_count(args, available_window: int) -> tuple[int, str | None, list
 
 
 def run_standard(args, effective_kickstart, today, final_output, tail,
-                 has_vo, has_style_frame, holidays, warnings):
+                 has_vo, has_style_frame, holidays, warnings,
+                 dof_pre_pro_entries=None):
     """Standard shoot+post branch."""
     project = args.project
     shoot_days = max(args.shoot_days, 1)
@@ -1072,6 +1208,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
             args, effective_kickstart, today, final_output, tail,
             has_vo, has_style_frame, holidays, warnings,
             standard_pre_pro_earliest=None,
+            dof_pre_pro_entries=dof_pre_pro_entries,
         )
     cut_chain, cut_warnings = walk_cut_chain_forward(
         shoot_date, chain_spec, compression["gaps"], cut_count, holidays
@@ -1099,7 +1236,8 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
         return run_compressed_edge_case(
             args, effective_kickstart, today, final_output, tail,
             has_vo, has_style_frame, holidays, warnings,
-            standard_pre_pro_earliest=earliest
+            standard_pre_pro_earliest=earliest,
+            dof_pre_pro_entries=dof_pre_pro_entries,
         )
 
     # Build milestones list (standard path)
@@ -1122,12 +1260,14 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
         holidays=holidays,
         warnings=warnings,
         cut_warnings=cut_warnings,
+        dof_pre_pro_entries=dof_pre_pro_entries,
     )
 
 
 def run_compressed_edge_case(args, effective_kickstart, today, final_output, tail,
                              has_vo, has_style_frame, holidays, warnings,
-                             standard_pre_pro_earliest=None):
+                             standard_pre_pro_earliest=None,
+                             dof_pre_pro_entries=None):
     """Compressed-Edge-Case Branch: Shoot ASAP, sequential 1-2 wd pre-pro, default 3-cut compressed."""
     project = args.project
     shoot_days = max(args.shoot_days, 1)
@@ -1198,23 +1338,27 @@ def run_compressed_edge_case(args, effective_kickstart, today, final_output, tai
         holidays=holidays,
         warnings=warnings,
         cut_warnings=cut_warnings,
+        dof_pre_pro_entries=dof_pre_pro_entries,
     )
 
 
 def run_pure_post(args, effective_kickstart, today, final_output,
-                  tail, has_vo, holidays, warnings):
+                  tail, has_vo, holidays, warnings,
+                  dof_pre_pro_entries=None):
     """
     Pure-post dispatcher (spec §11.5). Routes to mode runner.
     --mode in {animation, mixed, edit} is required; main() validates upfront.
     """
     return _run_pure_post_modes(args, effective_kickstart, today, final_output,
-                                tail, has_vo, holidays, warnings)
+                                tail, has_vo, holidays, warnings,
+                                dof_pre_pro_entries=dof_pre_pro_entries)
 
 
 # ---------- Pure-post mode runner (spec §6 + §7 + §11.5) ----------
 
 def _run_pure_post_modes(args, effective_kickstart, today, final_output,
-                         tail, has_vo, holidays, warnings):
+                         tail, has_vo, holidays, warnings,
+                         dof_pre_pro_entries=None):
     """
     Dispatcher for --mode animation/mixed/edit. Implements the 3-cut → 2-cut →
     extreme-squeeze fallback ladder (spec §6 Q4 resolution) and routes
@@ -1327,6 +1471,7 @@ def _run_pure_post_modes(args, effective_kickstart, today, final_output,
         cut_count=cut_count,
         storyboard_choice=args.storyboard if mode in ("mixed", "edit") else None,
         storyboard_dates=storyboard_dates,
+        dof_pre_pro_entries=dof_pre_pro_entries,
     )
 
     # Past-milestone detection.
@@ -1361,7 +1506,7 @@ def _run_pure_post_modes(args, effective_kickstart, today, final_output,
 
 def _build_pure_post_milestones(*, mode, project, pre_pro_dates, cut_dates,
                                 tail, has_vo, cut_count, storyboard_choice,
-                                storyboard_dates):
+                                storyboard_dates, dof_pre_pro_entries=None):
     """Build ordered milestone list for pure-post mode output (spec §8)."""
     milestones: list = []
     order = 1
@@ -1371,6 +1516,19 @@ def _build_pure_post_milestones(*, mode, project, pre_pro_dates, cut_dates,
         kwargs.setdefault("project", project)
         milestones.append(mm(order, name, label, d, **kwargs))
         order += 1
+
+    # DOF-made pre-pro deliverables prepend (Script / Video Flow / Storyboard).
+    # Inserted before all other milestones so chronological order surfaces them
+    # at the top of the timeline.
+    if dof_pre_pro_entries:
+        for entry in dof_pre_pro_entries:
+            slug = entry["deliverable"].lower().replace(" ", "_")
+            name = f"dof_{slug}_{entry['kind']}"
+            add(name, entry["label"], entry["date"],
+                calendar_emit=True,
+                client_facing=(entry["party"] == "Client"),
+                party=entry["party"],
+                color=entry["color"])
 
     # Storyboard sub-chain (mixed/edit only, when we-make).
     if storyboard_dates is not None:
@@ -1521,10 +1679,21 @@ def build_output(*, status, scenario_label, effective_kickstart, final_output,
                  shoot_date, shoot_days, available_window, cut_count,
                  pre_pro, cut_chain, tail, has_vo, has_style_frame,
                  compressed_style_frame_in_post, project, holidays, warnings,
-                 first_cut_start=None, cut_warnings=None):
+                 first_cut_start=None, cut_warnings=None,
+                 dof_pre_pro_entries=None):
     """Assemble final milestones list and emit JSON."""
     milestones: list = []
     order = 1
+
+    # DOF-made pre-pro deliverables (Script / Video Flow / Storyboard).
+    # Inserted first; final milestones.sort() at end of function ensures
+    # chronological order regardless of insertion sequence.
+    if dof_pre_pro_entries:
+        for entry in dof_pre_pro_entries:
+            title = f"{entry['label']} - {project}"
+            milestones.append(m(order, entry["label"], entry["date"],
+                                entry["color"], entry["party"], title))
+            order += 1
 
     # Pre-pro chain (skip for pure-post)
     if pre_pro:

@@ -550,9 +550,12 @@ Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或
 > 2. 有冇 VO recording？
 > 3. Filming window 入面**實際拍幾多日**？（DOF 好少連拍整個 window — e.g. May 18–22 通常只係 1–3 日 actual shoot，唔係 5 日連拍）
 > 4. Shoot date 有冇已經 fix（你 / team 已經 mark 落 Calendar）？冇 → Mugi 喺 window 內 propose；有 → 我會用你提供嘅 date。
-> 5. **Final Output 性質**：呢個 final delivery date 係 **hard event-driven deadline**（e.g. 播片 event / 客人 hard delivery / launch date，唔可以 push）定 **soft 內部 target**（可 push N 日）？」
+> 5. **DOF 有冇要寫 / 整 pre-pro deliverable**？例如 DOF 寫 script、DOF 整 video flow、DOF 整 storyboard——任何一樣 yes 就 list 出嚟，每樣大概要幾多 wd 寫 + client confirm 要幾多 wd（唔講就用 defaults：script 3+3 / video flow 3+2 / storyboard 5+2）。冇 → 答冇。
+> 6. **Final Output 性質**：呢個 final delivery date 係 **hard event-driven deadline**（e.g. 播片 event / 客人 hard delivery / launch date，唔可以 push）定 **soft 內部 target**（可 push N 日）？」
 
-**關於 #5（Final Output hardness）：** 答案直接 affect downstream lever 揀法——詳見下面 **Final Delivery Hardness — Downstream Implication** sub-section。**唔可以 silent default 當 soft**，必須 user explicit 答。
+**關於 #6（Final Output hardness — shoot+post）：** 答案直接 affect downstream lever 揀法——詳見下面 **Final Delivery Hardness — Downstream Implication** sub-section。**唔可以 silent default 當 soft**，必須 user explicit 答。
+
+**關於 #5（DOF pre-pro deliverables — shoot+post）：** Yes 嘅話對應 Pre-step A 加 `--dof-pre-pro-deliverables` + write/confirm flags（見 §3 Step 4 Pre-step A 「其他 flags」list）。Chain script 自動將 Submit + Confirm milestones prepend 入 timeline 頭，並將 effective kickstart 推到最後一樣 client confirm date。**唔好**自己手動倒推或者用 reply narrative 解釋。
 
 **關於 VO 嘅問法（重要）：** 問「有冇 **VO recording**」，**唔好**問「有冇 VO」。
 - Traditional voice talent → 有 recording session → 排 VO Recording window（multi-day，colorId 1）
@@ -578,13 +581,12 @@ Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或
 >
 >    （按組成 deliverables 通常包括：Animation → script + reference；Mixed → footage + graphics raw + script；Edit → footage + client video flow。Edit mode 嘅 video flow 已經 cover 客人對 edit 嘅 direction，所以 chain 入面冇 rough cut alignment stage。）
 >
-> 3. **如果 script / video flow 係 DOF 寫 / 整：** 主動問 user 想點 handle ——
->    - 係咪要**寫完 script 先**至能 unblock 下一步（hard sequential）？通常係。
->    - **點寫**：DOF 內部寫 / 外判？外判通常多 buffer days。
->    - **預計幾時寫到 / 要幾多日**？呢個 date = 「script ready」milestone（同 client-provided script delivery 等價）。
->    - 寫完之後幾時送俾 client confirm？Client confirm date = unblock 下一步嘅 effective date。
+> 3. **如果 script / video flow / storyboard 任何一樣係 DOF 寫 / 整：** 對每樣 confirm ——
+>    - **邊樣 DOF 做？** Script / Video Flow / Storyboard（可多選；Video Flow 同 Storyboard 互斥，DOF 只做其中一個 align doc）。
+>    - **每樣寫 / 整要幾多 wd？** Defaults：script 3 wd（內部 2-3 / 外判 2-4，外判加 buffer）、video flow 3 wd、storyboard 5 wd。User 可 override。
+>    - **每樣送出後 client confirm 要幾多 wd？** Defaults：script 3 wd（要 senior approval）、video flow 2 wd、storyboard 2 wd。User 可 override。
 >
->    呢個 case 而家 chain 冇 native model「DOF script writing」做獨立 stage，所以 timeline reply 唔會 surface 寫 script 嘅 deadline。Mugi 可以喺 reply pre-pro narrative 入面提一句「DOF script 預計 X 號 draft 完 / Y 號 client confirm，後面嘅 milestone 由 Y 號倒推」做透明化。
+>    呢啲嘢喺 Pre-step A pass `--dof-pre-pro-deliverables script,video-flow` (或 `script,storyboard`) + 對應 `--script-write-days` / `--script-confirm-wd` / `--video-flow-write-days` / `--video-flow-confirm-wd` / `--storyboard-write-days` / `--storyboard-confirm-wd` flags 入 chain script。Chain 會將每樣 deliverable 嘅 Submit + Confirm 做獨立 milestone（`DOF Script Submit` / `Client Script Confirm` 等）prepend 入 timeline 頭，並將 effective kickstart 自動推到最後一樣 client confirm date——Mugi **唔需要**自己手動倒推或者用 reply narrative 解釋。
 >
 > 同時 confirm：
 >
@@ -609,9 +611,8 @@ Job number 揾唔到 / job-list 冇 director → 跟 §3 Step 3 reactive ask 或
 Reply 入面**唔可以**將 Rough Cut / Animatic 描述為 optional / "你 OK 保留，唔 OK 我可以 skip"——呢個係 mandatory client alignment stage。
 
 **Effective kickstart = 最遲一樣 deliverable ready / confirmed 嘅 date**：
-- Client-provided deliverables（footage / graphics raw / video flow / client script 等）→ 用 client 預期 delivery date
-- DOF-written / DOF-made deliverables（DOF 寫 script / DOF 整 video flow）→ 用 **client confirm date**（唔係 DOF draft 完嗰日，因為要等 client 認可先 unblock 落手做下一步）
-- 揀晒以上所有 date 之中**最遲嗰個**做 `--today` flag value，**唔係**用 system today silent default
+- **Client-provided deliverables**（footage / graphics raw / video flow / client script 等）→ 揀最遲嗰樣嘅預期 delivery date 做 `--today` flag value，**唔係**用 system today silent default
+- **DOF-written / DOF-made deliverables**（DOF 寫 script / DOF 整 video flow / storyboard）→ **唔好**自己手動加日數倒推。Pass `--dof-pre-pro-deliverables` + write/confirm flags 俾 chain script，由 script 自己將 effective kickstart 推到最後一樣 client confirm date。`--today` 喺呢個 case 用 client-provided deliverables 嗰條 date（或 system today 如果冇 client deliverable），DOF chain 會由呢度向前疊上去。
 - 如果 Q1 pre-pro context 顯示仲有 outstanding alignment session 未開（罕見），亦要計埋嗰個 expected date
 
 **如果 user 答「未知 / 客人未覆 / 仲等緊」：** 唔好 silent fallback 用今日做 kickstart 跑 timeline。Reply 直接話而家排唔到，要 user 同客人 chase 返 expected dates 先 invoke script。
@@ -620,7 +621,7 @@ Reply 入面**唔可以**將 Rough Cut / Animatic 描述為 optional / "你 OK �
 
 ### Final Delivery Hardness — Downstream Implication
 
-Mandatory ask 嘅 Final Output hardness Q（shoot+post #5 / pure-post #6）唔係 cosmetic question——答案決定 Mugi 點揀 lever 同點寫 reply。**Hardness 一定要 user explicit confirm**，唔可以 silent default。
+Mandatory ask 嘅 Final Output hardness Q（shoot+post #6 / pure-post #6）唔係 cosmetic question——答案決定 Mugi 點揀 lever 同點寫 reply。**Hardness 一定要 user explicit confirm**，唔可以 silent default。
 
 #### Hard event-driven deadline（播片 event / 客人 hard delivery / launch date）
 
@@ -718,6 +719,10 @@ python3 scripts/timeline_backward.py \
 - `--has-vo false` — 冇 VO recording
 - `--has-style-frame false` — 冇 style frame milestone
 - `--holidays-dir path` — 一般唔需要 override（default = `context/holidays/`，auto-glob `hk-*.json`）
+- `--dof-pre-pro-deliverables script,video-flow` (或 `script,storyboard`) — DOF 寫 / 整其中一樣或多樣 pre-pro deliverable。Sequencing：Script → Video Flow OR Storyboard。VF 同 STB 互斥（DOF 只做其中一個 align doc），同時傳會自動 drop video-flow + warn。每樣會 prepend `DOF [X] Submit` + `Client [X] Confirm` 兩個 milestones 入 timeline 頭，並將 effective kickstart 推到最後一樣 client confirm date。
+- `--script-write-days N` / `--script-confirm-wd N` — DOF script writing wd / client confirm wd（defaults 3 / 3）
+- `--video-flow-write-days N` / `--video-flow-confirm-wd N` — DOF video flow drafting wd / client confirm wd（defaults 3 / 2）
+- `--storyboard-write-days N` / `--storyboard-confirm-wd N` — DOF storyboard production wd / client confirm wd（defaults 5 / 2）
 
 **Script 輸出 1 行 JSON。Top-level keys：**
 
