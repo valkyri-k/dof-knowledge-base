@@ -137,6 +137,9 @@ J260BB Test Project 4 pure-post timeline test。Kary post 咗 client schedule im
 ### 2026-05-14 morning session (null)
 Pre-clear 緊接上一個 session 再次觸發，中間冇新 work。Open threads 同上，冇新 entries。
 
+### 2026-05-14 morning session (J26062 calendar ops + MCP bug fix)
+今日主力係 J26062 calendar ops + 發現並修正 Google Calendar MCP bug。Kary 提供 Project Status Update docx（9 videos：C-series 6 + FVL F-series 3），job note 更新完成。然後批量加 F-series 9 events（[F-1/2/3] 1st Cut Jun 10 / 2nd Cut Jun 15 / Final Output Jun 17）——初次錯用 Google Calendar MCP，events 寫入 Kary 個人 calendar。Kary 指正後：刪走 9 個錯誤 events，用 service account 重建，再 patch colorId（cuts=`"7"` Peacock，Final Output=`"3"` Grape）。Root cause：由 MCP 轉 service account 嗰陣冇 re-read `technical/google-apis.md`。已儲 2 條 memory rule（no MCP + always apply colorId）。**Key learning**：Calendar ops 必須用 service account；colorId 係 mandatory，唔係 optional。
+
 ### 2026-05-10 to 2026-05-14 session
 主要兩條工作線：J260BB timeline + J26062 calendar ops。
 
@@ -279,3 +282,6 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-10 | J260BB: Kary direction — compress feedback + keep 3 rounds + 1st cut 3wd; pointed out Mugi missed pre-pro compression | Re-ran script with compressed pre-pro (script 2+2, storyboard 3+1) → feasible; Phase 1 draft sent ✅; Phase 2 pending |
 | 2026-05-12 | J26062 add Shooting Day 2 - Orbis Future Vision Leader, Jun 2 all-day, 1-4pm in desc | Created ✅ (colorId 11) |
 | 2026-05-14 | J26062 batch add 6 calendar events: [C-1]/[C-2] 1st Cut May 21, 2nd Cut May 27, Final Output May 29 (Orbis IG Reel) | All 6 created ✅; rules check pass (no holiday, no saturation) |
+| 2026-05-14 | J26062 update video list from Project_Status_Update_Orbis_HK_2026_Campaign.docx | Job note updated: C-series 6 videos + FVL F-series 3 videos ✅ |
+| 2026-05-14 | J26062 F-series 9 events: [F-1/2/3] 1st Cut Jun 10 / 2nd Cut Jun 15 / Final Output Jun 17 | Created via service account on DOF Internal calendar; colorId patched (cuts=7 Peacock, FO=3 Grape) ✅ |
+| 2026-05-14 | Bug: Google Calendar MCP → wrote to personal calendar (9 events) | Deleted wrong events; recreated via service account; saved 2 memory rules (no MCP + always apply colorId) ✅ |
