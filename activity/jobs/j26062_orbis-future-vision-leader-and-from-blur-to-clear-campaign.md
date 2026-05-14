@@ -53,3 +53,7 @@ Total shooting days: 4
 ### [[2026-05-14]] morning — Batch add Orbis IG Reel schedule (F-series)
 - **Kary 問**：Add 9 events for F-1/F-2/F-3：1st Cut Jun 10，2nd Cut Jun 15，Final Output Jun 17；format [F-X] Milestone - Orbis IG Reels
 - **Mugi 做**：Dates check pass (Wed/Mon/Wed，no holiday)；all 9 events created ✅
+
+### [[2026-05-14]] afternoon — Test message in Timeline Schedule thread
+- **Kary 問**：「test」（@Mugi in Timeline Schedule thread）
+- **Mugi 做**：Auto-context detected J26062 Orbis Future Vision Leader；Discord reply sent to confirm detection ✅

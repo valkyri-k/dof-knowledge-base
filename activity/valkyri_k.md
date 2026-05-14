@@ -53,7 +53,7 @@
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
 - **[2026-05-09] root-owned kb files recurring bug** — `scripts/timeline_backward.py` root-owned pattern（estimate: 由 Kary Claude Code local session 改 file 以 root process 跑）；dev-log `2026-05-09 14:53` logged；awaiting permanent fix decision。Cross-ref: `activity/kary-dev-log.md` 2026-05-09 14:53 entry
-- **[2026-05-10] J260BB Test Project 4 Phase 2 push pending** — Phase 1 draft sent: pure-post mixed, compressed pre-pro (DOF script 2+2 wd + storyboard 3+1 wd starting May 11), post kickstart May 21, 3-cut compressed feedback (1 wd/round), VO Jun 10–11, Final Output Jun 15 (hard). Waiting Kary confirm → push Calendar.
+- **[2026-05-14] J260BB Test Project 4 Phase 2 push pending** — Phase 1 draft sent (new round with Kary's committed dates): pure-post mixed, kickstart 15 May (assets + script confirm), storyboard submit 18 May, rough cut submit 20 May, 3-cut all-compressed (1 wd FB each), VO Jun 10–11, Final Output Jun 15 (hard). Pattern L warning issued (client must pre-arrange same-day/next-day feedback). Waiting Kary confirm → push Calendar.
 
 ---
 
@@ -158,6 +158,9 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 
 ### 2026-04-12 afternoon session
 今日主要係 calendar timeline 查詢 + J26016 schedule 整理。Kary 要求列出 J26053 BOC Trendy Too 同 J26016 HSUHK Student Excellence 嘅 project timeline 文字版——兩個都搵到（BOC 17 events，HSUHK 12 events），順帶發現 HSUHK Final Output Apr 27 同 Batch 2 Shoot D2 撞日。跟住 Kary 要求：(1) 移除 Batch 1 post-pro 所有 (TBC)、(2) 按 Batch 1 間距規劃 Batch 2 post-pro。Plan 出咗但 Kary 喺 confirm 間距前 clear，所以執行部分留到下次 session。**Key decision**：HSUHK Final Output Apr 27 係 Batch 1 專屬；Batch 2 post-pro 需要包含 Client FB on 3rd Cut 先出 Final（Batch 1 呢步係 skip 咗），呢個係 Kary 明確糾正嘅 scheduling principle。
+
+### 2026-05-14 afternoon quick session
+短 session，兩個 interactions：J26062 Timeline Schedule thread test message → auto-context 識別 reply；J26071 Submit Storyboard May 18 → Calendar event created (colorId 5 Banana，Mon weekday，唔係假期)。冇 architectural decision，冇 open threads 新增。
 
 ---
 
@@ -285,3 +288,6 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-14 | J26062 update video list from Project_Status_Update_Orbis_HK_2026_Campaign.docx | Job note updated: C-series 6 videos + FVL F-series 3 videos ✅ |
 | 2026-05-14 | J26062 F-series 9 events: [F-1/2/3] 1st Cut Jun 10 / 2nd Cut Jun 15 / Final Output Jun 17 | Created via service account on DOF Internal calendar; colorId patched (cuts=7 Peacock, FO=3 Grape) ✅ |
 | 2026-05-14 | Bug: Google Calendar MCP → wrote to personal calendar (9 events) | Deleted wrong events; recreated via service account; saved 2 memory rules (no MCP + always apply colorId) ✅ |
+| 2026-05-14 | J26062 Timeline Schedule thread test message | Auto-context detected J26062 Orbis；Discord reply sent ✅ |
+| 2026-05-14 | J26071 add Submit Storyboard May 18 to Calendar | Created event (colorId 5 Banana, Mon weekday, no holiday) ✅ |
+| 2026-05-14 | J260BB Test Project 4 Phase 1 timeline (new round: client schedule image, pure-post mixed, VO, storyboard 18 May, rough cut 20 May, hard deadline 15 Jun) | Phase 1 draft sent: 15 milestones (kickstart 15 May → FO 15 Jun, 3-cut, all cut/FB windows 1-2 wd, VO Jun 10–11); 25 May 佛誕 holiday handled; Pattern L warning issued; Phase 2 pending Kary confirm |
