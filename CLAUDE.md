@@ -88,6 +88,26 @@
 
 ---
 
+## Google API Side-Effect Tool Path（Hard Rule，唔可以用 MCP）
+
+任何 **Google Calendar / Drive / Docs write** 操作之前，self-check 你 about to call 嘅 tool name **唔可以**有以下 prefix：
+
+- ❌ `mcp__*calendar*`、`gcal_*`（Calendar MCP）
+- ❌ `mcp__*drive*`、`mcp__*docs*`（Drive / Docs MCP）
+
+呢啲 cloud MCP 喺 Mugi 嘅 Claude Code instance 入面 silently 連住 Kary 個人 `karyto.dof@gmail.com` —— write 落去就會去到 personal account，唔係 `dof.internal@gmail.com`，**係嚴重錯誤**。
+
+✅ **必須**用 Python boilerplate（詳見 `technical/google-apis.md`）：
+
+- Calendar → Service Account（`agent-mugi@agent-mugi.iam.gserviceaccount.com`，`CALENDAR_ID = 'dof.internal@gmail.com'`）
+- Drive / Docs → OAuth2 as `dof.internal@gmail.com`
+
+Op-level rules + boilerplate code 喺 `skills/producer/calendar-ops.md`。撞到自己 about to call 一個 `mcp__` / `gcal_` prefix tool → **STOP**，切返 Python boilerplate path 再做。
+
+點解：歷史上 cloud MCP invisibility 已經咬過兩次（2026-05-09 gcal write 入 personal account、2026-05-14 KB context trim 誤刪 Service Account anchor 後 regression）。Prose 禁令冇 visible code anchor 嘅情況下，agent 容易 fall back 去 cloud MCP default —— 所以呢條 rule 放上 CLAUDE.md root level，唔可以淨係靠 skill file。
+
+---
+
 ## DM Policy
 
 - Discord User ID `1328602029303791646`（Kary）嘅 DM：可以回覆
