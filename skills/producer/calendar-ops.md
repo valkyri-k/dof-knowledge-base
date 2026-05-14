@@ -9,10 +9,68 @@
 
 Google Calendar 操作用 Service Account。Boilerplate + credentials 喺 `technical/google-apis.md`。
 
-⚠️ **禁止用 `gcal_*` MCP tools**——用 Service Account + Python boilerplate。
+> 🚫 **絕對禁止用任何 Calendar MCP tool**（`gcal_*`、`mcp__*calendar*`、claude.ai 嘅 "Google Calendar" tool 全部唔得）。
+> 用 MCP → event 會 create 喺 **Kary 嘅 personal `karyto.dof@gmail.com`**，唔係 `dof.internal@gmail.com` —— **嚴重錯誤**。
+> 所有 add / update / delete / list event 必須用以下 Service Account Python boilerplate。冇例外。
 
 - Calendar ID（DOF Internal）: `dof.internal@gmail.com`
 - HK Public Holidays: load 本地 `context/holidays/hk-*.json`（**唔好** call Google Calendar API — `en.hk#holiday@group.v.calendar.google.com` 已 deprecated / 404）
+
+### Service Account Write Boilerplate（每次 op 都要用呢個 pattern）
+
+```python
+import os, json
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+
+creds_dict = json.loads(os.environ["GOOGLE_CALENDAR_CREDENTIALS"])
+creds = Credentials.from_service_account_info(
+    creds_dict,
+    scopes=['https://www.googleapis.com/auth/calendar']
+)
+service = build('calendar', 'v3', credentials=creds)
+
+CALENDAR_ID = 'dof.internal@gmail.com'  # DOF Internal — 唔好 hardcode 任何其他 calendar
+```
+
+**Add event：**
+```python
+event = {
+    'summary': '1st Cut - HSUHK Student',          # [Milestone] - [Project Shorthand]
+    'description': 'J26015\nDirector: Kary',       # optional
+    'start': {'date': '2026-04-27'},               # all-day
+    'end':   {'date': '2026-04-28'},               # end exclusive (next day)
+    'colorId': '7',                                 # string，唔係 int
+}
+created = service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
+print(created['id'])
+```
+
+**Update / Move：**
+```python
+service.events().patch(
+    calendarId=CALENDAR_ID,
+    eventId=event_id,
+    body={'start': {'date': '2026-05-09'}, 'end': {'date': '2026-05-10'}},
+).execute()
+```
+
+**Delete：**
+```python
+service.events().delete(calendarId=CALENDAR_ID, eventId=event_id).execute()
+```
+
+**List（搵 event by date / saturation check）：**
+```python
+events = service.events().list(
+    calendarId=CALENDAR_ID,
+    timeMin='2026-05-21T00:00:00+08:00',
+    timeMax='2026-05-22T00:00:00+08:00',
+    singleEvents=True,
+).execute().get('items', [])
+```
+
+⚠️ **Self-check before execute**：每次 call `events().*` 之前，confirm `calendarId == 'dof.internal@gmail.com'`。如果 tool name 出現 `mcp__` 或 `gcal_` → **STOP**，你用緊錯嘅 path。
 
 ---
 
@@ -112,6 +170,8 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 
 ### Add Event
 
+**Tool path：用上面 Credentials section 嘅 Service Account boilerplate + `service.events().insert(calendarId='dof.internal@gmail.com', ...)`。唔好用任何 Calendar MCP tool。**
+
 1. 先 run Rule 1 + 2 + 3 check（parallel：holiday fetch + saturation list）
 2. **有任何 rule trigger ⚠️** → 顯示 warning + flag 具體問題，等用戶確認後再執行
 3. **全部 pass ✅** → 直接 create，唔問——然後一行 report：
@@ -122,6 +182,8 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 
 ### Move / Reschedule
 
+**Tool path：Service Account `service.events().patch(calendarId='dof.internal@gmail.com', eventId=..., body=...)`。唔好用 Calendar MCP。**
+
 1. 計新 target date
 2. Run Rule 1 + 2 + 3 check on 新 date
 3. **有任何 rule trigger ⚠️** → 顯示 warning + 等確認
@@ -131,6 +193,8 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
    >（唔顯示 colorId）
 
 ### Delete
+
+**Tool path：Service Account `service.events().delete(calendarId='dof.internal@gmail.com', eventId=...)`。唔好用 Calendar MCP。**
 
 - 用戶明確講「delete / cancel [event name]」→ list 出要 delete 嘅 events，等 confirm 後 call `events.delete`（Delete 唔可以 undo，保留確認步驟）
 - 「移除」/「整走」呢類字眼 → 先問清楚係 delete 定 reschedule

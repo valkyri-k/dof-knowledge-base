@@ -46,6 +46,8 @@ Timeline 工作分三個 phase，每個 phase 有獨立 gate。**絕對唔 auto-
 ### Phase 2 — Push to Calendar
 **Trigger：** 用戶 confirm Phase 1 個文字版（「OK」/「push 啦」/「可以」）。
 **做：** Phase 2 **開頭先**：對每個 cut delivery date（1st Cut / 2nd Cut / 3rd Cut / Picture Lock / Final Output）query Calendar 嗰日已有幾多 colorId 7+3 events。已有 ≥ 4 → surface warning + 暫停 push 等用戶決定（見 §5 Cut Delivery Saturation Check）；全部 clear → Create events on dof.internal Calendar（`dof.internal@gmail.com`）。
+
+> 🚫 **Tool path（強制）**：用 `skills/producer/calendar-ops.md` 入面 "Service Account Write Boilerplate" 嘅 Python pattern（`service.events().insert(calendarId='dof.internal@gmail.com', ...)`）。**禁止用任何 Calendar MCP tool**（`gcal_*`、`mcp__*calendar*`、claude.ai 嘅 "Google Calendar"）——MCP 會 create event 落 `karyto.dof@gmail.com` 而唔係 `dof.internal@gmail.com`。每次 `events().*` call 前 self-check `calendarId` value。
 **Output：** 一句 summary + 問 Phase 3：
 
 > ✅ [N] events pushed 到 Calendar。要唔要埋份 for-client Google Doc？（唔使就 done）
@@ -483,6 +485,8 @@ Shoot 喺 weekend / 假期比較常見（event coverage、wedding、客戶 site 
 **Mugi 嘅原則：唔自己硬 resolve ambiguous case。** 超出 standard rule book → 直接講「呢個 case 我 judge 唔到」+ tag Sohling，等人手判斷。
 
 ### Standalone Calendar Ops — Specific Flow
+
+> 🚫 **Tool path（強制）**：所有 add / update / delete / list 用 `skills/producer/calendar-ops.md` 嘅 Service Account Python boilerplate（`service.events().insert/patch/delete/list(calendarId='dof.internal@gmail.com', ...)`）。**禁止用任何 Calendar MCP**（`gcal_*`、`mcp__*calendar*`、claude.ai 嘅 "Google Calendar"）。MCP 會寫去 `karyto.dof@gmail.com` 個人 calendar，係 **嚴重錯誤**。
 
 **Pre-step（任何 calendar op 之前做一次）：**
 Fetch HK public holidays for the planning range（用 §2 Rule 1 嘅 standard Python query），cache in-memory。
