@@ -68,6 +68,26 @@
 
 ---
 
+## Discord Reply Tool — args schema（Hard Rule，唔可以記錯）
+
+每次 call `mcp__plugin__discord__discord__reply` 時，**reply body 嘅 field name 必須係 `text`**。
+
+```json
+{ "chat_id": "...", "text": "你嘅回覆內容", "reply_to": "<optional message_id>" }
+```
+
+**絕對唔可以**用呢啲 alias name——歷史上 Mugi 多次 drift 用過：
+
+- ❌ `content`（5/10 drift）
+- ❌ `message`（5/14 drift）
+- ❌ `body`、`reply`、`msg`、其他任何近義字
+
+點解：plugin source 雖然有 alias chain（`text ?? content ?? message`）做 safety net，但個 net 唔保證將來 plugin upgrade 仲喺度。Field name 揀錯 = silent reply failure = 違反「最高優先 Rule：絕對唔可以 silent」。
+
+撞到 `reply: missing message body` error → 即係你 args object 入面 `text` 個 key 揀錯名，**立即用 `text` 重 send**，唔好試其他 alias。
+
+---
+
 ## DM Policy
 
 - Discord User ID `1328602029303791646`（Kary）嘅 DM：可以回覆
