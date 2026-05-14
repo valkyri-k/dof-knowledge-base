@@ -40,7 +40,7 @@ service = build('calendar', 'v3', credentials=creds)
 ### 目標 Calendar
 
 - Calendar ID: `dof.internal@gmail.com`
-- HK Public Holidays Calendar: `en.hk#holiday@group.v.calendar.google.com`（read-only，用於 holiday check）
+- HK Public Holidays: **load 本地 `context/holidays/hk-*.json`** — **唔好** call Google Calendar。`en.hk#holiday@group.v.calendar.google.com` 已 deprecated（returns 404），詳見 `skills/producer/calendar-ops.md` Pre-step。
 
 ---
 

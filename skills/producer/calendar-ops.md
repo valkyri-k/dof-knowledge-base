@@ -12,7 +12,7 @@ Google Calendar 操作用 Service Account。Boilerplate + credentials 喺 `techn
 ⚠️ **禁止用 `gcal_*` MCP tools**——用 Service Account + Python boilerplate。
 
 - Calendar ID（DOF Internal）: `dof.internal@gmail.com`
-- HK Public Holidays（read-only）: `en.hk#holiday@group.v.calendar.google.com`
+- HK Public Holidays: load 本地 `context/holidays/hk-*.json`（**唔好** call Google Calendar API — `en.hk#holiday@group.v.calendar.google.com` 已 deprecated / 404）
 
 ---
 
@@ -28,18 +28,26 @@ Google Calendar 操作用 Service Account。Boilerplate + credentials 喺 `techn
 
 ## Pre-step（任何 calendar op 之前做一次）
 
-Fetch HK public holidays for the planning range，cache in-memory：
+Load HK public holidays 由本地 JSON，cache in-memory。**唔好** call Google Calendar API。
+
+**Schema**：頂層 dict，`holidays` field 係 list of `{date, weekday, name_en, name_zh}` objects。**唔好**對 list 盲 call `.keys()`。
 
 ```python
-# from technical/google-apis.md boilerplate
-holidays_result = service.events().list(
-    calendarId='en.hk#holiday@group.v.calendar.google.com',
-    timeMin='<range_start>',
-    timeMax='<range_end>',
-    singleEvents=True,
-).execute()
-holiday_dates = {e['start'].get('date') for e in holidays_result.get('items', [])}
+import json, glob
+
+holiday_dates = set()
+holiday_names_by_date = {}
+
+for path in sorted(glob.glob('context/holidays/hk-*.json')):
+    with open(path) as f:
+        data = json.load(f)
+    for h in data['holidays']:
+        d = h['date']
+        holiday_dates.add(d)
+        holiday_names_by_date[d] = h.get('name_en') or h.get('name_zh', 'Public Holiday')
 ```
+
+如 planning year JSON 未存在（e.g. 2027）→ surface 俾用戶：「⚠️ 本地未有 `hk-YYYY.json`，請 Kary 補返。」
 
 ---
 

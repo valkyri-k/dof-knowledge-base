@@ -18,7 +18,7 @@
 ## 基本設定
 
 - **DOF Internal Calendar ID:** `dof.internal@gmail.com`
-- **HK Public Holidays Calendar ID:** `en.hk#holiday@group.v.calendar.google.com`（public，SA 直接 query 到，唔需要任何 sharing setup）
+- **HK Public Holidays:** load 本地 `context/holidays/hk-*.json`（**唔好** call Google Calendar — `en.hk#holiday@group.v.calendar.google.com` 已 deprecated / 404）
 - **認證方式:** Service Account（環境變數 `GOOGLE_CALENDAR_CREDENTIALS`）
 - **操作庫:** `google-api-python-client` + `google-auth`
 
@@ -26,31 +26,38 @@
 
 ## HK Public Holidays Reference
 
-### 點 query
+### 點 load
 
-每次 Mugi plan timeline 或者 schedule 任何非 shooting milestone 之前，都必須 check HK public holidays，確保 office 性質嘅 milestone 唔會排到假期。Google 提供咗 public HK holiday calendar，service account 直接就可以 list events，唔需要任何 sharing setup。
+每次 Mugi plan timeline 或者 schedule 任何非 shooting milestone 之前，都必須 check HK public holidays，確保 office 性質嘅 milestone 唔會排到假期。**Source = 本地 `context/holidays/hk-*.json`**，由 Kary 維護。**唔好** call Google Calendar API — `en.hk#holiday@group.v.calendar.google.com` 已經 404，再試只會嘥 turns。
+
+**JSON Schema（必須跟）：**
+
+```json
+{
+  "$schema_version": "1.0",
+  "region": "HK",
+  "year": 2026,
+  "holidays": [
+    {"date": "2026-01-01", "weekday": "Thursday", "name_en": "New Year's Day", "name_zh": "元旦"}
+  ]
+}
+```
+
+頂層 dict，**`holidays` field 係 list of objects**——唔好對 `data['holidays']` 盲 call `.keys()`。
 
 ```python
-# Fetch HK public holidays for the planning range
-holidays_resp = service.events().list(
-    calendarId='en.hk#holiday@group.v.calendar.google.com',
-    timeMin=range_start.isoformat() + 'T00:00:00Z',
-    timeMax=range_end.isoformat() + 'T00:00:00Z',
-    singleEvents=True,
-    orderBy='startTime'
-).execute()
+import json, glob
 
-holiday_dates = {
-    e['start']['date']  # YYYY-MM-DD format
-    for e in holidays_resp.get('items', [])
-    if 'date' in e.get('start', {})
-}
+holiday_dates = set()
+holiday_names_by_date = {}
 
-holiday_names_by_date = {
-    e['start']['date']: e.get('summary', 'Public Holiday')
-    for e in holidays_resp.get('items', [])
-    if 'date' in e.get('start', {})
-}
+for path in sorted(glob.glob('context/holidays/hk-*.json')):
+    with open(path) as f:
+        data = json.load(f)
+    for h in data['holidays']:
+        d = h['date']
+        holiday_dates.add(d)
+        holiday_names_by_date[d] = h.get('name_en') or h.get('name_zh', 'Public Holiday')
 ```
 
 ### 點 apply
@@ -64,13 +71,13 @@ holiday_names_by_date = {
 
 ### Cache strategy
 
-**同一個 Mugi conversation 入面，個 timeline session 共用同一個 `holiday_dates` set——唔好對每個 milestone 重新 fetch。** Mugi 喺 timeline planning 開頭一次過 fetch 整個 planning range（通常今日 → 今日 + 60 wd），cache 落 working memory 用到 planning session 完。
+**同一個 Mugi conversation 入面，個 timeline session 共用同一個 `holiday_dates` set——唔好對每個 milestone 重新 load。** Mugi 喺 planning 開頭 load 一次（auto-glob 攞曬所有年份 file），cache 落 working memory 用到 session 完。
 
-### 如果 fetch 失敗
+### 如果 planning year JSON 未存在
 
-Google holiday calendar 係 public 嘅，正常情況冇理由 fail，但如果真係 fetch 唔到（network / API error），Mugi 要**明顯 surface 俾用戶知**：
+Auto-glob `hk-*.json` 攞唔到 planning year 嘅 file（e.g. 2027 file 仲未補）→ Mugi 要**明顯 surface 俾用戶知**：
 
-> 「⚠️ 我 fetch HK public holiday calendar 嗰陣 fail 咗 — 我會繼續 plan timeline，但**請你自己 double check 有冇 milestone 撞到 public holiday**。HK public holiday 通常包括：農曆新年、清明、復活節、勞動節、佛誕、端午、七一、中秋、國慶、重陽、聖誕。」
+> 「⚠️ 本地未有 `hk-YYYY.json` — knowledge base 未補 YYYY 年 holiday data。我會繼續 plan timeline，但**請你自己 double check 有冇 milestone 撞到 public holiday**。HK public holiday 通常包括：農曆新年、清明、復活節、勞動節、佛誕、端午、七一、中秋、國慶、重陽、聖誕。」
 
 ---
 

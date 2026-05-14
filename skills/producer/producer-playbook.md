@@ -397,38 +397,45 @@ Compressed pre-pro total（reference only）：T0 → Shoot ≈ 9–10 wd (~2 �
 
 任何 office 性質嘅 milestone target date 默認必須同時滿足：
 1. **Weekday**（Mon–Fri）
-2. **唔係 HK 公眾假期**（用 `en.hk#holiday@group.v.calendar.google.com` query verify）
+2. **唔係 HK 公眾假期**（load 本地 `context/holidays/hk-*.json` verify）
 
 Apply 喺**所有非 shooting milestone**：Script Lock、Submit / Confirm Video Flow、Submit / Confirm Graphics Ref、Style Frame Submit / Confirm、1st / 2nd / 3rd Cut、Client FB 1/2/3、Picture Lock、VO Recording window、Color/Sound/Subtitle、Final Output。
 
-**HK Public Holiday fetch：** 任何 calendar planning 開始之前，先一次過 fetch 整個 planning range 嘅 HK public holidays，cache 落 in-memory set，之後每個 candidate date 對住個 set check。**唔好假設「下個月應該冇 holiday」就 skip fetch**——會撞 Buddha's Birthday、勞動節翌日、清明、重陽呢類用戶日常未必 top-of-mind 嘅 holiday。
+**HK Public Holiday source：** 一律 load 本地 `context/holidays/hk-*.json`，**唔好** call Google Calendar API。Google 嘅 `en.hk#holiday@group.v.calendar.google.com` 已經 deprecated（returns 404）；本地 JSON 由 Kary 維護，係 single source of truth。**唔好假設「下個月應該冇 holiday」就 skip load**——會撞 Buddha's Birthday、勞動節翌日、清明、重陽呢類用戶日常未必 top-of-mind 嘅 holiday。
 
-```python
-# Fetch HK public holidays for the planning range
-holidays_resp = service.events().list(
-    calendarId='en.hk#holiday@group.v.calendar.google.com',
-    timeMin=range_start.isoformat() + 'T00:00:00Z',
-    timeMax=range_end.isoformat() + 'T00:00:00Z',
-    singleEvents=True,
-    orderBy='startTime'
-).execute()
+**Schema（必須跟）：**
 
-holiday_dates = {
-    e['start']['date']  # YYYY-MM-DD format
-    for e in holidays_resp.get('items', [])
-    if 'date' in e.get('start', {})
-}
-
-holiday_names_by_date = {
-    e['start']['date']: e.get('summary', 'Public Holiday')
-    for e in holidays_resp.get('items', [])
-    if 'date' in e.get('start', {})
+```json
+{
+  "$schema_version": "1.0",
+  "region": "HK",
+  "year": 2026,
+  "holidays": [
+    {"date": "2026-01-01", "weekday": "Thursday", "name_en": "New Year's Day", "name_zh": "元旦"}
+  ]
 }
 ```
 
-**同一個 conversation 共用同一個 `holiday_dates` set**——唔好對每個 milestone 重新 fetch。一次過 fetch 整個 planning range（今日 → 今日 + 60 wd），cache 用到 planning session 完。
+**頂層係 dict，`holidays` field 係 list of objects**——唔好盲 call `.keys()` 喺 `holidays`，會 `AttributeError`。
 
-**如果 fetch 失敗：** 明顯 surface 俾用戶知：「⚠️ 我 fetch HK public holiday calendar 嗰陣 fail 咗 — 我會繼續 plan timeline，但**請你自己 double check 有冇 milestone 撞到 public holiday**。HK public holiday 通常包括：農曆新年、清明、復活節、勞動節、佛誕、端午、七一、中秋、國慶、重陽、聖誕。」
+```python
+import json, glob
+
+holiday_dates = set()
+holiday_names_by_date = {}
+
+for path in sorted(glob.glob('context/holidays/hk-*.json')):
+    with open(path) as f:
+        data = json.load(f)
+    for h in data['holidays']:
+        d = h['date']
+        holiday_dates.add(d)
+        holiday_names_by_date[d] = h.get('name_en') or h.get('name_zh', 'Public Holiday')
+```
+
+**同一個 conversation 共用同一個 `holiday_dates` set**——唔好對每個 milestone 重新 load。Planning session 開頭 load 一次，cache 用到 planning session 完。
+
+**如果 planning year 嘅 JSON 唔存在**（e.g. 2027 file 未補）：明顯 surface 俾用戶知：「⚠️ 本地未有 `hk-YYYY.json` — knowledge base 未補 YYYY 年 holiday data。我會繼續 plan timeline，但**請你自己 double check 有冇 milestone 撞到 public holiday**。HK public holiday 通常包括：農曆新年、清明、復活節、勞動節、佛誕、端午、七一、中秋、國慶、重陽、聖誕。」
 
 ### Rule 2: Weekend / Holiday Cross Check
 
