@@ -1,7 +1,12 @@
 # Calendar Ops
 
-> **呢份 file 只係 standalone calendar operations（add / move / reschedule / delete event）用。**
-> 如果係 generate full production timeline，唔係呢度——read `skills/producer/producer-playbook.md`。
+> **用途：** Universal calendar operations — 任何 add / move / reschedule / delete / list event 都用呢份 file 嘅 Service Account boilerplate + Rule 1-4。
+> **Callers：**
+> - Standalone calendar request（用戶直接話「add / move / cancel event」）
+> - `skills/producer/producer-playbook.md` §0 Phase 2（Push timeline to Calendar）
+> - `skills/producer/check-cut-saturation.md`（Shoot Date Planning Calendar list + Cut Saturation list）
+>
+> 如果係 generate full production timeline preview（Phase 1），唔係呢度——read `skills/producer/producer-playbook.md` 同 `skills/producer/generate-timeline.md`。
 
 ---
 
@@ -109,7 +114,16 @@ for path in sorted(glob.glob('context/holidays/hk-*.json')):
 
 ---
 
-## Rules（所有 standalone calendar ops 都要 run）
+## Rules（所有 calendar ops 都要 run — standalone + timeline Phase 2 都 mandatory）
+
+收到任何 calendar modification request → 先 run Rule 1 + 2 + 3，發現 trigger 就 flag 出嚟等用戶 confirm，唔好 silent 噉執行。
+
+| Use case | 例子 |
+|----------|------|
+| Document Generation push timeline milestones | Timeline_Template 產生嘅 cut delivery events |
+| 用戶手動 add event | 「J26015 1st cut 擺 5月10日」 |
+| 用戶 move / reschedule event | 「將 J26015 2nd cut 延遲 2 日」 |
+| 用戶 delete event | 「cancel 咗 J26008 個 VO recording」 |
 
 ### Rule 1: Weekday + HK Public Holiday Check
 
@@ -141,6 +155,10 @@ Shoot 係唯一 default exempt——唔需要 cross check weekend / holiday。
 - Warning message：
 
 > 「⚠️ [date] 已有 [N] 條片要交（[list]）。建議 push 去 [next day]——後期 team 需要 buffer 做 review。要繼續排落 [date]？」
+
+**Saturation threshold reasoning：** Post team 交片嗰日要等導演 review + cross-check 改嘢 + 即時 turnaround client feedback。四條已係邊緣，第五條落去就冇 buffer 走盞。
+
+詳細 escalation logic（Case 1 / 2 / 3 wording、Phase 2 trigger 時機）→ `skills/producer/check-cut-saturation.md`。
 
 ### Rule 4: Sohling Escalation
 

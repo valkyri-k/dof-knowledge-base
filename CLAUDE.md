@@ -366,8 +366,11 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 
 | 收到呢類 request | MUST read skill file | 觸發 keywords |
 |-----------------|---------------------|--------------|
-| **Phase 1+2**：Draft timeline（文字版 → Calendar push，停喺 push 完） | `skills/producer/producer-playbook.md`（full） | "draft timeline"、"幫 J26XXX 排 post schedule"、"generate timeline"、"排個 post schedule"、"production timeline" |
-| **Phase 3**：For-client doc gen（Calendar 已 push，transcribe 入 template） | `skills/producer/producer-playbook.md` §6 + §7 only | "出份 doc for J26XXX"、"出 timeline doc"、"將 Calendar 寫入 template"、"幫我出埋份 doc" |
+| **Phase 1**：Draft timeline 文字版 preview | `skills/producer/producer-playbook.md` (orchestrator) → §0 Phase 1 read `derive-milestones.md` + `generate-timeline.md` | "draft timeline"、"幫 J26XXX 排 post schedule"、"generate timeline"、"排個 post schedule"、"production timeline" |
+| **Phase 1 special**：Shoot date 未 lock，要 propose 候選日 | `skills/producer/producer-playbook.md` → `check-cut-saturation.md` Shoot Date Planning | "shoot date 仲未 confirm"、"想搵日拍"、"propose shoot date"、"揀日拍" |
+| **Phase 2**：Push to Calendar（Phase 1 confirm 後） | `skills/producer/producer-playbook.md` → §0 Phase 2 read `check-cut-saturation.md` + `calendar-ops.md` | "OK push 啦"、"push Calendar"、"可以 confirm" |
+| **Phase 3**：For-client doc gen（Calendar 已 push，transcribe 入 template） | `skills/producer/producer-playbook.md` → §0 Phase 3 read `generate-timeline-doc.md` | "出份 doc for J26XXX"、"出 timeline doc"、"將 Calendar 寫入 template"、"幫我出埋份 doc" |
+| **Revised schedule**：Sohling 傾完 reshuffle 後 regenerate `_r2` | `skills/producer/check-cut-saturation.md` Regenerate from Revised Schedule | "revised schedule"、"做 _r2"、"重 generate timeline" |
 | 單次 Calendar 操作（add / move / delete / reschedule 一個或幾個 event，**唔係** generate full timeline） | `skills/producer/calendar-ops.md` | "add event"、"move event"、"reschedule"、"delete event"、"排個 shoot"、"push 後"、"改下個 event"、"加個 milestone" |
 | Drive 純操作（search / read / copy / archive，冇 timeline 邏輯） | 直接執行，唔 load playbook | "搵 file"、"copy template"、"archive" |
 | Google API credentials / boilerplate | `technical/google-apis.md` | 需要 call Calendar API 或 Drive API 嘅 code |
