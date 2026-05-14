@@ -53,7 +53,7 @@
 - **[2026-04-12] J26016 HSUHK Batch 1 TBC removal** — 4 events 待移除 (TBC)（Apr 10/17/21/24）。Batch 1 post-pro planning 部分另見下。
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
 - **[2026-05-09] root-owned kb files recurring bug** — `scripts/timeline_backward.py` root-owned pattern（estimate: 由 Kary Claude Code local session 改 file 以 root process 跑）；dev-log `2026-05-09 14:53` logged；awaiting permanent fix decision。Cross-ref: `activity/kary-dev-log.md` 2026-05-09 14:53 entry
-- **[2026-05-10] J260BB Test Project 4 readiness gate pending** — New session re-triggered by Kary client schedule image. Mugi identified pure-post mixed mode (MG + footage, VO, Jun 15 deadline). Sent readiness gate questions: (1) client brief received when? (2) director-client alignment done / when? (3) materials (footage + graphics) ready when? (4) storyboard: DOF/client/none? Waiting Kary's answers before invoking script for Phase 1.
+- **[2026-05-10] J260BB Test Project 4 Phase 2 push pending** — Phase 1 draft sent: pure-post mixed, compressed pre-pro (DOF script 2+2 wd + storyboard 3+1 wd starting May 11), post kickstart May 21, 3-cut compressed feedback (1 wd/round), VO Jun 10–11, Final Output Jun 15 (hard). Waiting Kary confirm → push Calendar.
 
 ---
 
@@ -133,6 +133,15 @@ J260BB Test Project 4 pure-post timeline test。Kary post 咗 client schedule im
 
 ### 2026-05-10 morning session
 本 session 係一系列純 behavior test，冇實質 production change。J260AA Test Project 3 timeline test：完整跑咗 image parse → clarify questions → candidate propose script → full timeline script，Compressed-Edge-Case 3-cut output 正常（Shoot May 18，17 milestones，VO Jun 10-11，FO Jun 15）；Phase 1 draft sent，Kary 即確認 test only → ignored。另外兩個快速 test：J26062 cross-job mention（@Mugi update J26071 timeline）→ Mugi 正確 detect cross-job + ask clarify intent；J26062 reminder verb test → Mugi 正確 trigger reserved-verb clarification flow。三個 test 全部 pass，無需 log 任何 architectural decision 或 capability gap。
+
+### 2026-05-10 to 2026-05-14 session
+主要兩條工作線：J260BB timeline + J26062 calendar ops。
+
+J260BB 方面：Kary 回答咗 readiness gate questions（DOF 寫 script + storyboard we-make，footage 預計 May 18 week，Jun 15 hard deadline）。跑 `timeline_backward.py`（pure-post mixed, storyboard=we-make, kickstart May 18）→ extreme squeeze（2 wd available，deficit 8 wd）。用 May 11 kickstart 重跑 → 仍然 extreme squeeze（7 wd，deficit 3 wd）。Mugi 按 playbook 發 extreme squeeze escalation 只列 3 個 post-side propositions，**Kary 即時指出 Mugi 冇建議壓縮 pre-pro 時間**——呢個係 Mugi behavior gap（跟足 script output 但冇獨立思考 pre-pro lever）。重跑 script with compressed pre-pro（script 2+2 wd, storyboard 3+1 wd, kickstart May 11）→ 可行（status pure_post_mode，kickstart May 21，12 wd post window，3-cut compressed feedback）。Phase 1 draft sent，Phase 2 pending confirm。
+
+J26062 方面：Shooting Day 2 (Jun 2, all-day, 1-4pm in desc) ✅。然後 Kary 批量加 6 events：[C-1]/[C-2] 1st Cut May 21 + 2nd Cut May 27 + Final Output May 29（Orbis IG Reel，各有 video description）✅。Rules check 全 pass（三日都係 weekday，冇 holiday，saturation ≤ 3）。
+
+**Key learning**：Extreme squeeze escalation 唔應只 relay script 嘅 3 post-side propositions——pre-pro compression 係獨立 lever，即使 playbook 冇 explicit mention 都要主動 surface。
 
 ### 2026-05-08 afternoon/evening session
 今日兩個主要 work streams：job-list 擴展 + J26071 timeline。Job-list 方面：手動 patch 咗 J26071 Button InvestHK（Channel ID 1502220628424396821，Kary 係 Director），之後 Kary 自己喺 Airtable 做咗更大幅度更新——加 Director column + sync 晒所有 Current jobs，仲加咗 J26027 / J26075 / J26077 三條新 job，job-list 由 16 → 19 條。Kary 查 Airtable API 可用性：Mugi 只有 authenticate tools，冇 read/query tools，capability gap logged。
@@ -263,3 +272,7 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-09 | J26062 cross-job mention test: @Mugi update J26071 timeline | Detected cross-job, clarified intent → Kary: test only, ignore ✅ |
 | 2026-05-09 | J26062 reminder verb test: 「remind Kary to send 1st cut tmr」 | Triggered reserved-verb clarify flow → Kary: test only, ignore ✅ |
 | 2026-05-10 | J260BB Test Project 4 timeline re-request (new session, client schedule image, pure-post mixed, VO, Jun 15 deadline) | Identified pure-post mixed mode; multiple Discord reply attempts failed (wrong params `content`/`message_id`); CLAUDE.md updated mid-session with correct schema; finally sent readiness gate questions using `text`/`reply_to` ✅; waiting Kary answers |
+| 2026-05-10 | J260BB: Kary answered readiness gate (DOF script+storyboard, footage ~May18, Jun 15 hard) | Ran script (kickstart May18) → extreme squeeze 2wd; re-ran (May11) → extreme squeeze 7wd; sent escalation |
+| 2026-05-10 | J260BB: Kary direction — compress feedback + keep 3 rounds + 1st cut 3wd; pointed out Mugi missed pre-pro compression | Re-ran script with compressed pre-pro (script 2+2, storyboard 3+1) → feasible; Phase 1 draft sent ✅; Phase 2 pending |
+| 2026-05-12 | J26062 add Shooting Day 2 - Orbis Future Vision Leader, Jun 2 all-day, 1-4pm in desc | Created ✅ (colorId 11) |
+| 2026-05-14 | J26062 batch add 6 calendar events: [C-1]/[C-2] 1st Cut May 21, 2nd Cut May 27, Final Output May 29 (Orbis IG Reel) | All 6 created ✅; rules check pass (no holiday, no saturation) |

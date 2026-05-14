@@ -408,3 +408,9 @@ Status: open
 - **Root cause:** Mugi 用咗 `content` / `message_id` 作為 Discord reply tool 嘅 param names，但 Discord plugin 要求 `text` / `reply_to`（Telegram 嘅 convention 唔同 Discord 嘅 convention）。Plugin 收到 `text=undefined` → 內部 `chunk(undefined, ...)` crash。
 - **Fix:** Kary 更新 CLAUDE.md，加入「Discord reply tool — args 命名」section（`text` + `reply_to`，唔好用 `content` / `message_id`）。Mugi 即時 apply → 用正確 params 成功 send reply。
 - **Note:** Plugin code 已加 alias 做 safety net，但 schema-correct args 係 first choice。未來 Mugi 必須用 `text` / `reply_to` for Discord plugin replies。
+
+## [[2026-05-10]] — Extreme squeeze escalation 冇建議 pre-pro compression lever
+Type: bug
+Context: J260BB Test Project 4 timeline planning。Script 跑出 extreme squeeze，Mugi 按 playbook 發 escalation message，只列咗 script output 嘅 3 個 post-side propositions（壓縮 feedback / 減 cut rounds / 壓縮 1st cut）。
+Note: Kary 即時指出「你應該 suggest 埋壓縮 pre-pro 時間，點解你唔做？」——pre-pro compression（script write days / storyboard days / confirm window 壓縮）係獨立 lever，但 playbook extreme-squeeze template 只 surface post-side options，Mugi 冇獨立思考加第 4 個方向。Re-ran script with compressed pre-pro params → feasible（status: pure_post_mode）。
+Status: open
