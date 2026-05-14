@@ -134,6 +134,9 @@ J260BB Test Project 4 pure-post timeline test。Kary post 咗 client schedule im
 ### 2026-05-10 morning session
 本 session 係一系列純 behavior test，冇實質 production change。J260AA Test Project 3 timeline test：完整跑咗 image parse → clarify questions → candidate propose script → full timeline script，Compressed-Edge-Case 3-cut output 正常（Shoot May 18，17 milestones，VO Jun 10-11，FO Jun 15）；Phase 1 draft sent，Kary 即確認 test only → ignored。另外兩個快速 test：J26062 cross-job mention（@Mugi update J26071 timeline）→ Mugi 正確 detect cross-job + ask clarify intent；J26062 reminder verb test → Mugi 正確 trigger reserved-verb clarification flow。三個 test 全部 pass，無需 log 任何 architectural decision 或 capability gap。
 
+### 2026-05-14 morning session (null)
+Pre-clear 緊接上一個 session 再次觸發，中間冇新 work。Open threads 同上，冇新 entries。
+
 ### 2026-05-10 to 2026-05-14 session
 主要兩條工作線：J260BB timeline + J26062 calendar ops。
 
