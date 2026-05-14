@@ -6,6 +6,19 @@
 
 ---
 
+> ## 🔒 HOLIDAY VERIFY BAN（呼應 producer-playbook.md Hard Rule #1）
+>
+> 呢份 file 純粹 reference algorithm — **唔可以**用嚟做 hand-verification 嘅藉口。所有 backward chain math（HK holiday skip / push_to_weekday / back_wd）由 `scripts/timeline_backward.py` 唯一實作。
+>
+> 讀完呢度之後**禁止**：
+> - 「等我自己 verify 下個 chain 啱唔啱」嘅 inline Python
+> - `cat hk-*.json` 確認 milestone 撞唔撞 PH
+> - 重新計算 script 已 output 嘅 dates
+>
+> Script output = ground truth。如果 output 同直覺有差距 → reply 內部 reason，唔係 inline 重做。
+
+---
+
 ## Standard Milestone Set（Single Source of Truth）
 
 呢個係**完整 timeline 入面所有 milestones 嘅 canonical list**。Mugi 生成 timeline 時逐個 enumerate，唔可以揈做 date range，唔可以 silent 噉漏 push 邊個。

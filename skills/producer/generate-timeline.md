@@ -11,6 +11,19 @@
 
 ---
 
+> ## 🔒 HOLIDAY VERIFY BAN（呼應 producer-playbook.md Hard Rule #1）
+>
+> Script invocation 完成之後，**禁止**：
+> - `cat context/holidays/hk-*.json` 自己再 verify holiday list
+> - Inline Python 寫 `[h for h in holidays if ...]` 確認某一日係咪 PH
+> - 任何形式嘅「我再 check 下 25 May 係咪 Buddha」hand-verification
+>
+> Script `--holidays-dir` 已 auto-load `hk-*.json`，holiday push / Pattern L flag 全部由 script `warnings` array surface。Mugi 嘅 job 係**信 script output + parse JSON**，唔係 second-guess。
+>
+> 違反 = 純粹 token + time waste（典型 case：3 bash calls 揭 JSON schema + debug TypeError，5min+ 換零 information gain）。Script 唔啱 → 改 script，唔係 inline verify。
+
+---
+
 ## Step 1: Parse Request + Job List Lookup（zero Calendar API）
 
 **Phase 1 嚴格唔 query Calendar API。** Director / conflict / saturation 全部留 Phase 2 處理（見 producer-playbook.md §0 Phase 1 boundary + `check-cut-saturation.md`）。
