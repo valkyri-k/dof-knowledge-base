@@ -43,6 +43,30 @@ Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面�
 | **Session 開始** | Read `/home/node/kb/activity/<username>.md`——先掃 Open Threads，再睇最近 1-2 段 Session Summary，最後睇 Request Log table 揾具體日期 |
 | **Profile updates** | 發現用戶常見 request pattern → update Common requests 同 Notes |
 
+### Single-Update per turn 規則
+
+對**同一個 activity file**，**每個 conversation turn 只可以 Edit 一次**。將同 turn 入面所有要寫嘅嘢（Request Log row、Open Threads append、Profile draft、Session Summary）**喺 plan 階段 batch 埋**，最後一次 Edit 一齊寫入 file。
+
+**Why：**
+- 第二次 Edit 嘅 `old_string` 對住 first Edit 之後嘅 file state，容易 mismatch → retry → 多 turn round-trip
+- 每次 Edit 都產生一個 tool result（係成個 file diff），inflate context
+- File state 反覆變動會 invalidate Mugi 自己嘅 mental model
+
+**Apply 落邊：**
+- **Request Log automatic append** — 如果同 turn 仲要寫 Open Threads / Profile draft → 三樣嘢合併成 **一次** Edit
+- **Pre-Clear Sequence** — Step 1-5 全部寫去 user activity file 嘅嘢 batch 成 **一次** Edit；user activity + dev-log + gap-log 係三個 file，各自 1 Edit OK（跨 file 唔受限）
+- **In-Discord Profile Correction** — Step 2 + Step 3（edit Profile entry + add Evidence pointer）合併成 **一次** Edit
+- **Per-job + user activity 並行寫** — 兩個唔同 file，各自 1 Edit；唔係將兩個 file 嘅 update 合併
+
+**唔受限制：**
+- 唔同 file（user activity / per-job activity / dev-log / gap-log 各算各）
+- Read（read-only，唔改 state）
+- Bash（git ops、status check 等）
+
+**Failure mode（呢條 rule 防咩）：** Edit Request Log → 再 Edit Open Threads 用緊 stale snapshot → `old_string not found` → retry → 浪費 turn + context。
+
+---
+
 **Session Summary 點寫：**
 
 唔係淨係 list 做過咩（嗰啲喺 Request Log 已經有），而係**講 context / 點解 / decision / 學到咩**。例：
@@ -206,6 +230,7 @@ Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完�
 - **唔好做 destructive 嘢**——pre-clear sequence 全部係 append + commit + push，唔涉及 delete / overwrite。如果 commit / push 失敗（e.g. permission issue / merge conflict），**要 stop + 報告**，唔好嘗試自己 force-resolve
 - **Mugi 自己唔可以 `/clear`**——`/clear` 係 Claude Code 嘅 client-side command，要用戶自己打。Mugi 嘅責任係**準備好 disk state**，個 actual `/clear` 由用戶執行
 - **如果今晚冇實質 work**（純粹閒聊 / 一兩句 quick query），可以寫一句短 Session Summary（「今晚冇 production work，主要係 quick lookup」）然後仍然 commit + push——keep cadence consistent
+- **Step 1–5 寫 user activity file 嘅嘢 batch 成一次 Edit**——見上面 §Single-Update per turn 規則。User activity / dev-log / gap-log 係三個 file，跨 file 唔受限（各自 1 Edit 即可）。
 - **Profile promotion 永遠由 Kary 觸發**——Pre-Clear Sequence Step 5 只可以 draft 入 **Pending Profile Review** section（audit trail）。Promote 入 **User Practice Profile**（active runtime）只可以由 Kary 喺 Discord 即場 trigger（見 §In-Discord Profile Correction Protocol）。Mugi 主動 silent promote 屬於 violation。
 
 ### In-Discord Profile Correction Protocol
