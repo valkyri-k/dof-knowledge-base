@@ -1283,13 +1283,13 @@ def main():
                   "error": "pure-post mode requires --mode {animation|mixed|edit}"})
             return
         return run_pure_post(args, effective_kickstart, today, final_output,
-                             tail, has_vo, holidays, warnings,
+                             tail, has_vo, holidays, holiday_names, warnings,
                              dof_pre_pro_entries=dof_pre_pro_entries,
                              user_anchors=user_anchors)
 
     # ----- standard shoot+post branch -----
     return run_standard(args, effective_kickstart, today, final_output, tail,
-                        has_vo, has_style_frame, holidays, warnings,
+                        has_vo, has_style_frame, holidays, holiday_names, warnings,
                         dof_pre_pro_entries=dof_pre_pro_entries,
                         user_anchors=user_anchors)
 
@@ -1333,7 +1333,7 @@ def decide_cut_count(args, available_window: int) -> tuple[int, str | None, list
 
 
 def run_standard(args, effective_kickstart, today, final_output, tail,
-                 has_vo, has_style_frame, holidays, warnings,
+                 has_vo, has_style_frame, holidays, holiday_names, warnings,
                  dof_pre_pro_entries=None, user_anchors=None):
     """Standard shoot+post branch."""
     project = args.project
@@ -1390,7 +1390,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
         # which will re-derive shoot_date and may further reduce cut_count.
         return run_compressed_edge_case(
             args, effective_kickstart, today, final_output, tail,
-            has_vo, has_style_frame, holidays, warnings,
+            has_vo, has_style_frame, holidays, holiday_names, warnings,
             standard_pre_pro_earliest=None,
             dof_pre_pro_entries=dof_pre_pro_entries,
             user_anchors=user_anchors,
@@ -1420,7 +1420,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
         ]
         return run_compressed_edge_case(
             args, effective_kickstart, today, final_output, tail,
-            has_vo, has_style_frame, holidays, warnings,
+            has_vo, has_style_frame, holidays, holiday_names, warnings,
             standard_pre_pro_earliest=earliest,
             dof_pre_pro_entries=dof_pre_pro_entries,
             user_anchors=user_anchors,
@@ -1444,6 +1444,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
         compressed_style_frame_in_post=False,
         project=args.project,
         holidays=holidays,
+        holiday_names=holiday_names,
         warnings=warnings,
         cut_warnings=cut_warnings,
         dof_pre_pro_entries=dof_pre_pro_entries,
@@ -1452,7 +1453,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
 
 
 def run_compressed_edge_case(args, effective_kickstart, today, final_output, tail,
-                             has_vo, has_style_frame, holidays, warnings,
+                             has_vo, has_style_frame, holidays, holiday_names, warnings,
                              standard_pre_pro_earliest=None,
                              dof_pre_pro_entries=None, user_anchors=None):
     """Compressed-Edge-Case Branch: Shoot ASAP, sequential 1-2 wd pre-pro, default 3-cut compressed."""
@@ -1523,6 +1524,7 @@ def run_compressed_edge_case(args, effective_kickstart, today, final_output, tai
         compressed_style_frame_in_post=has_style_frame,
         project=project,
         holidays=holidays,
+        holiday_names=holiday_names,
         warnings=warnings,
         cut_warnings=cut_warnings,
         dof_pre_pro_entries=dof_pre_pro_entries,
@@ -1531,14 +1533,14 @@ def run_compressed_edge_case(args, effective_kickstart, today, final_output, tai
 
 
 def run_pure_post(args, effective_kickstart, today, final_output,
-                  tail, has_vo, holidays, warnings,
+                  tail, has_vo, holidays, holiday_names, warnings,
                   dof_pre_pro_entries=None, user_anchors=None):
     """
     Pure-post dispatcher (spec §11.5). Routes to mode runner.
     --mode in {animation, mixed, edit} is required; main() validates upfront.
     """
     return _run_pure_post_modes(args, effective_kickstart, today, final_output,
-                                tail, has_vo, holidays, warnings,
+                                tail, has_vo, holidays, holiday_names, warnings,
                                 dof_pre_pro_entries=dof_pre_pro_entries,
                                 user_anchors=user_anchors)
 
@@ -1546,7 +1548,7 @@ def run_pure_post(args, effective_kickstart, today, final_output,
 # ---------- Pure-post mode runner (spec §6 + §7 + §11.5) ----------
 
 def _run_pure_post_modes(args, effective_kickstart, today, final_output,
-                         tail, has_vo, holidays, warnings,
+                         tail, has_vo, holidays, holiday_names, warnings,
                          dof_pre_pro_entries=None, user_anchors=None):
     """
     Dispatcher for --mode animation/mixed/edit. Implements the 3-cut → 2-cut →
@@ -1702,6 +1704,9 @@ def _run_pure_post_modes(args, effective_kickstart, today, final_output,
         "warnings": warnings,
         "milestones": milestones,
         "user_anchors_applied": anchor_results,
+        "holidays_in_window": compute_holidays_in_window(
+            milestones, None, holidays, holiday_names
+        ),
     }
     emit(payload)
 
@@ -1877,10 +1882,37 @@ def emit_extreme_squeeze(args, effective_kickstart, final_output, shoot_date, ta
     })
 
 
+def compute_holidays_in_window(milestones: list, vo_window: dict | None,
+                               holidays: set, holiday_names: dict) -> list:
+    """Public holidays falling within the timeline's date range.
+
+    Window = earliest milestone date → latest milestone date, extended to cover
+    vo_window if present. Self-evidences that the script has loaded + applied
+    the HK holiday set, so downstream consumers don't need to verify externally.
+    """
+    if not milestones:
+        return []
+    iso_dates = [ms["date"] for ms in milestones]
+    start = date.fromisoformat(min(iso_dates))
+    end = date.fromisoformat(max(iso_dates))
+    if vo_window:
+        vo_start = date.fromisoformat(vo_window["start"])
+        vo_end = date.fromisoformat(vo_window["end"])
+        if vo_start < start:
+            start = vo_start
+        if vo_end > end:
+            end = vo_end
+    return [
+        {"date": hd.isoformat(), "name": holiday_names.get(hd, "Public Holiday")}
+        for hd in sorted(holidays) if start <= hd <= end
+    ]
+
+
 def build_output(*, status, scenario_label, effective_kickstart, final_output,
                  shoot_date, shoot_days, available_window, cut_count,
                  pre_pro, cut_chain, tail, has_vo, has_style_frame,
-                 compressed_style_frame_in_post, project, holidays, warnings,
+                 compressed_style_frame_in_post, project, holidays, holiday_names,
+                 warnings,
                  first_cut_start=None, cut_warnings=None,
                  dof_pre_pro_entries=None, user_anchors=None):
     """Assemble final milestones list and emit JSON."""
@@ -2024,6 +2056,9 @@ def build_output(*, status, scenario_label, effective_kickstart, final_output,
         "cut_warnings": cut_warnings or [],
         "extreme_squeeze_propositions": None,
         "user_anchors_applied": anchor_results,
+        "holidays_in_window": compute_holidays_in_window(
+            milestones, vo_window, holidays, holiday_names
+        ),
     }
     emit(payload)
 
