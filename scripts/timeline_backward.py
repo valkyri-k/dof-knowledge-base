@@ -501,9 +501,13 @@ def chain_spec_mixed() -> list:
           → rough_cut_fb             → Rough Cut FB end
           → rough_to_first_cut       → 1st Cut Submit  (end)
     """
+    # rough_cut_fb is a client feedback window — same nature as first/second/third_cut_fb.
+    # Category "cut_fb" (not "pre_pro") so it compresses together with the other client FBs
+    # under window pressure. Otherwise 1st/2nd/3rd Cut FB compress to 1 wd while Rough Cut FB
+    # stays at default 2 wd — inconsistent rule from the user's perspective.
     return [
         _gap("materials_to_rough_cut", "pre_pro", "mixed"),
-        _gap("rough_cut_fb",           "pre_pro", "mixed"),
+        _gap("rough_cut_fb",           "cut_fb",  "mixed"),
         _gap("rough_to_first_cut",     "pre_pro", "mixed"),
     ]
 

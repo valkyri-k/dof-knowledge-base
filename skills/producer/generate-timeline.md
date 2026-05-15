@@ -354,6 +354,8 @@ Chain script 用 `--senior-approval-fb2-wd` flag 控制 senior approval window�
 | Hardness = **soft** + chain output 顯示 senior approval window 被壓縮 | ❌ 唔好 silent forward。Surface「Final Output 可 push N 日換返標準 5 wd senior approval，定接受 squeeze？」（見 Pattern L） |
 | Hardness = **soft** + Final Output 比 user mark 嘅 date 遲 | ✅ OK，propose slip 係 first lever（健康做法）|
 
+**Client FB consistency check（HARD — pure-post `mixed` mode）：** 對住 chain output，mental verify「**所有** client feedback window 全部 ≤ 同一 max wd」。例如：1st Cut FB / 2nd Cut FB / 3rd Cut FB 壓到 1 wd 嗰陣，Rough Cut FB **唔可以**仍然 2 wd / 3 wd。如果見到 Rough Cut FB > 其他 Cut FB → ❌ Stop，唔可以 forward；script 出 bug（曾經有 `rough_cut_fb` mis-categorized 嘅 regression），escalate Kary debug，唔好 silent forward 個 inconsistent timeline 俾 user。Holiday/weekend 出現嗰陣，正確處理係 **將 Submit date 提前**（chain backward math 由 script handle），唔係 **將 FB Due 推後**。
+
 **Violation handling：**
 
 1. ❌ **絕對唔好** silent forward 個 timeline 俾 user 然後叫佢「OK 唔 OK」
