@@ -103,6 +103,169 @@ TAIL_VALUES = {
 MATERIALS_GATHERING_ESTIMATE_WD = 5
 
 
+# ---------- User anchor alias mapping (bug: user-supplied-dates-not-anchored) ----------
+#
+# User-facing alias → list of possible milestone `name` field values to overwrite.
+# Standard mode uses title-case `name` ("1st Cut", "Picture Lock"); pure-post mode
+# uses snake_case (`first_cut_submit`, `picture_lock`). For each alias we try each
+# target in order until one matches a milestone in the assembled list.
+#
+# Principle: user-supplied dates are LOCKED ANCHORS, not candidates. Apply after
+# default chain + push_milestones + sort; do NOT recompute surrounding milestones
+# in v1 (surrounding stay at script default — Mugi explains at prompt layer).
+
+ALIAS_TO_TARGETS = {
+    "script_received":      ["Script Received"],
+    "submit_video_flow":    ["Submit Video Flow"],
+    "submit_graphics_ref":  ["Submit Graphics Ref"],
+    "script_lock":          ["Script Lock"],
+    "confirm_graphics_ref": ["Confirm Graphics Ref"],
+    "submit_style_frame":   ["Submit Style Frame"],
+    "confirm_style_frame":  ["Confirm Style Frame"],
+    "shoot_date":           ["Shooting"],
+    "storyboard_submit":    ["storyboard_submit"],
+    "storyboard_confirm":   ["storyboard_confirm"],
+    "treatment_meeting":    ["treatment_meeting"],
+    "stb_sf_submit":        ["stb_sf_submit"],
+    "stb_sf_confirm":       ["stb_sf_confirm"],
+    "animatic_submit":      ["animatic_submit"],
+    "animatic_confirm":     ["animatic_confirm"],
+    "materials_ready":      ["materials_ready"],
+    "rough_cut_submit":     ["rough_cut_submit"],
+    "rough_cut_fb_due":     ["rough_cut_fb_due"],
+    "first_cut_submit":     ["first_cut_submit", "1st Cut"],
+    "first_cut_fb_due":     ["first_cut_fb_due", "Client FB 1"],
+    "second_cut_submit":    ["second_cut_submit", "2nd Cut"],
+    "second_cut_fb_due":    ["second_cut_fb_due", "Client FB 2"],
+    "third_cut_submit":     ["third_cut_submit", "3rd Cut"],
+    "third_cut_fb_due":     ["third_cut_fb_due", "Client FB 3"],
+    "picture_lock":         ["picture_lock", "Picture Lock"],
+    "vo_start":             ["vo_start"],
+    "vo_end":               ["vo_end"],
+    "color_sound":          ["color_sound", "Color/Sound/Subtitle"],
+    "final_output":         ["Final Output"],
+}
+
+
+def parse_user_anchors(arg_list: list) -> tuple[dict, list]:
+    """Parse repeatable --anchor name=YYYY-MM-DD args.
+
+    Returns (anchors_dict, warnings). anchors_dict = {alias: date_obj}.
+    Unknown alias / invalid date → warning, skip that entry.
+    """
+    anchors: dict = {}
+    warnings: list = []
+    for raw in arg_list or []:
+        if "=" not in raw:
+            warnings.append(f"⚠️ --anchor 格式錯誤（缺 `=`）：{raw}。Skip 咗。")
+            continue
+        name, _, datestr = raw.partition("=")
+        name = name.strip()
+        datestr = datestr.strip()
+        if name not in ALIAS_TO_TARGETS:
+            valid = ", ".join(sorted(ALIAS_TO_TARGETS.keys()))
+            warnings.append(
+                f"⚠️ --anchor `{name}` 唔識：可用 alias 包括 {valid}。Skip 咗。"
+            )
+            continue
+        try:
+            d = date.fromisoformat(datestr)
+        except ValueError:
+            warnings.append(f"⚠️ --anchor `{name}={datestr}` 唔係 valid ISO date。Skip 咗。")
+            continue
+        anchors[name] = d
+    return anchors, warnings
+
+
+def apply_anchors(milestones: list, anchors: dict, holidays: set) -> tuple[list, list, list]:
+    """Overlay user-supplied anchor dates onto already-assembled milestone list.
+
+    For each anchor:
+      - Find first milestone whose `name` matches one of ALIAS_TO_TARGETS[alias].
+      - Record original_default (the script-computed date about to be overwritten).
+      - Overwrite milestone["date"] + milestone["weekday"] with anchor date.
+      - Warn if anchor falls on non-wd (user knows, but surface it).
+
+    After all anchors applied, scan consecutive milestones (by new date) and warn
+    if any pair has 0 wd gap (date order swap or same-day where shouldn't be) —
+    this is the feasibility signal for prompt-layer to surface.
+
+    Returns (anchor_results, anchor_warnings, infeasibility_warnings). Caller is
+    responsible for re-sorting milestones after the overlay.
+    """
+    anchor_results: list = []
+    anchor_warnings: list = []
+    name_to_idx = {m_dict.get("name"): i for i, m_dict in enumerate(milestones)}
+    for alias, anchor_date in anchors.items():
+        target_idx = None
+        matched_name = None
+        for target in ALIAS_TO_TARGETS[alias]:
+            if target in name_to_idx:
+                target_idx = name_to_idx[target]
+                matched_name = target
+                break
+        if target_idx is None:
+            anchor_warnings.append(
+                f"⚠️ --anchor `{alias}` 喺今次 timeline 搵唔到對應 milestone "
+                f"(tried {ALIAS_TO_TARGETS[alias]})。Skip 咗。"
+            )
+            anchor_results.append({
+                "alias": alias,
+                "requested_date": anchor_date.isoformat(),
+                "applied_date": None,
+                "original_default": None,
+                "matched_milestone": None,
+                "status": "milestone_not_found",
+            })
+            continue
+        ms = milestones[target_idx]
+        original_default = ms["date"]
+        ms["date"] = anchor_date.isoformat()
+        ms["weekday"] = WEEKDAY_NAMES[anchor_date.weekday()]
+        ms["user_anchor"] = True
+        status = "applied"
+        if not is_wd(anchor_date, holidays):
+            anchor_warnings.append(
+                f"⚠️ --anchor `{alias}={anchor_date.isoformat()}` "
+                f"({WEEKDAY_NAMES[anchor_date.weekday()]}) 唔係 working day。"
+                f"User 講就跟，但留意可能撞 weekend / public holiday。"
+            )
+            status = "applied_non_wd"
+        anchor_results.append({
+            "alias": alias,
+            "requested_date": anchor_date.isoformat(),
+            "applied_date": anchor_date.isoformat(),
+            "original_default": original_default,
+            "matched_milestone": matched_name,
+            "status": status,
+        })
+    # Feasibility scan: iterate by business sequence (order field). Caller may
+    # re-sort by date after this call, so we MUST scan before that — `order` here
+    # still reflects business sequence, not chronological.
+    infeasibility_warnings: list = []
+    if anchor_results:
+        sorted_by_order = sorted(milestones, key=lambda x: x.get("order", 0))
+        for i in range(1, len(sorted_by_order)):
+            prev = sorted_by_order[i - 1]
+            cur = sorted_by_order[i]
+            if cur.get("user_anchor") or prev.get("user_anchor"):
+                if cur["date"] < prev["date"]:
+                    infeasibility_warnings.append(
+                        f"⚠️ Anchor 令 chain 出現倒序：business sequence {prev['name']} → "
+                        f"{cur['name']}，但 dates {prev['date']} > {cur['date']}。"
+                        f"User 嘅 anchor 同其他 default milestone 衝突，"
+                        f"surrounding milestones 仍係 script default 計，"
+                        f"可能要 user reconfirm 或者放鬆其中一邊。"
+                    )
+                elif cur["date"] == prev["date"] and cur.get("user_anchor") != prev.get("user_anchor"):
+                    infeasibility_warnings.append(
+                        f"⚠️ Anchor 令 chain 出現 0 wd gap：business sequence {prev['name']} → "
+                        f"{cur['name']} 落到同日 ({cur['date']})。"
+                        f"Min gap 可能未滿足，留意 production feasibility。"
+                    )
+    return anchor_results, anchor_warnings + infeasibility_warnings, infeasibility_warnings
+
+
 # ---------- Holiday loading ----------
 
 def load_holidays(holidays_dir: str) -> tuple[set, dict]:
@@ -828,6 +991,16 @@ def parse_args():
                         "mixed extreme 1-2; full animation min 3).")
     p.add_argument("--storyboard-confirm-wd", type=int, default=2,
                    help="Client Storyboard confirm turnaround (default 2 wd; range 1-3).")
+    # --- User-supplied milestone anchors (bug: user-supplied-dates-not-anchored) ---
+    # Treat user-supplied milestone dates as LOCKED ANCHORS, not candidates.
+    # Repeatable; format `name=YYYY-MM-DD`. Aliases see ALIAS_TO_TARGETS.
+    # Common: storyboard_submit, rough_cut_submit, first_cut_submit,
+    # first_cut_fb_due, second_cut_submit, second_cut_fb_due, third_cut_submit,
+    # third_cut_fb_due, picture_lock, color_sound, final_output, shoot_date.
+    p.add_argument("--anchor", action="append", default=[],
+                   help="User-supplied milestone anchor: name=YYYY-MM-DD (repeatable). "
+                        "Supplied dates are locked; surrounding milestones stay at "
+                        "script default. See ALIAS_TO_TARGETS for valid names.")
     return p.parse_args()
 
 
@@ -1095,6 +1268,11 @@ def main():
     )
     warnings.extend(dof_pre_pro_warnings)
 
+    # Parse user-supplied milestone anchors (bug: user-supplied-dates-not-anchored).
+    # Applied AFTER milestone list assembled in build_output / _build_pure_post_milestones.
+    user_anchors, anchor_parse_warnings = parse_user_anchors(args.anchor)
+    warnings.extend(anchor_parse_warnings)
+
     # Step B: backward tail
     tail = backward_tail(final_output, has_vo, holidays)
 
@@ -1106,12 +1284,14 @@ def main():
             return
         return run_pure_post(args, effective_kickstart, today, final_output,
                              tail, has_vo, holidays, warnings,
-                             dof_pre_pro_entries=dof_pre_pro_entries)
+                             dof_pre_pro_entries=dof_pre_pro_entries,
+                             user_anchors=user_anchors)
 
     # ----- standard shoot+post branch -----
     return run_standard(args, effective_kickstart, today, final_output, tail,
                         has_vo, has_style_frame, holidays, warnings,
-                        dof_pre_pro_entries=dof_pre_pro_entries)
+                        dof_pre_pro_entries=dof_pre_pro_entries,
+                        user_anchors=user_anchors)
 
 
 def decide_cut_count(args, available_window: int) -> tuple[int, str | None, list]:
@@ -1154,7 +1334,7 @@ def decide_cut_count(args, available_window: int) -> tuple[int, str | None, list
 
 def run_standard(args, effective_kickstart, today, final_output, tail,
                  has_vo, has_style_frame, holidays, warnings,
-                 dof_pre_pro_entries=None):
+                 dof_pre_pro_entries=None, user_anchors=None):
     """Standard shoot+post branch."""
     project = args.project
     shoot_days = max(args.shoot_days, 1)
@@ -1213,6 +1393,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
             has_vo, has_style_frame, holidays, warnings,
             standard_pre_pro_earliest=None,
             dof_pre_pro_entries=dof_pre_pro_entries,
+            user_anchors=user_anchors,
         )
     cut_chain, cut_warnings = walk_cut_chain_forward(
         shoot_date, chain_spec, compression["gaps"], cut_count, holidays
@@ -1242,6 +1423,7 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
             has_vo, has_style_frame, holidays, warnings,
             standard_pre_pro_earliest=earliest,
             dof_pre_pro_entries=dof_pre_pro_entries,
+            user_anchors=user_anchors,
         )
 
     # Build milestones list (standard path)
@@ -1265,13 +1447,14 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
         warnings=warnings,
         cut_warnings=cut_warnings,
         dof_pre_pro_entries=dof_pre_pro_entries,
+        user_anchors=user_anchors,
     )
 
 
 def run_compressed_edge_case(args, effective_kickstart, today, final_output, tail,
                              has_vo, has_style_frame, holidays, warnings,
                              standard_pre_pro_earliest=None,
-                             dof_pre_pro_entries=None):
+                             dof_pre_pro_entries=None, user_anchors=None):
     """Compressed-Edge-Case Branch: Shoot ASAP, sequential 1-2 wd pre-pro, default 3-cut compressed."""
     project = args.project
     shoot_days = max(args.shoot_days, 1)
@@ -1343,26 +1526,28 @@ def run_compressed_edge_case(args, effective_kickstart, today, final_output, tai
         warnings=warnings,
         cut_warnings=cut_warnings,
         dof_pre_pro_entries=dof_pre_pro_entries,
+        user_anchors=user_anchors,
     )
 
 
 def run_pure_post(args, effective_kickstart, today, final_output,
                   tail, has_vo, holidays, warnings,
-                  dof_pre_pro_entries=None):
+                  dof_pre_pro_entries=None, user_anchors=None):
     """
     Pure-post dispatcher (spec §11.5). Routes to mode runner.
     --mode in {animation, mixed, edit} is required; main() validates upfront.
     """
     return _run_pure_post_modes(args, effective_kickstart, today, final_output,
                                 tail, has_vo, holidays, warnings,
-                                dof_pre_pro_entries=dof_pre_pro_entries)
+                                dof_pre_pro_entries=dof_pre_pro_entries,
+                                user_anchors=user_anchors)
 
 
 # ---------- Pure-post mode runner (spec §6 + §7 + §11.5) ----------
 
 def _run_pure_post_modes(args, effective_kickstart, today, final_output,
                          tail, has_vo, holidays, warnings,
-                         dof_pre_pro_entries=None):
+                         dof_pre_pro_entries=None, user_anchors=None):
     """
     Dispatcher for --mode animation/mixed/edit. Implements the 3-cut → 2-cut →
     extreme-squeeze fallback ladder (spec §6 Q4 resolution) and routes
@@ -1478,6 +1663,18 @@ def _run_pure_post_modes(args, effective_kickstart, today, final_output,
         dof_pre_pro_entries=dof_pre_pro_entries,
     )
 
+    # Apply user-supplied anchors AFTER milestones assembled. Pure-post milestones
+    # are built in chronological order already; overlay then re-sort + re-order.
+    anchor_results: list = []
+    if user_anchors:
+        anchor_results, anchor_warnings, _infeas = apply_anchors(
+            milestones, user_anchors, holidays
+        )
+        warnings.extend(anchor_warnings)
+        milestones.sort(key=lambda x: x["date"])
+        for i, ms in enumerate(milestones, start=1):
+            ms["order"] = i
+
     # Past-milestone detection.
     earliest = pre_pro_dates["_chain_start"]
     if storyboard_dates is not None:
@@ -1504,6 +1701,7 @@ def _run_pure_post_modes(args, effective_kickstart, today, final_output,
         "scenario_label": f"Pure-post {mode} {cut_count}-cut",
         "warnings": warnings,
         "milestones": milestones,
+        "user_anchors_applied": anchor_results,
     }
     emit(payload)
 
@@ -1684,7 +1882,7 @@ def build_output(*, status, scenario_label, effective_kickstart, final_output,
                  pre_pro, cut_chain, tail, has_vo, has_style_frame,
                  compressed_style_frame_in_post, project, holidays, warnings,
                  first_cut_start=None, cut_warnings=None,
-                 dof_pre_pro_entries=None):
+                 dof_pre_pro_entries=None, user_anchors=None):
     """Assemble final milestones list and emit JSON."""
     milestones: list = []
     order = 1
@@ -1795,6 +1993,15 @@ def build_output(*, status, scenario_label, effective_kickstart, final_output,
     # Apply weekend/holiday push to all non-shooting milestones
     milestones = push_milestones(milestones, holidays, warnings)
 
+    # Apply user-supplied anchors AFTER push so user dates stay literal (user
+    # knows; we surface non-wd as warning but don't move). Sort happens below.
+    anchor_results: list = []
+    if user_anchors:
+        anchor_results, anchor_warnings, _infeas = apply_anchors(
+            milestones, user_anchors, holidays
+        )
+        warnings.extend(anchor_warnings)
+
     # Sort chronologically (stable: ties keep insertion order)
     milestones.sort(key=lambda x: x["date"])
     for i, ms in enumerate(milestones, start=1):
@@ -1816,6 +2023,7 @@ def build_output(*, status, scenario_label, effective_kickstart, final_output,
         "warnings": warnings,
         "cut_warnings": cut_warnings or [],
         "extreme_squeeze_propositions": None,
+        "user_anchors_applied": anchor_results,
     }
     emit(payload)
 

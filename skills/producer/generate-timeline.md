@@ -11,6 +11,24 @@
 
 ---
 
+> ## 🔒 ANCHOR PRIORITY RULE（**user-supplied dates = locked anchor，唔係 candidate**）
+>
+> User message 入面任何明確俾出嚟嘅 milestone date（e.g.「Storyboard 下星期一交」、「Rough cut May 20 Wed」、「1st cut 6 月 3 號 deliver」）= **hard anchor**。係 real-world client coordination 嘅 commitment，唔係 Mugi 可以 second-guess 嘅 preference。
+>
+> **Mugi 嘅 role：** Fill in the blanks + flag genuine infeasibility。**唔係** propose alternative date 反問 user「邊個好」、唔係 silent 用 script default 推翻 supplied date。
+>
+> **Workflow：**
+> 1. **Pre-step A.0**：parse user message 攞 supplied dates，逐個 pass 落 chain script 做 `--anchor name=YYYY-MM-DD`
+> 2. **Chain script 自動處理**：anchor overlay 落 milestone（literal date，唔 push weekend / holiday），surrounding milestones 由 script default 補
+> 3. **Anchor + default 衝突嗰陣：**
+>    - Chain feasible（min gap 滿足、冇 ordering inversion）→ **silently 用 supplied date**，唔向 user surface 做 warning
+>    - Chain infeasible（script return ordering inversion / 0 wd gap warning）→ Pattern M surface contradiction + impact，俾 3 個方向 user 揀
+> 4. **Warning framing：** focus 喺 **impact**（「你 May 20 嘅 Rough Cut 令 storyboard confirm 同 rough cut 之間只剩 0 wd」），**唔係** alternative date（「script 計到 May 22 你要唔要」）
+>
+> 違反 = trust erosion。Kary 已經講過嘅 date 又要再 confirm，浪費 turn + 顯得 Mugi 唔聽。Cross-skill principle，亦 apply 落 Calendar / Trello ops。
+
+---
+
 > ## 🔒 HOLIDAY VERIFY BAN（呼應 producer-playbook.md Hard Rule #1）
 >
 > Script invocation 完成之後，**禁止**：
@@ -185,6 +203,58 @@ Mandatory ask 嘅 Final Output hardness Q（shoot+post #6 / pure-post #6）唔�
 
 **唔好再 inline 寫 Python**。所有 backward-planning math（HK holidays load / kickstart push / backward tail / cut chain / pre-pro / Compressed-Edge-Case / Extreme-Squeeze / Pattern J / pure-post）已經由 `scripts/timeline_backward.py` encapsulate。Phase 1 只係 invoke script + parse JSON + 寫 reply。
 
+**Pre-step A.0（必須做 — invoke script 之前）：Parse user-supplied milestone anchors**
+
+跑 bash command 之前，**逐個 word scan user message** + Step 3 follow-up reply 入面有冇明確俾出嚟嘅 milestone date。**「明確俾出嚟」嘅 signal：**
+- 具體 date phrase：「Storyboard 下個星期一交（May 18 Mon）」、「Rough cut May 20 Wed 交」、「1st cut 6 月 3 號 deliver」
+- 任何 cut / milestone name + 具體日期（包括 weekday name、相對日期 e.g.「聽日」、「下個星期三」）
+- 由 client coordination 講出嚟嘅 date：「同 client 講好 storyboard 18 號交」/「客人嗰邊預 May 20 收 rough cut」
+
+**唔當 anchor 嘅 signal：**
+- 純粹 final delivery / shoot date hint（呢啲已經由 `--final-output` / `--shoot-date` cover）
+- 語氣詞「暫定」/「TBC」/「未 confirm」/「諗住」/「大概」= soft，**唔當 anchor**
+- 將來再 confirm 嘅 placeholder
+
+**對應 chain script alias（見 ALIAS_TO_TARGETS）：**
+
+| User 講嘅 milestone | `--anchor` alias |
+|---|---|
+| Script received / 收 script | `script_received` |
+| Submit video flow / video flow 交 | `submit_video_flow` |
+| Script lock / script 鎖定 | `script_lock` |
+| Storyboard submit / storyboard 交 | `storyboard_submit` |
+| Storyboard confirm | `storyboard_confirm` |
+| Style frame submit / SF 交 | `submit_style_frame` |
+| Shoot date / 拍攝日 | `shoot_date` |
+| Rough cut submit / rough cut 交 | `rough_cut_submit` |
+| Rough cut FB / rough cut feedback | `rough_cut_fb_due` |
+| 1st cut submit / 1st cut 交 | `first_cut_submit` |
+| 1st cut FB / Client FB 1 | `first_cut_fb_due` |
+| 2nd cut submit / 2nd cut 交 | `second_cut_submit` |
+| 2nd cut FB / Client FB 2 | `second_cut_fb_due` |
+| 3rd cut submit / 3rd cut 交 | `third_cut_submit` |
+| 3rd cut FB / Client FB 3 | `third_cut_fb_due` |
+| Picture lock | `picture_lock` |
+| VO start / VO 開始 | `vo_start` |
+| VO end / VO 結束 | `vo_end` |
+| Color / sound / subtitle | `color_sound` |
+| Final output / final delivery | `final_output`（罕用 — 通常用 `--final-output` flag） |
+
+每個 anchor 加多一個 `--anchor <alias>=YYYY-MM-DD` flag（repeatable）。**禁止 silent skip user-supplied date** — 攞唔到 alias mapping / 唔識點 map → 直接問 user clarify，唔好自己估「應該係 1st cut 啩」。
+
+**Chain script return `user_anchors_applied` array**（每個 anchor 一條），格式：
+```
+{alias, requested_date, applied_date, original_default, matched_milestone, status}
+```
+`status` 值：
+- `applied` — anchor 成功 overlay，literal date 已 lock 入 milestones
+- `applied_non_wd` — anchor 落 weekend / public holiday；User 講就跟，但 warnings list 會有 ⚠️ 提一提（reply 內 echo 原 warnings）
+- `milestone_not_found` — 今次 timeline 冇對應 milestone（e.g. pure-post mode 冇 shoot_date，但 user 仲叫 anchor shoot date）→ warnings list 會有 ⚠️。Reply 要 explicit 同 user 講「呢個 milestone 喺今次 timeline 冇出現，所以 anchor skip 咗」，唔好 hide
+
+**Anchor + chain default 衝突 handling（核心）：**
+- Chain script 出嚟嘅 `warnings` array 有 ordering inversion warning（"Anchor 令 chain 出現倒序" / "0 wd gap"）→ **Pattern M** surface（見 Step 5）
+- 冇 inversion warning → silently 用 supplied date 行 timeline，**唔向 user surface 做 confirmation question**（user 已經講過，唔需要再問）
+
 **Bash CLI invocation（standard shoot+post）：**
 
 ```bash
@@ -196,6 +266,22 @@ python3 scripts/timeline_backward.py \
   --has-vo true \
   --has-style-frame true \
   --project "J26XXX-Project-Name"
+```
+
+**Bash CLI invocation（with user-supplied anchors）：**
+
+```bash
+# User 講：「Storyboard 下星期一交 (May 18 Mon), Rough cut 下星期三 (May 20 Wed) 交」
+python3 scripts/timeline_backward.py \
+  --today 2026-05-15 \
+  --final-output 2026-06-15 \
+  --shoot-mode pure-post \
+  --mode mixed \
+  --storyboard we-make \
+  --has-vo true \
+  --project "J260BB Test Project 4" \
+  --anchor storyboard_submit=2026-05-18 \
+  --anchor rough_cut_submit=2026-05-20
 ```
 
 **Pure-post（無 shoot — 由 picture_lock backward 行）：**
@@ -253,6 +339,7 @@ python3 scripts/timeline_backward.py \
 - `--script-write-days N` / `--script-confirm-wd N` — DOF script writing wd / client confirm wd（defaults 3 / 3）
 - `--video-flow-write-days N` / `--video-flow-confirm-wd N` — DOF video flow drafting wd / client confirm wd（defaults 3 / 2）
 - `--storyboard-write-days N` / `--storyboard-confirm-wd N` — DOF storyboard production wd / client confirm wd（defaults 5 / 2）
+- `--anchor <alias>=YYYY-MM-DD` — **User-supplied milestone anchor**（repeatable）。Supplied date locked literal（chain 唔 push weekend / holiday），surrounding milestones 仍由 script default 計。見 Pre-step A.0 alias table。Apply 之後 chain 自動 feasibility scan，inversion / 0 wd gap 會出 ⚠️ warning（觸發 Pattern M）。
 
 **Script 輸出 1 行 JSON。Top-level keys：**
 
@@ -302,6 +389,10 @@ extreme_squeeze_propositions: [{id, name, detail}, ...] | null（status="extreme
 - ❌ **Script return `--storyboard required` / `--mode required` error 嗰陣 silent retry 加 default flag**（e.g. 自動補 `--storyboard none`）— 必須 stop 返去問 user，唔好自己揀
 - ❌ **Reply 入面將 Rough Cut（mixed）/ Animatic（animation）描述為 optional / "OK 保留，唔 OK skip"** — 呢個係 mandatory client alignment stage，唔向 user offer skip
 - ❌ **Storyboard Submit / Animatic Submit / 任何 Production 類 milestone date < effective_kickstart silent forward** — script 會 emit「Earliest milestone < kickstart」warning 然後照返結果，**Pre-step B common-sense ordering check 必須截住**。Storyboard 唔可能早過 script ready（要 script draft 先做到 breakdown），呢類 ordering violation 一定要 escalate（Pattern K），唔可以照 echo 個 invalid date 俾 user 然後叫佢「OK 唔 OK」
+- ❌ **User-supplied milestone date 當 candidate 同 script default compare 反問 user**（最典型：「script 推 May 13，你話 May 18，你想用邊個？」）— User 講過嘅 date = hard anchor，**必須**喺 Pre-step A.0 parse 出嚟做 `--anchor` flag，唔可以變成「verification question」。違反 = trust erosion + 浪費 turn。見 Anchor Priority Rule 同 Pattern M
+- ❌ **Pre-step A.0 漏 scan user-supplied dates，跑 chain 之後先發現 default 同 user 講嘅唔同**——script default 跑出嚟之後先「醒起」user 講過 supplied date，已經太遲。Anchor parsing 必須喺 invoke script **之前**做晒
+- ❌ **Anchor 同 default 唔同但 chain feasible，仍然問 user「邊個好」** — feasible 就 silently 用 supplied，呢個係 design intent，唔係 oversight
+- ❌ **Reply warning framing 用「alternative date」做 focus**（e.g.「script 計到 May 22 你要唔要用」）— 應該 focus 喺 **impact**（「你 May 20 嘅 Rough Cut 令 storyboard confirm 同 rough cut 之間只剩 0 wd」）
 
 **Pre-step B（必須做）：Pre-flight Self-Check（mental，唔 echo）**
 
@@ -480,4 +571,60 @@ Chain script 嘅 backward math 唔識 model「real-world prerequisite」（e.g. 
 3. ✅ Hardness = hard 而且 chain 用咗 `--senior-approval-fb2-wd N` 嗰陣，reply 必須有 client pre-arrangement explicit ask
 4. ✅ 等 user confirm client + senior 都 pre-arrange 到先 Phase 2 push Calendar
 
-**核心原則：** Mugi 嘅 default = 保守 + 透明。撞到 ambiguous case 直接 surface 係 feature，唔係 bug。
+**Pattern M — User-supplied anchor handling（silent honor + infeasibility surface）：**
+
+User message 入面有 supplied milestone date 嘅情況（已 Pre-step A.0 parse + pass `--anchor`），chain script 出嚟之後分兩個分支處理：
+
+**M.1 — Anchor feasible（chain 冇 inversion / 0 wd gap warning）：**
+
+✅ **Silently honor** supplied date 行 timeline，**唔好**：
+- ❌ 反問 user「script 推 [date X]，你話 [date Y]，你想用邊個？」
+- ❌ Reply 入面 echo「呢個 milestone 你 supplied 嘅 date 同 script default 唔同，我用咗你嘅」做 confirmation
+- ❌ 將 supplied date 列做 "candidate" 同 script default 並排比較
+
+✅ **應該：** Reply 直接照 milestones list 出嚟。如果想 acknowledge user 講過嘅 anchor，可以喺 timeline summary 開頭一句 acknowledge 一吓：
+
+> 「跟你講嘅日子排（Storyboard May 18, Rough Cut May 20），其他 milestone 由 chain 補返……」
+
+之後就照 standard reply convention 行（milestones list + warnings + cut_warnings + 結尾 push Calendar 問）。
+
+**M.2 — Anchor infeasible（chain `warnings` array 有 "Anchor 令 chain 出現倒序" / "0 wd gap" warning）：**
+
+❌ **唔好** silent echo invalid timeline 俾 user。
+❌ **唔好** 將 warning 隱埋喺 warnings list 一條 ⚠️。
+❌ **唔好** reply 用 alternative date 做 focus（「script 計到另一個 date 你要唔要？」）。
+
+✅ **Reply 用 user-facing 講法，focus 喺 impact**：
+
+> 「<@director> 你嘅 [milestone A]（[date A]）令 chain 出現問題——[milestone B]（[date B，script default 計）同 [milestone A] 之間得 [N] wd / 0 wd / 出現倒序，[concrete impact，e.g.「storyboard confirm 同 rough cut 之間連 0 wd 都冇，post team 冇時間 production」]。
+>
+> 你 [milestone A] 嘅 date 我會照跟，但要決定點 resolve 個 contradiction，三個方向：
+>
+> (a) Push [milestone B] 去 [feasible date X]（重新 reverse-fit chain，[milestone A] 保持你 supplied 嗰日）
+> (b) Push [milestone A] 後 N 日去到 [date]（保留 chain default ordering）
+> (c) Cut scope / 換 mode（e.g. cut storyboard、由 3 cut 變 2 cut）
+>
+> 揀邊樣？」
+
+**核心 behavior：**
+1. **Anchor 永遠係 hard commitment** — Reply 嘅 framing 永遠係「你 supplied date 我跟」，唔係「邊個 date 好啲」
+2. **Impact framing 取代 alternative framing** — 講「你 supplied date 令 X 變唔可行」，唔係「我計到另一個 date 你要唔要」
+3. **3 個方向必須包 push other milestone**（option a）做第一選擇——chain default 係 fill-the-rest，user supplied 係 anchor，default 應該讓步
+4. ❌ 唔好 Phase 2 push Calendar——等 user 揀完 (a)/(b)/(c) 先 re-run chain
+5. ✅ User 揀 (a) → re-run chain with 同樣 `--anchor` flag，window 可能要其他 lever（e.g. `--senior-approval-fb2-wd`）。揀 (b) → update `--anchor` 嘅 date。揀 (c) → update mode flags
+
+**Edge case — anchor 落 weekend / public holiday（`status: applied_non_wd`）：**
+
+User 講就跟（literal date 唔 push），但 warnings list 會有「⚠️ --anchor `X=YYYY-MM-DD` (Sat/Sun/PH) 唔係 working day」——reply **照原樣 echo** 呢條 warning 俾 user 留意，**唔好**自動 silently push 去下一個 wd（user 講過就係 user intent）。
+
+**Edge case — anchor alias 喺 timeline 搵唔到對應 milestone（`status: milestone_not_found`）：**
+
+通常因為 mode mismatch（e.g. user 講 shoot date 但跑緊 pure-post mode）。Reply 要明確同 user 講：
+
+> 「[Alias，e.g. shoot date] 喺呢個 [mode，e.g. pure-post] timeline 冇出現（[reason，e.g. 純後期冇拍攝 milestone]），所以 anchor skip 咗。如果你想保留呢個 date，要 confirm 我哋係咪用啱 mode。」
+
+唔好 hide 喺 warnings list，亦唔好自己估「應該係 picture lock 啩」silent reassign。
+
+---
+
+**核心原則：** Mugi 嘅 default = 保守 + 透明。撞到 ambiguous case 直接 surface 係 feature，唔係 bug。**User-supplied operational details（including milestone dates）永遠係 anchor，唔係 candidate**——Mugi 嘅 job 係 fill in the blanks + flag genuine infeasibility，唔係 second-guess。
