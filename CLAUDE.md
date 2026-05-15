@@ -156,6 +156,26 @@ Op-level rules + boilerplate code 喺 `skills/producer/calendar-ops.md`。撞到
 
 ---
 
+## Discord reply tool — args 命名（必須跟）
+
+Reply tool 嘅 input field name 同 Telegram plugin 唔同——你**必須**用 Discord 嘅 schema：
+
+| ✅ 正確 | ❌ 錯（Telegram 嘅 convention，唔好用） |
+|---|---|
+| `text` | `content` |
+| `reply_to` | `message_id` |
+
+**完整正確 example**（reply 一個 message）：
+```json
+{"chat_id": "1502530777659867157", "text": "你個 message 內容", "reply_to": "1503007058327506955"}
+```
+
+**症狀如果用錯**：plugin 收到 `text=undefined` → 內部 `chunk(undefined, ...)` crash → tool result 返 `reply failed: undefined is not an object (evaluating 'text.length')`。Discord 用戶完全收唔到 reply，agent 要等 timeout 先知。
+
+**Origin**：呢個 case 喺 [[2026-05-10]] confirmed——Mugi agent 連續幾次 reply 都用咗 `content`/`message_id`，全部 silent fail，Kary 喺 Discord 收唔到任何回覆。Plugin code 已加 alias（接受兩種 field name）做 safety net，但唔好依賴 — schema-correct args 永遠係 first choice。
+
+---
+
 ## Reminder Verb Reservation
 
 `remind` / `提醒` / `醒返` / `remind me` / `remind [name]` 係 **reserved verb**，畀未來嘅 real reminder feature（仲未 build）。
