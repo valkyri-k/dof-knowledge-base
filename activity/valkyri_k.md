@@ -54,6 +54,8 @@
 - **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
 - **[2026-05-09] root-owned kb files recurring bug** — `scripts/timeline_backward.py` root-owned pattern（estimate: 由 Kary Claude Code local session 改 file 以 root process 跑）；dev-log `2026-05-09 14:53` logged；awaiting permanent fix decision。Cross-ref: `activity/kary-dev-log.md` 2026-05-09 14:53 entry
 - **[2026-05-14] J260BB Test Project 4 Phase 2 push pending** — Phase 1 draft sent (new round with Kary's committed dates): pure-post mixed, kickstart 15 May (assets + script confirm), storyboard submit 18 May, rough cut submit 20 May, 3-cut all-compressed (1 wd FB each), VO Jun 10–11, Final Output Jun 15 (hard). Pattern L warning issued (client must pre-arrange same-day/next-day feedback). Waiting Kary confirm → push Calendar.
+- **[2026-05-15] J260CC Test Project 5 Phase 2 push pending** — Phase 1 draft sent: pure-post mixed, no filming, kickstart 15 May (materials + script confirm today), rough cut anchor 20 May, 3-cut compressed (all FB 1 wd), VO Jun 10–11, Final Output Jun 15. Pattern L warning issued. Waiting Kary confirm → push Calendar.
+- **[2026-05-15] Trello member assignment — Sohling's sync jobs** — Calendar→Trello sync 跑完，但 J26062 Orbis、J26070 EMSD Farewell May、J26071 InvestHK 三個 job 嘅新 cards 冇 assign member（Sohling 未 specify 負責人）。等 Sohling confirm 邊個人處理先 assign。
 
 ---
 
@@ -161,6 +163,19 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 
 ### 2026-05-14 afternoon quick session
 短 session，兩個 interactions：J26062 Timeline Schedule thread test message → auto-context 識別 reply；J26071 Submit Storyboard May 18 → Calendar event created (colorId 5 Banana，Mon weekday，唔係假期)。冇 architectural decision，冇 open threads 新增。
+
+### 2026-05-15 afternoon session
+今日兩條主線：J260CC timeline Phase 1 + Sohling 批量 Trello sync。
+
+**J260CC Test Project 5**：Kary post 咗 client schedule image（no filming，motion graphics + footage edit，VO，hard deadline Jun 15）。Kary 補充：DOF 今日收 footage + assets，script confirm 預計今日，rough cut anchor May 20。Storyboard 係 internal progress update only，唔需要 milestone。Script 已 invoke `timeline_backward.py`（pure-post mixed，storyboard=none，kickstart May 15，rough_cut_submit=2026-05-20，has-vo=true，senior-approval-fb2-wd=2，deadline Jun 15）。Output：15 milestones（Materials Ready May 15 → Final Output Jun 15），3-cut all-compressed（all FB 1 wd），VO Jun 10–11。Pattern L triggered（window 16 wd，all client FBs forced to 1 wd）——must pre-arrange client same-day/next-day feedback。Phase 1 draft sent，Phase 2 pending confirm。
+
+**Sohling Trello sync（4 requests）**：
+1. HSUHK Batch 2 Calendar→Trello sync（Yik + Max）：scan J26016 Calendar events，compare vs existing Trello list，create missing cards。
+2. EMSD GWIN Long version Calendar→Trello sync（Keith + Katy）：J26063 events → Trello cards。
+3. Full job list Calendar→Trello comparison：掃 ALL current jobs，identify jobs 冇 Trello list / missing cards，batch create。J26062/J26070/J26071 有 cards created 但無 member 因 Sohling 未 specify。
+4. Kary post-pro calendar gap check：識別 current jobs 喺 Calendar 冇 post-production milestone。
+
+Pre-Clear triggered by Kary 講 "clear"。
 
 ---
 
@@ -291,3 +306,9 @@ OCR dispatch 方面：今日成功執行兩輪 TEST dispatch（第一輪只有 t
 | 2026-05-14 | J26062 Timeline Schedule thread test message | Auto-context detected J26062 Orbis；Discord reply sent ✅ |
 | 2026-05-14 | J26071 add Submit Storyboard May 18 to Calendar | Created event (colorId 5 Banana, Mon weekday, no holiday) ✅ |
 | 2026-05-14 | J260BB Test Project 4 Phase 1 timeline (new round: client schedule image, pure-post mixed, VO, storyboard 18 May, rough cut 20 May, hard deadline 15 Jun) | Phase 1 draft sent: 15 milestones (kickstart 15 May → FO 15 Jun, 3-cut, all cut/FB windows 1-2 wd, VO Jun 10–11); 25 May 佛誕 holiday handled; Pattern L warning issued; Phase 2 pending Kary confirm |
+| 2026-05-15 | J260CC Test Project 5 Phase 1 timeline (client schedule image, pure-post mixed, no filming, VO, hard deadline Jun 15, rough cut anchor May 20) | Phase 1 draft sent: 15 milestones (kickstart May 15 → FO Jun 15, 3-cut, all FB 1 wd compressed, VO Jun 10–11); Pattern L warning issued; Phase 2 pending Kary confirm |
+| 2026-05-15 | Sohling: HSUHK Batch 2 Calendar→Trello sync (Yik + Max) | Scanned J26016 Calendar; created/updated missing Trello cards with Yik + Max members ✅ |
+| 2026-05-15 | Sohling: EMSD GWIN Long version Calendar→Trello sync (Keith + Katy) | Scanned J26063 Calendar; created Trello cards with Keith + Katy members ✅ |
+| 2026-05-15 | Sohling: full job list Calendar→Trello comparison + sync | Compared all current jobs; created missing cards; J26062/J26070/J26071 cards created without member (Sohling 未 specify) — open thread |
+| 2026-05-15 | Kary: post-pro calendar gap check (which current jobs 冇 post-pro milestones in calendar) | Identified jobs with no post-production Calendar events; reported list to Kary |
+| 2026-05-15 | Pre-Clear triggered by Kary "clear" | Running Pre-Clear Sequence ✅ |
