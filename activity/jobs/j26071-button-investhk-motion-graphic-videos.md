@@ -198,3 +198,7 @@ last_updated: [[2026-05-10]]
 ### [[2026-05-10]] — Project Overview pilot manual write + schema lock
 - **Kary 做**：Phase A pilot — paste 完整 chat `dof-project-overview` skill output（`InvestHK_CE_Reception_Project_Overview_2026-05-08.md`）。Mid-pilot reframe：Working Timeline 唔再係 SoT（Calendar 先係），split 出 Hard Deadlines + Project Constraints 兩個 immutable knowledge sub-sections。
 - **Mugi 做**：Wrote `## Project Overview`（verbatim PO + 6 operational sub-sections：Hard Deadlines / Project Constraints / Working Timeline / Current Phase / Open Issues / Recent Material Decisions）。Schema locked into KB CLAUDE.md `## Per-Job Project Overview Section`。Mandatory extraction spec（Hard Deadlines + Constraints categories with concrete user-facing question examples）寫入 KB CLAUDE.md + vault idea file。
+
+### [[2026-05-14]] afternoon — Add Submit Storyboard to Calendar
+- **Kary 問**：Add Submit Storyboard May 18 to Calendar
+- **Mugi 做**：Rules check pass (Mon, no holiday)；created `Submit Storyboard - InvestHK MG` May 18 (colorId 5 Banana) ✅
