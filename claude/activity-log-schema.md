@@ -153,6 +153,55 @@ Conversation context 越長，每 turn 嘅成本 scale 緊 O(N²)——reload + 
 
 Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完之後返嚟睇呢段，夠唔夠 rebuild context？**」 唔夠 → 加多啲 narrative；夠 → 唔好為咗詳細而塞 noise。
 
+### Rotation & Archive Rules
+
+Activity file 越長，Pre-Clear 同任何 trigger-based read 嘅 cost 都越貴。`Request Log` 同 `Recent Session Summaries` 兩個 section append-only，最易脹。以下 threshold 一過就 archive 落 monthly file，主 file 只保留 active window。
+
+**Archive file naming：** `/home/node/kb/activity/archive/<username>_YYYY-MM.md`
+（一個 user 一個月一個 file；e.g. `valkyri_k_2026-04.md`）
+
+**Threshold + 做法：**
+
+| Section | Threshold（whichever first） | Archive 做法 | 主 file 保留 |
+|---|---|---|---|
+| **Request Log** | > 50 entries 或最舊 entry > 60 日 | Cut 最舊一個 calendar month 嘅 rows，append 落 `<username>_YYYY-MM.md` Request Log section | 最近 50 entries / 60 日內 |
+| **Recent Session Summaries** | > 10 summaries | Cut 最舊 summaries（一次 cut 一個 calendar month），append 落同一 archive file Session Summaries section | 最近 10 summaries |
+
+**Monthly collapse format**（archive file 開頭加，俾將來 quick scan）：
+
+```markdown
+# <username> — YYYY-MM archive
+
+> Archived from `activity/<username>.md` on [[YYYY-MM-DD]]
+
+## Month summary
+<2-3 句 narrative：呢個月主要做咗咩 / surface 咗咩 pattern / key decisions>
+
+## Recent Session Summaries (archived)
+<原樣 paste 嗰 month 嘅 session summaries>
+
+## Request Log (archived)
+| Date | Request | Outcome |
+|------|---------|---------|
+<原樣 paste 嗰 month 嘅 rows>
+```
+
+**Trigger 點**（邊個時候 run rotation）：
+
+- **Pre-Clear Sequence Step 6 commit 之前**——Mugi 量度主 file 兩個 section size，超 threshold 就先 rotate 再 commit。Rotation + Pre-Clear 兩件事 batch 入同一個 commit，message 加「+ rotate <username> YYYY-MM」。
+- **In-Discord Profile Correction Protocol 唔 trigger rotation**——嗰 path 為咗即時 deploy active Profile，唔應該夾 unrelated work。
+
+**Section 保留 vs Archive 嘅唔郁部分：**
+
+- `Profile`、`User Practice Profile`、`Pending Profile Review`、`Open Threads` 四個 section **永遠唔 archive**——呢啲係 live state，唔係歷史。
+- Archive file 一旦寫咗，視為 read-only；新 rotation 開新 month file，唔 amend 舊 file。
+
+**第一次 backfill：**
+
+Existing users 主 file 已經超 threshold 嘅，**唔需要急住一次過 rotate 哂**——Pre-Clear Sequence 下次 trigger 嗰陣 incrementally rotate 一個 month 就夠。Long file 入面個別 entry value 唔大，可以一個 month 一個 month 慢慢 archive。
+
+**Single-Update per turn 互動：** Rotation Edit（主 file cut + archive file append）= 兩個唔同 file，各 1 Edit，唔受 single-update 限制。但主 file rotation 同 Pre-Clear 嘅 5-section update **要 batch 成同一個 Edit**（cut + append section update 一齊寫）。
+
 ### Pre-Clear Sequence（用戶話「clear」嗰陣 Mugi 自動做嘅嘢）
 
 **Trigger keywords：** 用戶（任何 user，但**通常係 Kary**）講以下任何一句 → Mugi 自動 run 整套 pre-clear sequence：
@@ -194,7 +243,7 @@ Mugi 嘅責任：寫 activity log 嘅時候要諗「**將來嘅自己 clear 完�
    - 個人 admin preference / 涉及第三方人嘅 context → `proposed_visibility: kary-only`
 
    **永遠唔好** silent self-promote 入 active **User Practice Profile**——只能 draft 入 Pending Profile Review。Profile promotion 由 Kary 喺 Discord 直接觸發（見 §In-Discord Profile Correction Protocol），唔再經 Claude Code batch review。
-6. **Commit + push** — Stage 全部相關 file，single commit（message 簡述今晚主題），push 上 GitHub。Commit message format 跟現有 convention。
+6. **Rotation check + Commit + push** — Commit 之前先 check 主 activity file 嘅 `Request Log` 同 `Recent Session Summaries` section size。超 threshold（> 50 entries / > 60 日 / > 10 summaries）→ 先 rotate 再 commit，rotation + pre-clear batch 入同一個 commit，message 加「+ rotate <username> YYYY-MM」。唔超 threshold → 直接 commit。Stage 全部相關 file，single commit（message 簡述今晚主題），push 上 GitHub。Commit message format 跟現有 convention。詳細 rotation 做法見 §Rotation & Archive Rules。
 7. **Report 俾用戶** — 一個簡潔 message。**Mandatory fields，每次都要齊**（即使 value 係 0 或 skip）：
 
    1. `Commit <hash> pushed`
