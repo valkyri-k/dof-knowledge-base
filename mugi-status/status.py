@@ -42,6 +42,7 @@ def _is_mugi_running() -> bool:
         return False
 
 IDLE_AFTER_SECONDS = 120
+NEW_SESSION_GRACE_SECONDS = 120  # treat new non-Discord session as "no session" for this long
 
 
 def _humanize_age(seconds: float) -> str:
@@ -70,6 +71,19 @@ def find_current_discord_session() -> str | None:
         if _file_has_discord(path):
             return path
     return None
+
+
+def _find_newest_jsonl() -> tuple[float, str] | None:
+    """Return (mtime, path) of the most recently modified jsonl regardless of content."""
+    best: tuple[float, str] | None = None
+    for path in glob.glob(PROJECTS_GLOB):
+        try:
+            mtime = os.path.getmtime(path)
+        except OSError:
+            continue
+        if best is None or mtime > best[0]:
+            best = (mtime, path)
+    return best
 
 
 def _file_has_discord(path: str) -> bool:
@@ -239,7 +253,18 @@ def build_status() -> dict[str, Any]:
             "generated_at": datetime.now(timezone.utc).isoformat(),
         }
 
+    now_ts = time.time()
     session_path = find_current_discord_session()
+
+    # If a newer non-Discord session was created within the grace window, don't
+    # show stale data from the old Discord session — treat it as "no session yet".
+    if session_path is not None:
+        newest = _find_newest_jsonl()
+        if newest is not None:
+            newest_mtime, newest_path = newest
+            if newest_path != session_path and newest_mtime > now_ts - NEW_SESSION_GRACE_SECONDS:
+                session_path = None
+
     if session_path is None:
         return {
             "session": None,
@@ -256,7 +281,6 @@ def build_status() -> dict[str, Any]:
         }
 
     entries = parse_entries(session_path)
-    now_ts = time.time()
     return {
         "session": {
             "id": os.path.basename(session_path).replace(".jsonl", ""),
