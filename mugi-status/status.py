@@ -12,6 +12,7 @@ from __future__ import annotations
 import glob
 import json
 import os
+import subprocess
 import time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -28,6 +29,17 @@ PORT = int(os.environ.get("PORT", "8080"))
 AUTH_TOKEN = os.environ.get("MUGI_STATUS_TOKEN", "").strip()
 
 NOISE_TYPES = {"system", "queue-operation", "file-history-snapshot"}
+
+
+def _is_mugi_running() -> bool:
+    """Return True if tmux 'main' session exists (Mugi process is live)."""
+    try:
+        result = subprocess.run(
+            ["tmux", "ls"], capture_output=True, text=True, timeout=3
+        )
+        return result.returncode == 0 and "main" in result.stdout
+    except Exception:
+        return False
 
 IDLE_AFTER_SECONDS = 120
 
@@ -218,6 +230,15 @@ def count_replies_today(entries: list[dict[str, Any]]) -> int:
 
 
 def build_status() -> dict[str, Any]:
+    if not _is_mugi_running():
+        return {
+            "session": None,
+            "activity": {"verb": "offline", "label": "⛔ offline", "age_seconds": None},
+            "tokens": {"input": 0, "cache_creation": 0, "cache_read": 0, "output": 0, "total": 0},
+            "replies_today": 0,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
+
     session_path = find_current_discord_session()
     if session_path is None:
         return {
