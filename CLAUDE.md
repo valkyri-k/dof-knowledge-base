@@ -398,6 +398,7 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 | **Multi-channel dispatch v2 — image + tag**（OCR flow）| `skills/producer/multi-channel-dispatch-ocr.md` | user post **image + tag `@agent-Mugi`** 喺 home base（有冇 caption 都 trigger）、"派任務 from 呢張圖"、"睇張圖派落 channel" |
 | Trello 操作（create card、assign、dates、labels、checklists、move） | `skills/trello/trello-agent.md` | "Trello"、"card"、"Planyway"、"assign"、"checklist"、"J26XXX 入面"、"postpro board"、"加張 card"、"改 due date"、"move 去"、"mark complete" |
 | Calendar → Trello sync（將 calendar events 批量轉成 Trello cards） | `skills/trello/trello-agent.md` | "sync calendar to trello"、"calendar 入 trello"、"將 calendar events create cards"、"extract calendar for J26XXX" |
+| 刷新 active job cache（由 Airtable Master Job Log sync `status = Current` rows 入 `context/job-list.md`） | `skills/producer/update-job-list.md` | "update job list"、"update current job list"、"sync job list"、"refresh job list"、"對下個 job list"、"更新 job list" |
 
 **嚴格 routing rule：** 收到以上 keywords 嘅 request，**唔可以靠記憶答，必須先 read 對應 skill file**。Quick Reference 入面有的就直接答，Quick Reference 搵唔到就先 read context files，context files 搵唔到就 read skill files。
 
