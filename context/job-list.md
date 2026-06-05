@@ -2,7 +2,7 @@
 
 > Source of truth: Airtable Master Job Log (base `appld5YU1iZm3Hx5F`, table `Projects`)
 > Scope: `status = Current` only（active production jobs）
-> Last synced: 2026-05-08（director column added；Airtable director field synced for all Current jobs；J26075 added；J26075 project_title typo fixed in Airtable）
+> Last synced: 2026-06-04（auto-sync via `scripts/sync-job-list.js`）
 > Sync mechanism: Stage 1 (n8n auto-sync) 待實作。期間如有新 Current job，手動 trigger re-sync 或 patch 此 file。
 
 ---
@@ -11,26 +11,31 @@
 
 | Job No | Client | Project Name | Aliases | Status | Director | Discord Channel ID | Discord Channel Name |
 |--------|--------|--------------|---------|--------|----------|---------------------|----------------------|
-| J26002 | CLP | CLP CLPP Hall of Fame Award Sharing video production |  | Current | Benjy | 1492110996653740083 | #j26002-clpp-hall-of-fame-award-sharing-video |
-| J26007 | DFI | DFI Corporate video 2026 |  | Current | Benjy | 1500690941638479893 | #j26007-dfi-corporate-video-2026 |
-| J26010 | Cartier | Cartier Prince Building - the making of video |  | Current | Benjy | — (no channel by design) | — (no channel by design) |
-| J26016 | HSUHK | HSUHK Student Excellence Video Production_Final |  | Current | Kary | 1489144435869483059 | #j26016_hsuhk-student-excellence-video-series |
-| J26027 | EMSD | EMSD 15th National Games for CS Outstanding Awards video production | NG15;全運會 | Current | Benjy | 1501787539642650706 | #j26027_emsd_15th_national_game_for_cs_award |
-| J26047 | CLP | CLP Chat with Joe April 2026 |  | Current | Benjy | 1491279980447928380 | #j26047-clp-chat-with-joe-apr |
-| J26053 | Buttons_BOC | button BOC Trendy Together 22 IG videos |  | Current | Kary | 1489112803397603348 | #j26053_button-boc-trendytogether-ig-reels |
-| J26057 | HKTB | HKTB Incentive Playbook all-in-one Fam video update |  | Current | Sohling | 1494549516337283154 | #j26057-hktb-incentive-playbook-all-in-one-fam-video-update |
-| J26060 | CLP | CLP Smart E animation |  | Current | Sohling | 1493155958162198658 | #j26060-clp-smarte_animation |
-| J26062 | Orbis | Orbis Future Vision Leader and From Blur to Clear Campaign |  | Current | Kary | 1493117424201891952 | #j26062_orbis-future-vision-leader-and-from-blur-to-clear-campaign |
-| J26063 | EMSD | EMSD HKMA GWIN |  | Current | Benjy | 1493811545497538560 | #j26063_emsd-hkma-gwin |
+| J26007 | DFI | DFI Corporate video 2026 |  | Current | Benjy | 1501849664176132247 | j26007_dfi_corporate_video_2026 |
+| J26010 | Cartier | Cartier Prince Building - the making of video |  | Current | Benjy | 1504037605006770176 | j26010-cartier-prince-building_the-making-of-videography-production |
+| J26016 | HSUHK | HSUHK Student Excellence Video Production_Final |  | Current | Kary | 1489144435869483059 | j26016_hsuhk-student-excellence-video-series |
+| J26020 | EMSD | EMSD Engineer & Technician Trainee Graduation Ceremony event with director blog video production |  | Current | — | 1509779734777696266 | j26020_emsd-engineer-technician-trainee-graduation-ceremony-event-with-director-blog-video-productio |
+| J26024 | DFI_Mannings | DFI Own Brand H&B 2026 Strategy Video APAC |  | Current | Sohling | 1506247763975733298 | j26024-dfi-own-brand-apac |
+| J26027 | EMSD | EMSD 15th National Games for CS Outstanding Awards video production | NG15;全運會 | Current | Benjy | 1501787539642650706 | j26027_emsd_15th_national_game_for_cs_award |
+| J26050 | CUHK | CUHK Bid for IFOS 2030 Promotional video |  | Current | Kary | 1509800199588020284 | j26050_cuhk-bid-for-ifos-2030-promotional-video |
+| J26053 | Buttons_BOC | button BOC Trendy Together 22 IG videos |  | Current | Kary | 1489112803397603348 | j26053_button-boc-trendytogether-ig-reels |
+| J26056 | DFI | DFI Own Brand H & B KV production |  | Current | — | 1511303483716796557 | j26056_dfi-own-brand-h-and-b-kv-production |
+| J26057 | HKTB | HKTB Incentive Playbook all-in-one Fam video update |  | Current | Sohling | 1493606268449984642 | j26057_hktb_incentive_playbook_all-in-one_fam_video_update |
+| J26058 | Hong Kong Productivity Council | HKPC 60th anniversary staff photos for all employees |  | Current | Ki | 1509778703750533282 | j26058_hkpc-60th-anniversary-staff-photos-for-all-employees |
+| J26062 | Orbis | Orbis Future Vision Leader and From Blur to Clear Campaign |  | Current | Kary | 1493117424201891952 | j26062_orbis-future-vision-leader-and-from-blur-to-clear-campaign |
+| J26063 | EMSD | EMSD HKMA GWIN |  | Current | Benjy | 1493811545497538560 | j26063_emsd-hkma-gwin |
 | J26064 | Megaworks | Megaworks Private Birthday Party event video and photo service |  | Current | Ki | — (no channel by design) | — (no channel by design) |
-| J26065 | CLP | CLP HKMA Smart E Living |  | Current | Sohling | 1497160276196327424 | #j26065-clp-hkma-smart-e-living |
-| J26066 | EMSD | EMSD Quiz challenge video for Farewell event | 快問快答 | Current | Benjy | 1496037652825112657 | #j26066_emsd_quiz_of_farewell_party |
-| J26067 | EMSD | EMSD QUOHSD1KC20060046 好醫工大賽 | Best CE Award;好E工 | Current | Benjy | 1500764253181972480 | #j26067_emsd_best_ce_award_competition_video |
-| J26069 | CLP | CLP MD aand COO speech event |  | Current | Benjy | 1501043831829954570 | #j26069-clp-md-aand-coo-speech-event |
-| J26070 | EMSD | EMSD CCSD2026-19 Farewell party on May | Farewell event highlight shooting | Current | Benjy | 1501043894433874120 | #j26070-emsd-ccsd2026-19-farewell-party-on-may |
-| J26071 | Buttons_InvestHK | Button InvestHK Motion graphic videos production |  | Current | Kary | 1502220628424396821 | #j26071-button-investhk-motion-graphic-videos |
-| J26075 | CLP | CLP Chat With Joe May episode external version | Joe Chat | Current | Benjy | 1502249491296817314 | #j26075-clp-chat-with-joe-may-ep-external-ver |
-| J26077 | CLP | CLP Chat with Joe June 2026 | Joe Chat | Current | Benjy | 1500803244144721970 | #j26077_chat_with_joe_ep_june |
+| J26069 | CLP | CLP MD aand COO speech event |  | Current | Benjy | 1501043831829954570 | j26069-clp-md-aand-coo-speech-event |
+| J26070 | EMSD | EMSD CCSD2026-19 Farewell party on May | Farewell event highlight shooting | Current | Benjy | 1501043894433874120 | j26070-emsd-ccsd2026-19-farewell-party-on-may |
+| J26071 | Buttons | Button InvestHK Motion graphic videos production |  | Current | Kary | 1502220628424396821 | j26071-button-investhk-motion-graphic-videos-production |
+| J26075 | CLP | CLP Chat With Joe May episode external version | Joe Chat | Current | Benjy | 1502249491296817314 | j26075-clp-chat-with-joe-may-ep-external-ver |
+| J26077 | CLP | CLP Chat with Joe June 2026 | Joe Chat | Current | Benjy | 1500803244144721970 | j26077_chat_with_joe_ep_june |
+| J26081 | Department of Health | MDD 10K Listing video |  | Current | — | 1509079387339751464 | j26081_mdd_10k_listing_video_cant_vers |
+| J26082 | EMSD | EMSD Corporate Video 2026 | EMSTF 30A | Current | — | 1503674382030209094 | j26082_emsd_corporate_video_2026 |
+| J26084 | Department of Health | MDD 10K Listing video, English and Mandarin versions |  | Current | — | 1509079823383924747 | j26084_mdd_10k_listing_video_eng_mand_vers |
+| J26085 | — | Minerals Hang Seng Facility Management Award |  | Current | — | 1509112179339694212 | j26085_minerals_hang_seng_facility_management_award |
+| J26091 | DFI_711 | DFI 7 eleven Trade show 2026 |  | Current | — | 1509860999631470643 | j26091_dfi-711-trade-show-present-video |
+| J26XXX | — | Test Project |  | Current | — | — | — |
 
 ---
 
