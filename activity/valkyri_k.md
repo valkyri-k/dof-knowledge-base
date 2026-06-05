@@ -52,8 +52,6 @@
 - **[2026-05-09] root-owned kb files recurring bug** — `scripts/timeline_backward.py` root-owned pattern（estimate: 由 Kary Claude Code local session 改 file 以 root process 跑）；dev-log `2026-05-09 14:53` logged；awaiting permanent fix decision。Cross-ref: `activity/kary-dev-log.md` 2026-05-09 14:53 entry
 - **[2026-05-14] J260BB Test Project 4 Phase 2 push pending** — Phase 1 draft sent (new round with Kary's committed dates): pure-post mixed, kickstart 15 May (assets + script confirm), storyboard submit 18 May, rough cut submit 20 May, 3-cut all-compressed (1 wd FB each), VO Jun 10–11, Final Output Jun 15 (hard). Pattern L warning issued (client must pre-arrange same-day/next-day feedback). Waiting Kary confirm → push Calendar.
 - **[2026-05-15] J260CC Test Project 5 Phase 2 push pending** — Phase 1 draft sent: pure-post mixed, no filming, kickstart 15 May (materials + script confirm today), rough cut anchor 20 May, 3-cut compressed (all FB 1 wd), VO Jun 10–11, Final Output Jun 15. Pattern L warning issued. Waiting Kary confirm → push Calendar.
-- **[2026-06-05] J26050 CUHK 1st Cut Jun 11 saturation** — Jun 11 已有 4 cut events，加 CUHK 1st Cut 會係第 5 個。Jun 12 係 Client FB day 唔適合。Trello card 已建，Calendar event 暫扣。等 Sohling confirm (a) keep Jun 11 or (b) choose different date。
-
 ---
 
 ## Recent Session Summaries

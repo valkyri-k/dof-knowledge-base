@@ -44,6 +44,7 @@
 （pending items，resolved 即時刪）
 
 - [2026-05-15] Trello member assignment — sync jobs — Calendar→Trello sync 跑完，但 J26062 Orbis、J26070 EMSD Farewell May、J26071 InvestHK 三個 job 嘅新 cards 冇 assign member（Sohling 未 specify 負責人）。等 Sohling confirm 邊個人處理先 assign。（2026-06-05 由 valkyri_k.md migrate，按 §Sender routing）
+- [2026-06-05] J26050 CUHK 1st Cut Jun 11 saturation — Jun 11 已有 4 cut events，加 CUHK 1st Cut 會係第 5 個。Jun 12 係 Client FB day 唔適合。Trello card 已建，Calendar event 暫扣。等 Sohling confirm (a) keep Jun 11 or (b) choose different date。（2026-06-05 由 valkyri_k.md migrate，按 §Sender routing）
 
 ---
 
