@@ -44,9 +44,7 @@
 
 ## Open Threads
 
-- **[2026-04-08] Planyway / Trello Timeline integration 方向** — 等 Kary 揀 3 條 propose 嘅方向（Trello 主控 / 雙向 push / on-demand mirror）；揀完先 set up Trello credentials + 寫 integration logic。Cross-ref: `activity/gap-log.md` 2026-04-08 entry。**[2026-06-05] Kary 唔記得 context，已解釋，等 Kary 決定方向。**
-- **[2026-04-08] GitHub PAT rotation reminder** — 今晚 Kary set up 咗 fine-grained PAT (`mugi-server-kb-push`) 俾 Mugi push `kb` repo，expiry 1 年。到 2027-04 要 rotate。Cross-ref: `activity/kary-dev-log.md` 2026-04-08 20:32 entry
-- **[2026-05-09] root-owned kb files recurring bug** — `scripts/timeline_backward.py` root-owned pattern（estimate: 由 Kary Claude Code local session 改 file 以 root process 跑）；dev-log `2026-05-09 14:53` logged；awaiting permanent fix decision。Cross-ref: `activity/kary-dev-log.md` 2026-05-09 14:53 entry。**[2026-06-05] Kary 唔記得 context，已解釋，等 Kary 決定 fix approach。**
+（全部 closed 2026-06-05 by Kary）
 ---
 
 ## Recent Session Summaries
@@ -71,3 +69,4 @@
 | 2026-06-05 | Flagged Sohling activity log missing; supplemented sohling_69845.md + created j26050 per-job log | Commit 8397dd3 ✅ |
 | 2026-06-05 | CLAUDE.md updated: Sender routing hard rule; Sohling open threads migrated to sohling_69845.md | Kary edit ✅ |
 | 2026-06-05 | Open threads cleanup: J260BB/J260CC/J26053 closed (test/ignore); activity.bak deleted; Planyway + root-owned kb context explained | ✅ |
+| 2026-06-05 | All remaining open threads cleared by Kary instruction | ✅ |
