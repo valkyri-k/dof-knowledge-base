@@ -18,6 +18,16 @@ Activity log 嘅核心 purpose 係**俾將來嘅 Mugi（clear session 之後）�
 
 Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面，會 sync 上 GitHub）。Mugi 寫嘅時候**永遠用 absolute path** `/home/node/kb/activity/<file>`，唔好用 bare relative path `activity/<file>`——`/home/node/activity` 而家係 symlink 指返 `kb/activity`，但係將來如果 setup 又出錯，bare path 可能 silent 寫去 wrong folder 而 push 唔到 GitHub。同樣 apply 落 `gap-log.md`、`kary-dev-log.md` 同任何將來新 activity file。
 
+### Sender routing（HARD — 邊個 sender 寫邊個 file）
+
+**呢條係整個 activity tracking 嘅 root rule，凌駕一切。** 每一個 write（Request Log row / Open Threads / Session Summary / Profile candidate）一律 route by **該 message envelope 嘅 actual Discord sender ID**，map 去 Profile 有對應 Discord ID 嘅 activity file。
+
+- **唔係**用「邊個 trigger clear」/「邊個喺 DM whitelist」/「conversation 主要 user」/「邊個 job 嘅 owner」嚟決定寫邊個 file。寫邊個 file **只**睇 message 嘅 actual sender。
+- 一個 session 可以有**多個 sender**（e.g. Kary 喺 DM + Sohling 喺 job channel）→ 就要**同時寫多個 file**，每個 sender 嘅嘢入自己 file。
+- **嚴禁** 將 sender B 嘅 activity 加個「B:」prefix 塞入 sender A 嘅 file。Sender B 喺 channel 講嘢 → 入 B 嘅 file，唔好因為 A 係 whitelist / A trigger clear 就當係 A 嘅 activity。
+- **Sender ID → file 嘅 mapping**：scan `activity/` 入面邊個 file 嘅 Profile `Discord ID` match envelope sender ID。Match 唔到 = 新 user → 建新 file（read File format template）。
+- **Setup 背景（解釋點解呢條容易 violate）**：DM whitelist 通常得 Kary，其他 team member（e.g. Sohling）只喺 job channel 同 Mugi 傾、永不自己 trigger clear。所以個 default 陷阱係將成個 session 當「Kary 嘅 session」、所有嘢入 `valkyri_k.md`。呢條 rule 就係要打破呢個 default：**channel 入面其他人嘅 interaction，係佢哋自己嘅 activity，入佢哋自己 file。**
+
 ### File 結構（5-section hybrid schema）
 
 每個 user activity file 有 **5 個 section**，各有用途：
@@ -34,7 +44,7 @@ Activity files 全部放喺 **`/home/node/kb/activity/`**（即係 repo 入面�
 | 時機 | 做咩 |
 |------|------|
 | **新用戶** | 建立 file，填入 Profile（Discord ID、Role、Notes）+ 起 4 個 section heading |
-| **每件事完成** | Append 一行入 **Request Log** table（Date / Request / Outcome）——automatic，唔等用戶叫。**唔好 git push**——push 只係 pre-clear 同 daily cron 先做 |
+| **每件事完成** | Append 一行入 **該 sender 自己** file 嘅 **Request Log** table（Date / Request / Outcome）——routing 跟 §Sender routing，actual sender 邊個寫邊個 file，**唔係**寫 conversation 主 user。Automatic，唔等用戶叫。**唔好 git push**——push 只係 pre-clear 同 daily cron 先做 |
 | **喺 per-job channel 做嘢** | 除咗 update user activity log，**同步**寫入對應 per-job activity file（見 §Per-Job Activity Tracking）。兩個 log **並行寫**，唔係二選一 |
 | **遇到 pending item**（blocked / waiting for / 等用戶決定） | Append 入 **Open Threads** section，標注日期 + cross-ref 去相關 gap-log / dev-log entry |
 | **Open thread resolved** | 即時刪走嗰行（keep section 短） |
@@ -217,9 +227,13 @@ Existing users 主 file 已經超 threshold 嘅，**唔需要急住一次過 rot
 
 **Sequence steps（一氣呵成做晒，唔逐步問用戶）：**
 
-1. **更新 Open Threads** — 由 conversation context 抽出今晚新出現嘅 pending items，append 入 sender 嘅 activity file Open Threads section。同時 review 現有 Open Threads，如果今晚已經 resolved → 刪走。
-2. **寫 Session Summary** — Append 一段新嘅 narrative 入 Recent Session Summaries section，跟 standard format `### YYYY-MM-DD <morning/afternoon/evening> session`。內容要 capture：今晚做咗咩主要 work、邊啲 decisions、學到咩、有冇 surface 新 issue / capability gap。**唔好 list 細節**——細節已經喺 Request Log table，narrative 講 nuance。
-3. **更新 Request Log** — 將今晚發生但未 log 嘅 entries append 入 table（每件主要事一行）。
+0. **Identify session participants（MANDATORY，multi-sender flush 嘅關鍵）** — 掃成個 session，by Discord sender ID 列出**所有 distinct sender**（唔淨係 trigger clear 嗰個）。每個 sender map 去自己 activity file（match Profile Discord ID；新 user 建 file）。**Step 1–3 對 EACH participant 各做一次**，寫入佢哋各自嘅 file。
+   - **點解呢個 step 存在**：trigger clear 通常得 Kary（DM whitelist），但 session 入面 channel 可能有 Sohling 等其他人 interaction。冇呢個 step，Pre-Clear 會將全部嘢當 trigger user（Kary）嘅 activity 塞入一個 file（= 舊 bug）。Pre-Clear 嘅職責係 flush **成個 session 所有 sender** 嘅 interaction，唔係淨 trigger user。
+   - 跟 §Sender routing：sender B 嘅 Open Threads / Session Summary / Request Log 入 B file，**唔好**用「B:」prefix 塞入 trigger user file。
+
+1. **更新 Open Threads（per-participant）** — 對每個 participant：由 conversation context 抽出佢今晚新出現嘅 pending items，append 入**佢自己** activity file 嘅 Open Threads section。同時 review 佢現有 Open Threads，resolved → 刪走。
+2. **寫 Session Summary（per-participant）** — 對每個 participant：append 一段新 narrative 入**佢自己** file 嘅 Recent Session Summaries section，跟 format `### YYYY-MM-DD <morning/afternoon/evening> session`。內容 capture 佢今晚做咗咩主要 work、decisions、學到咩、有冇 surface 新 issue / gap。**唔好 list 細節**——細節喺 Request Log table，narrative 講 nuance。（每個 participant 嘅 summary 只寫佢自己嘅 interaction，唔混入其他人嘅。）
+3. **更新 Request Log（per-participant）** — 對每個 participant：將佢今晚發生但未 log 嘅 entries append 入**佢自己** file 嘅 table（每件主要事一行）。
 4. **Cross-update related logs**（如有需要） — 如果今晚有 architectural decision / bug fix / capability gap，update 埋 `kary-dev-log.md` 或 `gap-log.md` 嘅相關 entry。
 5. **Profile candidate detection** — 呢個 step 拆兩部分：
 
@@ -247,16 +261,18 @@ Existing users 主 file 已經超 threshold 嘅，**唔需要急住一次過 rot
 7. **Report 俾用戶** — 一個簡潔 message。**Mandatory fields，每次都要齊**（即使 value 係 0 或 skip）：
 
    1. `Commit <hash> pushed`
-   2. `Open threads: N` （括號內列 thread topic，N=0 寫「none」）
-   3. `Cross-log updates: <list 邊個 file updated 或 'skip — 今晚冇 architectural decision'>`（Step 4 result）
-   4. `Profile review: N candidate drafted` （N=0 都要寫，**證明 Part A review 真係 run 過**；如果 N>0 列每條 sender + category + source）（Step 5 result）
-   5. `Session: <主題>`（Step 2 narrative 嘅 1 句 condensed version）
-   6. `OK 你而家可以 /clear 啦`
+   2. `Participants flushed: <list 今次 session 所有 sender + 各自 file>`（Step 0 result；得 trigger user 一個都要 explicit 寫，證明 multi-sender scan 真係 run 過）
+   3. `Open threads: N` （括號內列 thread topic + 邊個 sender，N=0 寫「none」）
+   4. `Cross-log updates: <list 邊個 file updated 或 'skip — 今晚冇 architectural decision'>`（Step 4 result）
+   5. `Profile review: N candidate drafted` （N=0 都要寫，**證明 Part A review 真係 run 過**；如果 N>0 列每條 sender + category + source）（Step 5 result）
+   6. `Session: <主題>`（Step 2 narrative 嘅 1 句 condensed version）
+   7. `OK 你而家可以 /clear 啦`
 
-   例（happy path）：
+   例（happy path，multi-sender）：
 
    > ✅ Pre-clear done. Commit `abc1234` pushed.
-   > Open threads: 2 (Planyway 方向 / activity.bak 待刪).
+   > Participants flushed: kary (valkyri_k.md), sohling (sohling_69845.md).
+   > Open threads: 2 (kary: Planyway 方向 / sohling: J26071 member 待 specify).
    > Cross-log updates: kary-dev-log.md (activity-path bug fix), gap-log.md (Planyway gap).
    > Profile review: 1 candidate drafted (sohling: response-guidance, observed × 3).
    > Session: stress test + activity-path bug fix + memory schema rework.
@@ -265,6 +281,7 @@ Existing users 主 file 已經超 threshold 嘅，**唔需要急住一次過 rot
    例（quiet session，所有 conditional step 都 skip）：
 
    > ✅ Pre-clear done. Commit `xyz5678` pushed.
+   > Participants flushed: kary (valkyri_k.md).
    > Open threads: none.
    > Cross-log updates: skip — 今晚冇 architectural decision / bug / capability gap.
    > Profile review: 0 candidate drafted.
@@ -279,7 +296,7 @@ Existing users 主 file 已經超 threshold 嘅，**唔需要急住一次過 rot
 - **唔好做 destructive 嘢**——pre-clear sequence 全部係 append + commit + push，唔涉及 delete / overwrite。如果 commit / push 失敗（e.g. permission issue / merge conflict），**要 stop + 報告**，唔好嘗試自己 force-resolve
 - **Mugi 自己唔可以 `/clear`**——`/clear` 係 Claude Code 嘅 client-side command，要用戶自己打。Mugi 嘅責任係**準備好 disk state**，個 actual `/clear` 由用戶執行
 - **如果今晚冇實質 work**（純粹閒聊 / 一兩句 quick query），可以寫一句短 Session Summary（「今晚冇 production work，主要係 quick lookup」）然後仍然 commit + push——keep cadence consistent
-- **Step 1–5 寫 user activity file 嘅嘢 batch 成一次 Edit**——見上面 §Single-Update per turn 規則。User activity / dev-log / gap-log 係三個 file，跨 file 唔受限（各自 1 Edit 即可）。
+- **Step 1–5 寫同一個 participant file 嘅嘢 batch 成一次 Edit**——見上面 §Single-Update per turn 規則。Multi-sender session 有多個 participant file，**每個 participant file 各自 1 Edit**（跨 file 唔受 single-update 限制）；user activity / dev-log / gap-log 亦各自 1 Edit。全部 file 最後 single commit 一齊 push。
 - **Profile promotion 永遠由 Kary 觸發**——Pre-Clear Sequence Step 5 只可以 draft 入 **Pending Profile Review** section（audit trail）。Promote 入 **User Practice Profile**（active runtime）只可以由 Kary 喺 Discord 即場 trigger（見 §In-Discord Profile Correction Protocol）。Mugi 主動 silent promote 屬於 violation。
 
 ### In-Discord Profile Correction Protocol

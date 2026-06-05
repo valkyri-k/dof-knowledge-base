@@ -43,7 +43,7 @@
 ## Open Threads
 （pending items，resolved 即時刪）
 
-（no open threads）
+- [2026-05-15] Trello member assignment — sync jobs — Calendar→Trello sync 跑完，但 J26062 Orbis、J26070 EMSD Farewell May、J26071 InvestHK 三個 job 嘅新 cards 冇 assign member（Sohling 未 specify 負責人）。等 Sohling confirm 邊個人處理先 assign。（2026-06-05 由 valkyri_k.md migrate，按 §Sender routing）
 
 ---
 
@@ -55,6 +55,9 @@ J26050 CUHK IFOS 2030 post-pro setup。Sohling 喺 J26050 channel 要求加 Cale
 
 ### 2026-04-08 afternoon session
 First-ever Sohling interaction. Request: 喺 Calendar 4月內 search EMSD QA events，create Trello list `J26054 EMSD QA` + cards mirror events. Mugi 搵到 4 條 events（Shooting 4/8 / 1st Cut 4/16 / 2nd Cut 4/23 / Final 4/29），create 咗新 list + 4 cards 連 due dates + labels（Shooting / cut / cut / final）。冇 assign member（Sohling 冇講），喺 reply 主動 surface 等佢決定。Trello list create 第一次 fail——`idBoard` 用咗 short ID `gThmFbyu`，要用 full board ID `682c30d662d5a52cc721cb04`，retry OK。Learned: Trello create-list endpoint 唔接受 short ID。
+
+### 2026-05-15 afternoon session
+（2026-06-05 由 valkyri_k.md migrate — 原本誤記入 Kary file，按 §Sender routing 修正。Sohling 喺 channel 做嘅，唔係 Kary。）批量 Calendar→Trello sync 3 個 request：(1) HSUHK Batch 2 Calendar→Trello sync（J26016，assign Yik + Max）——scan Calendar events，compare existing Trello list，補 missing cards；(2) EMSD GWIN Long version Calendar→Trello sync（J26063，assign Keith + Katy）——events → cards；(3) full job list Calendar→Trello comparison——掃 ALL current jobs，identify 冇 Trello list / missing cards 嘅 job，batch create。J26062 / J26070 / J26071 有 cards created 但無 member，因 Sohling 未 specify 負責人（留 open thread 等佢決定）。
 
 ---
 
@@ -72,4 +75,7 @@ First-ever Sohling interaction. Request: 喺 Calendar 4月內 search EMSD QA eve
 | 2026-05-03 | J26069 CLP Speech: 8 events Calendar + Trello (Shoot May 5 → Final Output Short May 28) | Done ✅; Hall of Fame card created then archived per Sohling request |
 | 2026-05-03 | J26065 CLP HKMA: 6 events Calendar + Trello (Tentative, Apr 29–May 8, May 2 Sat kept per Sohling) | Done ✅; all cards assigned to Sohling |
 | 2026-05-03 | J26066 EMSD Farewell Party: sync Calendar → Trello, assign Keith + Katy | Found 3 Calendar events; created list + 3 cards ✅ |
+| 2026-05-15 | HSUHK Batch 2 Calendar→Trello sync (J26016, Yik + Max) | Scanned Calendar, compared existing Trello list, created missing cards ✅ (migrated from valkyri_k.md 2026-06-05) |
+| 2026-05-15 | EMSD GWIN Long version Calendar→Trello sync (J26063, Keith + Katy) | Events → Trello cards ✅ (migrated from valkyri_k.md 2026-06-05) |
+| 2026-05-15 | Full job list Calendar→Trello comparison — batch create missing cards across all current jobs | Done ✅; J26062/J26070/J26071 cards created without member (Sohling 未 specify) → open thread (migrated from valkyri_k.md 2026-06-05) |
 | 2026-06-05 | J26050 CUHK IFOS 2030: Calendar + Trello (Katy + Keith), 8 milestones | 7/8 Calendar events pushed (1st Cut Jun 11 held — saturation, 5th cut that day); 8 Trello cards created ✅; Jun 11 pending Sohling confirm |

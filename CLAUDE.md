@@ -495,9 +495,14 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 - Per-job: `/home/node/kb/activity/jobs/<channel-name>.md`
 - 永遠用 **absolute path**——bare relative `activity/<file>` 危險（symlink 可能 silent 寫去 raw folder push 唔到 GitHub）
 
+**Sender routing（HARD — 邊個 sender 寫邊個 file）**：
+- 每個 write（Request Log / Open Threads / Session Summary / Profile）一律 route by **該 message 嘅 actual Discord sender ID**，map 去 Profile match 嗰個 file。**唔係**用「邊個 trigger clear」/「DM whitelist user」/「conversation 主 user」決定
+- 一個 session 多個 sender（你 DM + 其他人 channel）→ 同時寫多個 file；**嚴禁**用「B:」prefix 將 sender B 嘅嘢塞入 sender A file（channel 入面 Sohling 嘅 interaction = Sohling 自己 file）
+- 完整論述 + Pre-Clear multi-sender flow 見 `claude/activity-log-schema.md` §Sender routing + Pre-Clear Step 0
+
 **輕量 ops（唔使 read file）**：
-- 每件事完成 append 一行入 Request Log table（Date / Request / Outcome），唔等用戶叫，唔即時 push
-- Open Thread 出現即 append 入 Open Threads section，resolved 即時刪
+- 每件事完成 append 一行入 **該 sender 自己** file 嘅 Request Log table（Date / Request / Outcome），唔等用戶叫，唔即時 push
+- Open Thread 出現即 append 入 **該 sender** file 嘅 Open Threads section，resolved 即時刪
 - Session 開始：read `<username>.md`——先掃 Open Threads，再睇最近 1-2 段 Session Summary
 
 **必須 read `claude/activity-log-schema.md` 嘅 trigger（唔可以靠記憶答）**：
@@ -511,6 +516,7 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 - Kary 訊息含「dev-log」keyword 或「記低 / 記落去 / log this」自然語言 → read Auxiliary Logs §Kary Dev Log（trigger + entry format + 即時 push flow）
 
 **Hard rule reminder（schema file 入面有完整論述，呢度淨 surface 最 critical）**：
+- Pre-Clear 係 **multi-sender flush**：Step 0 先 scan 成個 session 所有 distinct sender，Step 1–3 對 EACH participant 各寫入自己 file。trigger clear 通常得 Kary，但 channel 入面其他人（e.g. Sohling）嘅 interaction 一樣要 flush 去佢哋自己 file，**唔可以**全部當 Kary 嘅 activity 塞入 valkyri_k.md
 - Profile promotion **唯一入口**係 Kary 喺 Discord 直接 trigger（In-Discord Correction Protocol）。Pre-Clear Step 5 只可 draft 入 Pending Profile Review section（audit trail），**永遠唔 silent self-promote** 入 active Profile
 - Pre-Clear Step 5 Part A review **永遠 mandatory**——0 candidate 都要 explicit report「Profile review: 0 candidate」，唔可以 default-skip
 - Pre-Clear Sequence 全部係 append + commit + push，**唔做 destructive 嘢**
@@ -528,16 +534,16 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 
 **Filename**：取 `job-list.md` row 嘅 `Discord Channel Name` column verbatim，去掉開頭 `#`（唔做 underscore→hyphen / case normalization）。
 
-**Log-worthiness（HARD RULE）**：per-job channel **每一次同 user 嘅互動**都要 append 一行 Interaction Log entry——包括 identification reply、status query、quick lookup、dispatch confirmation。短互動寫短 entry（一句 Kary 問 + 一句 Mugi 答，Followup omit），但唔可以唔寫。完整 audit trail > log 簡潔。例外：repeated noise 連續 2+ 條同 query 可以 collapse 成「× N 次」。
+**Log-worthiness（HARD RULE）**：per-job channel **每一次同 user 嘅互動**都要 append 一行 Interaction Log entry——包括 identification reply、status query、quick lookup、dispatch confirmation。短互動寫短 entry（一句 sender 問 + 一句 Mugi 答，Followup omit），但唔可以唔寫。完整 audit trail > log 簡潔。例外：repeated noise 連續 2+ 條同 query 可以 collapse 成「× N 次」。
 
 **Entry format（輕量 ops，唔使 read file）**：
 ```
 ### [[YYYY-MM-DD]] morning/afternoon/evening — <topic>
-- **Kary 問**：<1-2 行 summary>
+- **<sender> 問**：<1-2 行 summary>（`<sender>` = 該 message actual Discord sender，channel 入面好多時係 Kary 以外嘅人，e.g. Sohling；唔好 hardcode「Kary」）
 - **Mugi 做**：<1-2 行 outcome / decision>
 - **Followup**：<pending / waiting on，如有；冇就 omit>
 ```
-唔即時 push——跟 user activity log 一齊喺 Pre-Clear Sequence single commit 處理。
+唔即時 push——跟 user activity log 一齊喺 Pre-Clear Sequence single commit 處理。Per-job log 入面每條 entry 嘅 sender label 跟 actual sender；同時該 sender 嘅 user activity file 亦要並行寫（跟 §Sender routing）。
 
 **必須 read `claude/per-job-tracking.md` 嘅 trigger（唔可以靠記憶答）**：
 - File 未存在 → read scaffold + frontmatter template + 「Scaffold 同第一個 entry 必須喺同一個 Write call 完成」rule
