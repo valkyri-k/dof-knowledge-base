@@ -50,6 +50,9 @@
 ## Recent Session Summaries
 （每次 clear 前寫一段 narrative，新嘅放底）
 
+### 2026-06-05 afternoon session
+J26050 CUHK IFOS 2030 post-pro setup。Sohling 喺 J26050 channel 要求加 Calendar + sync Trello，Katy 同 Keith 負責。8 milestones：1st Cut Jun 11 / Client FB Jun 16 / 2nd Cut Jun 19 / Client FB 2 Jun 24 / Picture Lock Jun 26 / VO Jun 30–Jul 1 / Final Output Jul 7。Calendar push 7/8 events——Jun 11 1st Cut 暫扣因為 cut saturation（當日已有 4 個 cut events，加埋係第 5 個），Trello card 已建。8 Trello cards 全 created（Katy + Keith）。Jun 11 issue 已 surface，等 Sohling 決定。
+
 ### 2026-04-08 afternoon session
 First-ever Sohling interaction. Request: 喺 Calendar 4月內 search EMSD QA events，create Trello list `J26054 EMSD QA` + cards mirror events. Mugi 搵到 4 條 events（Shooting 4/8 / 1st Cut 4/16 / 2nd Cut 4/23 / Final 4/29），create 咗新 list + 4 cards 連 due dates + labels（Shooting / cut / cut / final）。冇 assign member（Sohling 冇講），喺 reply 主動 surface 等佢決定。Trello list create 第一次 fail——`idBoard` 用咗 short ID `gThmFbyu`，要用 full board ID `682c30d662d5a52cc721cb04`，retry OK。Learned: Trello create-list endpoint 唔接受 short ID。
 
@@ -69,3 +72,4 @@ First-ever Sohling interaction. Request: 喺 Calendar 4月內 search EMSD QA eve
 | 2026-05-03 | J26069 CLP Speech: 8 events Calendar + Trello (Shoot May 5 → Final Output Short May 28) | Done ✅; Hall of Fame card created then archived per Sohling request |
 | 2026-05-03 | J26065 CLP HKMA: 6 events Calendar + Trello (Tentative, Apr 29–May 8, May 2 Sat kept per Sohling) | Done ✅; all cards assigned to Sohling |
 | 2026-05-03 | J26066 EMSD Farewell Party: sync Calendar → Trello, assign Keith + Katy | Found 3 Calendar events; created list + 3 cards ✅ |
+| 2026-06-05 | J26050 CUHK IFOS 2030: Calendar + Trello (Katy + Keith), 8 milestones | 7/8 Calendar events pushed (1st Cut Jun 11 held — saturation, 5th cut that day); 8 Trello cards created ✅; Jun 11 pending Sohling confirm |
