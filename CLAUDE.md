@@ -399,6 +399,7 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 | Trello 操作（create card、assign、dates、labels、checklists、move） | `skills/trello/trello-agent.md` | "Trello"、"card"、"Planyway"、"assign"、"checklist"、"J26XXX 入面"、"postpro board"、"加張 card"、"改 due date"、"move 去"、"mark complete" |
 | Calendar → Trello sync（將 calendar events 批量轉成 Trello cards） | `skills/trello/trello-agent.md` | "sync calendar to trello"、"calendar 入 trello"、"將 calendar events create cards"、"extract calendar for J26XXX" |
 | 刷新 active job cache（由 Airtable Master Job Log sync `status = Current` rows 入 `context/job-list.md`） | `skills/producer/update-job-list.md` | "update job list"、"update current job list"、"sync job list"、"refresh job list"、"對下個 job list"、"更新 job list" |
+| 用片名搵 Vimeo 片（title-text search，返 share link + privacy；**唔掂 Job#**） | `skills/integration/vimeo-search.md` | "Vimeo link"、"Vimeo links of X"、"俾我 X 嘅 Vimeo link"、"搵 Vimeo X"、"X 條片個 link"、"Vimeo 有冇 X" |
 
 **嚴格 routing rule：** 收到以上 keywords 嘅 request，**唔可以靠記憶答，必須先 read 對應 skill file**。Quick Reference 入面有的就直接答，Quick Reference 搵唔到就先 read context files，context files 搵唔到就 read skill files。
 
