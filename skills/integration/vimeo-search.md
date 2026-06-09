@@ -60,7 +60,7 @@ Vimeo `query` 係 broad title match，會帶埋鬆散嘅 hit。睇 JSON 自己�
 > 搵到 N 條同「EMSD Dems Briefing」相關：
 > - EMSD_DEMS_Briefing Event 2024 → https://vimeo.com/1103377505 （anybody）
 > - EMSD_DEMS_Briefing Event 2023 → https://vimeo.com/1035078315 （password）
-> - EMSD_DemsBriefing2024_Trailer → https://vimeo.com/1043102897 （disabled）
+> - EMSD_DemsBriefing2024_Trailer → https://vimeo.com/1043102897 （disable）
 
 冇 match → 直接講「Vimeo search `<query>` 冇 match」，唔好亂估／唔好 fallback 去第二個 source（除非用戶另外叫你搵 Drive / Doji）。
 
@@ -71,4 +71,4 @@ Vimeo `query` 係 broad title match，會帶埋鬆散嘅 hit。睇 JSON 自己�
 | `anybody` | 公開，任何人開到 |
 | `password` | 要密碼先入到——俾 link 之餘要提返密碼喺邊 |
 | `unlisted` / `nobody` | 唔公開搜尋／淨係持 link 嘅人——可以俾 link 但提返「呢條唔好公開散」 |
-| `disabled` | 已停用，條 link 開唔到——report 出嚟但提返呢條 access 唔到 |
+| `disable` | 已停用，條 link 開唔到——report 出嚟但提返呢條 access 唔到 |
