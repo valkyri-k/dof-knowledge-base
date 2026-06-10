@@ -55,6 +55,9 @@
 ### 2026-06-05 micro-session (KB sender routing fix)
 極短 session。Kary 問 Sohling activity 有冇 log——發現冇，補 sohling_69845.md + 新建 j26050 per-job log (commit `8397dd3`)。Kary 之後更新 CLAUDE.md 加入 **Sender routing hard rule**（multi-sender flush：channel 入面其他人嘅 interaction 入佢哋自己 file，唔係塞入 valkyri_k.md；Pre-Clear Step 0 而家係 mandatory participant scan）。同時 migrate Sohling 嘅 open threads（J26050 saturation / J26062/J26070/J26071 member assign）去 sohling_69845.md。**Key decision**：呢個 rule 係長期 architectural fix，解決「所有 channel interaction 全部誤記入 Kary file」嘅 systemic bug。
 
+### 2026-06-09 afternoon session (Vimeo skill + J26085 log recovery)
+Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+Trello sync，但 session log 冇寫到。Kary 喺本 session 報告，Mugi 補建 `j26085_minerals_hang_seng_facility_management_award.md` per-job file + scaffold + Interaction Log entry。另一件事：Kary 要搵 EMSD Dems Briefing Vimeo links，Mugi 初次答「冇 Vimeo 整合」。Kary 即時更新 KB repo，加入 `skills/integration/vimeo-search.md` + CLAUDE.md routing entry；pull 後 Mugi 正確 read skill file、執行 `scripts/vimeo-search.js`，返 5 條 results。**Key takeaway**：Vimeo search 係 title-text search via REST script，唔係 cloud MCP；skill routing rule 已入 CLAUDE.md，下次直接 trigger。
+
 ---
 
 ## Request Log
@@ -70,3 +73,5 @@
 | 2026-06-05 | CLAUDE.md updated: Sender routing hard rule; Sohling open threads migrated to sohling_69845.md | Kary edit ✅ |
 | 2026-06-05 | Open threads cleanup: J260BB/J260CC/J26053 closed (test/ignore); activity.bak deleted; Planyway + root-owned kb context explained | ✅ |
 | 2026-06-05 | All remaining open threads cleared by Kary instruction | ✅ |
+| 2026-06-09 | Benjy J26085 session log recovery (server restart before log) | Supplemented j26085 per-job file ✅ |
+| 2026-06-09 | Vimeo links — EMSD Dems Briefing | 5 results returned (vimeo-search.js) ✅ |
