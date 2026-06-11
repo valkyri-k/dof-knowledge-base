@@ -68,6 +68,8 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 | 2026-06-03 | Discord allowlist batch add 6 channels (J26007/J26010/J26056/J26057/J26084/J26091) | All 6 in one terminal invoke ✅ |
 | 2026-06-04 | J26082 prelim tentative timeline for client presentation | Week-unit draft; Jun 19 holiday flagged ✅ |
 | 2026-06-04 | J26082 EMSTF 30A confirmed timeline: 13 Calendar events (Jun 8–Jul 20) + alias added | ✅ |
+| 2026-06-11 | Add CWJ alias to all Chat with Joe projects (J26075, J26077) | ✅ |
+| 2026-06-11 | J26082 client feedback debrief shared for Mugi ref (Kelly@EMSD call notes) | Logged to per-job file; Jun-16 TBC storyflow revision noted |
 | 2026-06-05 | Sohling: J26050 CUHK Calendar (7/8 pushed, Jun 11 saturation pending) + Trello (8 cards, Katy+Keith) | ✅ (logged in sohling_69845.md per sender routing) |
 | 2026-06-05 | Flagged Sohling activity log missing; supplemented sohling_69845.md + created j26050 per-job log | Commit 8397dd3 ✅ |
 | 2026-06-05 | CLAUDE.md updated: Sender routing hard rule; Sohling open threads migrated to sohling_69845.md | Kary edit ✅ |

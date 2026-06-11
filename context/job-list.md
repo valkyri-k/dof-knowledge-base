@@ -28,8 +28,8 @@
 | J26069 | CLP | CLP MD aand COO speech event |  | Current | Benjy | 1501043831829954570 | j26069-clp-md-aand-coo-speech-event |
 | J26070 | EMSD | EMSD CCSD2026-19 Farewell party on May | Farewell event highlight shooting | Current | Benjy | 1501043894433874120 | j26070-emsd-ccsd2026-19-farewell-party-on-may |
 | J26071 | Buttons | Button InvestHK Motion graphic videos production |  | Current | Kary | 1502220628424396821 | j26071-button-investhk-motion-graphic-videos-production |
-| J26075 | CLP | CLP Chat With Joe May episode external version | Joe Chat | Current | Benjy | 1502249491296817314 | j26075-clp-chat-with-joe-may-ep-external-ver |
-| J26077 | CLP | CLP Chat with Joe June 2026 | Joe Chat | Current | Benjy | 1500803244144721970 | j26077_chat_with_joe_ep_june |
+| J26075 | CLP | CLP Chat With Joe May episode external version | Joe Chat;CWJ | Current | Benjy | 1502249491296817314 | j26075-clp-chat-with-joe-may-ep-external-ver |
+| J26077 | CLP | CLP Chat with Joe June 2026 | Joe Chat;CWJ | Current | Benjy | 1500803244144721970 | j26077_chat_with_joe_ep_june |
 | J26081 | Department of Health | MDD 10K Listing video |  | Current | — | 1509079387339751464 | j26081_mdd_10k_listing_video_cant_vers |
 | J26082 | EMSD | EMSD Corporate Video 2026 | EMSTF 30A | Current | — | 1503674382030209094 | j26082_emsd_corporate_video_2026 |
 | J26084 | Department of Health | MDD 10K Listing video, English and Mandarin versions |  | Current | — | 1509079823383924747 | j26084_mdd_10k_listing_video_eng_mand_vers |
