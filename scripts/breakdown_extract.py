@@ -87,14 +87,28 @@ def yt_cookies_file(override=None):
     return p if os.path.exists(p) else None
 
 
+def js_runtime_args():
+    """yt-dlp needs a JS runtime to solve YouTube's 'n' challenge (EJS), else
+    'No video formats found'. Only deno is enabled by default; node/bun must be
+    named explicitly via --js-runtimes. Pick the first one actually on PATH.
+    Requires the yt-dlp-ejs solver scripts (pip --user) to be installed too.
+    """
+    import shutil
+    for rt in ("node", "bun", "deno"):
+        if shutil.which(rt):
+            return ["--js-runtimes", rt]
+    return []
+
+
 def download_youtube(url, work_dir, cookies=None):
     """Download a YouTube video with yt-dlp. Returns (path, title)."""
     out_tmpl = str(work_dir / "source.%(ext)s")
     cookie_args = ["--cookies", cookies] if cookies else []
+    js_args = js_runtime_args()
     # mp4-preferred, single progressive/merged file, capped at 1080p to keep
     # frame grabs fast -- breakdown only needs legible stills, not master quality.
     subprocess.run(
-        ["yt-dlp", "-q", "--no-warnings", *cookie_args,
+        ["yt-dlp", "-q", "--no-warnings", *cookie_args, *js_args,
          "-f", "bestvideo[height<=1080][ext=mp4]+bestaudio/best[height<=1080]/best",
          "--merge-output-format", "mp4",
          "-o", out_tmpl, url],
@@ -105,7 +119,8 @@ def download_youtube(url, work_dir, cookies=None):
         raise RuntimeError("yt-dlp produced no output file")
     video = files[0]
     title = subprocess.run(
-        ["yt-dlp", "-q", "--no-warnings", *cookie_args, "--print", "%(title)s", url],
+        ["yt-dlp", "-q", "--no-warnings", *cookie_args, *js_args,
+         "--print", "%(title)s", url],
         capture_output=True, text=True,
     ).stdout.strip() or video.stem
     return video, title
