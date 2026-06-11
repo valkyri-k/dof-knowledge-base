@@ -34,8 +34,11 @@ rows.json = a JSON array of objects, one per shot:
   [{"shot": 1, "subject": "...", "live_action": "...", "framing": "...",
     "editing": "...", "vfx": "...", "mg_text": "...", "transition": "...",
     "note": ""}, ...]
-Shots missing from rows.json still get a row (strip + timecode from manifest,
-description cells blank) -- never silently dropped.
+"shot" must be the manifest shot number. If EVERY object omits "shot", rows
+are matched to shots positionally (array order = manifest order) and the
+result carries a warning. Shots missing from rows.json still get a row
+(strip + timecode from manifest, description cells blank) -- never silently
+dropped.
 
 Output: single line JSON to stdout. On error: {"status":"error","error":...},
 exit code 0 (caller parses status). Never prints secret values.
@@ -179,10 +182,34 @@ def render(manifest_path, rows_path, title, folder_name, out_path, parent, do_up
     with open(manifest_path) as f:
         manifest = json.load(f)
     rows = []
+    rows_warning = None
     if rows_path and os.path.exists(rows_path):
         with open(rows_path) as f:
             rows = json.load(f)
-    rows_by_shot = {int(r["shot"]): r for r in rows if "shot" in r}
+    elif rows_path:
+        rows_warning = (f"rows file not found: {rows_path} -- ALL text columns "
+                        f"are BLANK.")
+    rows_by_shot = {int(r["shot"]): r for r in rows
+                    if isinstance(r, dict) and "shot" in r}
+    if rows and not rows_by_shot:
+        # The vision-fill step writes the array in manifest order but may omit
+        # the "shot" key entirely (it happened: every object dropped, xlsx
+        # shipped with all text columns blank and status ok). Match
+        # positionally against the manifest instead of shipping an empty
+        # breakdown -- but say so loudly, alignment is assumed not proven.
+        shot_nums = [s["shot"] for s in manifest["shots"]]
+        rows_by_shot = {sn: r for sn, r in zip(shot_nums, rows)
+                        if isinstance(r, dict)}
+        rows_warning = ('rows.json objects have no "shot" key -- rows matched '
+                        'to shots POSITIONALLY (array order = manifest order). '
+                        'Verify the text columns line up with the strips.')
+        if len(rows) != len(shot_nums):
+            rows_warning += (f" COUNT MISMATCH: {len(rows)} rows vs "
+                             f"{len(shot_nums)} shots; extras dropped.")
+    elif rows and len(rows_by_shot) < len(rows):
+        rows_warning = (f'only {len(rows_by_shot)} of {len(rows)} rows.json '
+                        f'objects had a usable "shot" key; the rest were '
+                        f'dropped -- those rows show blank text columns.')
 
     work_dir = Path(manifest.get("work_dir") or os.path.dirname(manifest_path))
     job_title = title or manifest.get("source", {}).get("title") or "breakdown"
@@ -203,15 +230,18 @@ def render(manifest_path, rows_path, title, folder_name, out_path, parent, do_up
         "n_strips_embedded": n_embedded,
         "uploaded": False,
     }
-    # No-silent-skip: a populated shot list with zero embedded strips means every
-    # strip path failed to resolve on this host. The xlsx still saves (text cols
-    # are intact) but the Strip column is blank -- surface it loudly, don't ship
-    # a "looks fine" ok with an empty visual column.
+    # No-silent-skip: surface every degraded-output condition loudly instead of
+    # shipping a "looks fine" ok with empty columns.
+    warnings = []
+    if rows_warning:
+        warnings.append(rows_warning)
     if n_shots and n_embedded == 0:
-        result["warning"] = (
+        warnings.append(
             f"0 of {n_shots} strips embedded -- strip images not found on this host "
             f"(looked in manifest paths + {work_dir}/strips/). Strip column is BLANK."
         )
+    if warnings:
+        result["warning"] = " | ".join(warnings)
 
     if do_upload:
         # Lazy import so a --no-upload render needs no Drive creds.

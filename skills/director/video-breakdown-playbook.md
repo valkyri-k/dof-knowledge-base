@@ -62,7 +62,7 @@ cd /home/node/kb && python3 scripts/breakdown_extract.py "<URL>" \
 
 | 欄 | rows.json key | 定義 |
 |---|---|---|
-| Shot # | —（manifest） | shot 序號 |
+| Shot # | `shot`（**必填**） | shot 序號 — **必須照抄 manifest `shots[].shot` 嗰個數字**。render script 靠呢個 key 將 row 對返 strip；漏咗會全部文字欄落空（script 有 positional fallback + warning，但唔好倚賴）。|
 | Timecode(s) | —（manifest） | start → end + duration |
 | Subject | `subject` | 極簡短名詞 indexing（e.g. `Older MJ`、`Four players`）。確保 character continuity。|
 | Live Action Description | `live_action` | 具體物理動作 + 空間關係 + 走位。**必須明確邊個 subject 做緊乜**。嚴格照 strip 所見，**唔可以憑空想像動作結果**（入波定炒粉，照實寫；睇唔到結果寫 `result not visible in strip`）。|
@@ -84,7 +84,9 @@ cd /home/node/kb && python3 scripts/breakdown_extract.py "<URL>" \
 **13 Editing effects**：1 Speed Ramp · 2 Slow-Motion · 3 Camera Shake/Vibration · 4 Digital Zoom Punch · 5 Frame Rotation · 6 Mirror/Symmetry · 7 White Bloom Flash · 8 Whip Pan · 9 Multi-Exposure Clone/Stroboscopic · 10 Zoom Pump · 11 Focus Pull/Rack Focus · 12 Motion Blur as Transition · 13 Lens Flare
 **Cut types / Transition out**：Straight Cut · Match Cut · Action Cut · Jump Cut · L-cut/J-cut · Hidden/Invisible Cut · Fade/Crossfade
 
-**Token discipline：** 唔好喺 reply echo 逐 shot 填咩；vision fill 係內部 step。砌好 `rows.json`（array，每 shot 一 object）寫入 work dir（e.g. `<work_dir>/rows.json`）就算，準備餵 Phase C。
+**Token discipline：** 唔好喺 reply echo 逐 shot 填咩；vision fill 係內部 step。砌好 `rows.json`（array，每 shot 一 object，**每個 object 必須包含 `"shot": <manifest shot number>`**）寫入 work dir（e.g. `<work_dir>/rows.json`）就算，準備餵 Phase C。
+
+**Phase C output check：** parse `n_rows_filled`——如果 = 0 或者有 `warning`，**唔好當成功收工**；surface 個 warning 俾 user 並 debug（最常見原因：rows.json 漏 `"shot"` key）。
 
 **Gate：** 冇 gate；直接落 Phase C。
 
