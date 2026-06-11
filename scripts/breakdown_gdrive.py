@@ -114,6 +114,24 @@ def create_folder(name, parent_id=None, service=None):
     }
 
 
+def set_anyone_writer(file_id, service=None):
+    """Grant 'anyone with the link can EDIT' on a file or folder.
+
+    Applied to the per-job folder so xlsx + strips + frames + contact sheet are
+    all link-editable in one call (folder permission cascades to children).
+    dof.internal is a consumer @gmail account, so type=anyone sharing is allowed.
+    Returns the permission id + role for caller confirmation.
+    """
+    service = service or get_drive_service()
+    created = service.permissions().create(
+        fileId=file_id,
+        body={"role": "writer", "type": "anyone"},
+        supportsAllDrives=True,
+        fields="id,role,type",
+    ).execute()
+    return {"id": created.get("id"), "role": created.get("role"), "type": created.get("type")}
+
+
 def upload_file(local_path, parent_id=None, name=None, service=None):
     """Upload a local file to a Drive folder. Returns dict with id + webViewLink."""
     service = service or get_drive_service()
@@ -153,6 +171,8 @@ def _cli():
     mk = sub.add_parser("mkfolder")
     mk.add_argument("name")
     mk.add_argument("parent", nargs="?", default=None)
+    sh = sub.add_parser("share")
+    sh.add_argument("file_id")
     sub.add_parser("roundtrip")
     args = ap.parse_args()
 
@@ -178,6 +198,10 @@ def _cli():
 
     elif args.cmd == "mkfolder":
         r = create_folder(args.name, parent_id=args.parent, service=svc)
+        _emit({"status": "ok", **r})
+
+    elif args.cmd == "share":
+        r = set_anyone_writer(args.file_id, service=svc)
         _emit({"status": "ok", **r})
 
     elif args.cmd == "roundtrip":

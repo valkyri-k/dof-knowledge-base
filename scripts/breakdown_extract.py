@@ -38,6 +38,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -258,6 +259,41 @@ def build_strip(path, frames_list, shot_idx, g, fps):
     strip.save(path, quality=88)
 
 
+def build_contact_sheet(path, repr_frames, title, cols=5):
+    """One montage of every shot's representative frame in a grid (reading order).
+
+    Separate deliverable from the per-shot strips: the strip shows ONE shot's
+    motion; the contact sheet shows the WHOLE video at a glance. Folder-only
+    (too large to embed legibly in Excel).
+    """
+    n = len(repr_frames)
+    if n == 0:
+        return
+    cols = min(cols, n)
+    rows = (n + cols - 1) // cols
+    thumb_w, pad, label_h, title_h = 320, 12, 28, 48
+    first = Image.open(repr_frames[0]["path"])
+    thumb_h = int(thumb_w * first.height / first.width)
+    cell_w = thumb_w + pad
+    cell_h = thumb_h + label_h + pad
+    W = cell_w * cols + pad
+    H = title_h + cell_h * rows + pad
+    sheet = Image.new("RGB", (W, H), (20, 20, 24))
+    draw = ImageDraw.Draw(sheet)
+    font, font_sm = _font(22), _font(15)
+    draw.text((pad, pad), f"CONTACT SHEET — {title}   ({n} shots)",
+              fill=(255, 180, 80), font=font)
+    for idx, fr in enumerate(repr_frames):
+        cx, cy = idx % cols, idx // cols
+        x = pad + cx * cell_w
+        y = title_h + cy * cell_h
+        img = Image.open(fr["path"]).resize((thumb_w, thumb_h), Image.LANCZOS)
+        sheet.paste(img, (x, y))
+        draw.text((x, y + thumb_h + 4), f"SHOT {fr['shot']:03d}   {fr['tc']}",
+                  fill=(230, 230, 235), font=font_sm)
+    sheet.save(path, quality=88)
+
+
 # ---------- main ----------
 
 def run(url, threshold, phash_merge, n_override, source, work_dir, cookies=None):
@@ -277,6 +313,7 @@ def run(url, threshold, phash_merge, n_override, source, work_dir, cookies=None)
     fps, merged, n_raw = detect_shots(video, threshold, phash_merge, tmp)
 
     shots = []
+    repr_frames = []
     for i, g in enumerate(merged, 1):
         dur = g["end"] - g["start"]
         rels = traj_positions(dur, n_override)
@@ -288,6 +325,15 @@ def run(url, threshold, phash_merge, n_override, source, work_dir, cookies=None)
             frames_list.append({"rel": rel, "path": fp})
         strip_path = strips_dir / f"shot_{i:03d}_strip.jpg"
         build_strip(strip_path, frames_list, i, g, fps)
+        # Representative single frame = the mid sample. Copied to a stable
+        # *_frame.jpg name purely to feed the contact sheet (one repr per shot).
+        # NOT embedded in the xlsx -- per Kary, strip and individual-frame are
+        # distinct concepts; the xlsx stays strip-only, individual frames go to
+        # their own Drive subfolder for on-demand reference (see render.py).
+        repr_src = frames_list[len(frames_list) // 2]["path"]
+        frame_path = frames_dir / f"shot_{i:03d}_frame.jpg"
+        shutil.copyfile(repr_src, frame_path)
+        repr_frames.append({"shot": i, "path": frame_path, "tc": tc(g["start"], fps)})
         shots.append({
             "shot": i,
             "start_tc": tc(g["start"], fps),
@@ -298,7 +344,11 @@ def run(url, threshold, phash_merge, n_override, source, work_dir, cookies=None)
             "sub_shots": g["sub_count"],
             "n_frames": len(frames_list),
             "strip": str(strip_path),
+            "frame": str(frame_path),
         })
+
+    contact_path = strips_dir.parent / "contact_sheet.jpg"
+    build_contact_sheet(contact_path, repr_frames, title)
 
     manifest = {
         "status": "ok",
@@ -312,6 +362,8 @@ def run(url, threshold, phash_merge, n_override, source, work_dir, cookies=None)
         },
         "work_dir": str(work_dir),
         "manifest_path": str(work_dir / "manifest.json"),
+        "frames_dir": str(frames_dir),
+        "contact_sheet": str(contact_path),
         "shots": shots,
     }
     with (work_dir / "manifest.json").open("w") as f:

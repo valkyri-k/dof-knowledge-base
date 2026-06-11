@@ -19,8 +19,11 @@ Pipeline (deterministic, no reasoning):
      from the manifest; the 8 description columns come from rows.json; the strip
      is scaled down and embedded inline.
   3. Save the xlsx into the work dir.
-  4. Unless --no-upload: create_folder(<job name>) under docgen, upload xlsx +
-     all strips + manifest.json into it, return the folder + xlsx links.
+  4. Unless --no-upload: create_folder(<job name>) under docgen, set it to
+     "anyone with the link can edit", upload xlsx + all strips + contact sheet +
+     manifest.json into it, and drop the individual shot frames into an
+     "individual-frames" subfolder (xlsx stays strip-only; frames are for
+     on-demand reference). Return the folder + xlsx links + share confirmation.
 
 Usage (CLI):
   python3 scripts/breakdown_render.py --manifest <manifest.json> --rows <rows.json> \
@@ -84,6 +87,24 @@ def _safe_name(s, fallback="breakdown"):
     return s[:80] or fallback
 
 
+def _resolve_strip(strip_path, work_dir):
+    """Find the strip image on THIS host.
+
+    The manifest stores container-absolute strip paths. When render runs on a
+    different host than extract (or the work dir moved), that absolute path is
+    gone -- the old code silently skipped the embed and still returned ok, so
+    the xlsx shipped with a blank Strip column. Fall back to the basename under
+    work_dir/strips/ before giving up. Returns a usable path or None.
+    """
+    if strip_path and os.path.exists(strip_path):
+        return strip_path
+    if strip_path:
+        cand = Path(work_dir) / "strips" / os.path.basename(strip_path)
+        if cand.exists():
+            return str(cand)
+    return None
+
+
 def _scaled_strip(strip_path, tmp_dir):
     """Write a width-EMBED_W copy of the strip for inline embed. Returns (path, w, h)."""
     im = PILImage.open(strip_path)
@@ -99,7 +120,7 @@ def _scaled_strip(strip_path, tmp_dir):
     return str(out), w, h
 
 
-def build_workbook(manifest, rows_by_shot, embed_tmp):
+def build_workbook(manifest, rows_by_shot, embed_tmp, work_dir):
     wb = Workbook()
     ws = wb.active
     ws.title = "Shot Breakdown"
@@ -121,6 +142,7 @@ def build_workbook(manifest, rows_by_shot, embed_tmp):
     strip_col_letter = get_column_letter(2)
 
     r = 2
+    n_embedded = 0
     for shot in manifest["shots"]:
         sn = shot["shot"]
         row = rows_by_shot.get(sn, {})
@@ -134,22 +156,23 @@ def build_workbook(manifest, rows_by_shot, embed_tmp):
             ws.cell(row=r, column=c, value=row.get(key, "")).alignment = wrap_top
 
         # Embed the scaled strip inline; size the row + col to it.
-        strip_path = shot.get("strip")
+        strip_path = _resolve_strip(shot.get("strip"), work_dir)
         row_h = 90
-        if strip_path and os.path.exists(strip_path):
+        if strip_path:
             embed_path, ew, eh = _scaled_strip(strip_path, embed_tmp)
             img = XLImage(embed_path)
             img.width, img.height = ew, eh
             img.anchor = f"{strip_col_letter}{r}"
             ws.add_image(img)
             row_h = eh * 0.75 + 8          # px -> points, plus a little padding
+            n_embedded += 1
         ws.row_dimensions[r].height = max(row_h, 60)
 
         for c in range(1, len(COLUMNS) + 1):
             ws.cell(row=r, column=c).border = BORDER
         r += 1
 
-    return wb
+    return wb, n_embedded
 
 
 def render(manifest_path, rows_path, title, folder_name, out_path, parent, do_upload):
@@ -167,25 +190,41 @@ def render(manifest_path, rows_path, title, folder_name, out_path, parent, do_up
         out_path = str(work_dir / f"{_safe_name(job_title)} - breakdown.xlsx")
 
     embed_tmp = tempfile.mkdtemp(prefix="breakdown_embed_", dir=str(work_dir))
-    wb = build_workbook(manifest, rows_by_shot, embed_tmp)
+    wb, n_embedded = build_workbook(manifest, rows_by_shot, embed_tmp, work_dir)
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     wb.save(out_path)
 
+    n_shots = len(manifest["shots"])
     result = {
         "status": "ok",
         "xlsx_path": os.path.abspath(out_path),
-        "n_shots": len(manifest["shots"]),
+        "n_shots": n_shots,
         "n_rows_filled": len(rows_by_shot),
+        "n_strips_embedded": n_embedded,
         "uploaded": False,
     }
+    # No-silent-skip: a populated shot list with zero embedded strips means every
+    # strip path failed to resolve on this host. The xlsx still saves (text cols
+    # are intact) but the Strip column is blank -- surface it loudly, don't ship
+    # a "looks fine" ok with an empty visual column.
+    if n_shots and n_embedded == 0:
+        result["warning"] = (
+            f"0 of {n_shots} strips embedded -- strip images not found on this host "
+            f"(looked in manifest paths + {work_dir}/strips/). Strip column is BLANK."
+        )
 
     if do_upload:
         # Lazy import so a --no-upload render needs no Drive creds.
-        from breakdown_gdrive import create_folder, upload_file, get_drive_service
+        from breakdown_gdrive import (
+            create_folder, upload_file, get_drive_service, set_anyone_writer,
+        )
         svc = get_drive_service()
         fname = _safe_name(folder_name or job_title)
         folder = create_folder(fname, parent_id=parent, service=svc)
         fid = folder["id"]
+        # "Anyone with the link can edit" on the per-job folder; cascades to every
+        # child (xlsx, strips, frames subfolder, contact sheet) in one call.
+        share = set_anyone_writer(fid, service=svc)
 
         up_xlsx = upload_file(out_path, parent_id=fid, service=svc)
         uploaded = [os.path.basename(out_path)]
@@ -195,14 +234,37 @@ def render(manifest_path, rows_path, title, folder_name, out_path, parent, do_up
             for strip in sorted(strips_dir.glob("*.jpg")):
                 upload_file(str(strip), parent_id=fid, service=svc)
                 uploaded.append(strip.name)
-        if os.path.exists(manifest_path):
-            upload_file(manifest_path, parent_id=fid, name="manifest.json", service=svc)
-            uploaded.append("manifest.json")
+        # Contact sheet (whole-video-at-a-glance) -> job folder, alongside strips.
+        contact = manifest.get("contact_sheet")
+        if contact and os.path.exists(contact):
+            upload_file(contact, parent_id=fid, name="contact_sheet.jpg", service=svc)
+            uploaded.append("contact_sheet.jpg")
+        # Individual shot frames -> their OWN subfolder. Strip and individual-frame
+        # are distinct concepts (a strip groups several actions of one shot); the
+        # xlsx stays strip-only and these frames are fetched on demand for reference.
+        frames_meta = None
+        frames_dir = Path(manifest.get("frames_dir") or (work_dir / "frames"))
+        if frames_dir.is_dir():
+            # shot_XXX_fNN.jpg = sampled frames; exclude the *_frame.jpg repr copies
+            # (those only exist to build the contact sheet, not for browsing).
+            frame_imgs = sorted(
+                p for p in frames_dir.glob("shot_*_f[0-9]*.jpg")
+                if not p.stem.endswith("_frame")
+            )
+            if frame_imgs:
+                sub = create_folder("individual-frames", parent_id=fid, service=svc)
+                for fr in frame_imgs:
+                    upload_file(str(fr), parent_id=sub["id"], service=svc)
+                frames_meta = {
+                    "id": sub["id"], "link": sub.get("link"), "n_frames": len(frame_imgs),
+                }
 
         result.update({
             "uploaded": True,
             "folder": {"id": fid, "name": folder.get("name"), "link": folder.get("link")},
+            "shared": share,
             "xlsx": {"id": up_xlsx["id"], "link": up_xlsx["link"]},
+            "frames_subfolder": frames_meta,
             "uploaded_files": uploaded,
         })
 
