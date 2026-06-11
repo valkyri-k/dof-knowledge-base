@@ -94,6 +94,26 @@ def download_drive(url_or_id, dest_path, service=None):
     }
 
 
+FOLDER_MIME = "application/vnd.google-apps.folder"
+
+
+def create_folder(name, parent_id=None, service=None):
+    """Create a Drive folder under parent_id (default = docgen folder). Returns id + link."""
+    service = service or get_drive_service()
+    parent_id = parent_id or os.environ.get("GOOGLE_DRIVE_DOCGEN_FOLDER_ID")
+    body = {"name": name, "mimeType": FOLDER_MIME}
+    if parent_id:
+        body["parents"] = [parent_id]
+    created = service.files().create(
+        body=body, fields="id,name,webViewLink", supportsAllDrives=True,
+    ).execute()
+    return {
+        "id": created["id"],
+        "name": created.get("name"),
+        "link": created.get("webViewLink"),
+    }
+
+
 def upload_file(local_path, parent_id=None, name=None, service=None):
     """Upload a local file to a Drive folder. Returns dict with id + webViewLink."""
     service = service or get_drive_service()
@@ -130,6 +150,9 @@ def _cli():
     u = sub.add_parser("upload")
     u.add_argument("path")
     u.add_argument("parent", nargs="?", default=None)
+    mk = sub.add_parser("mkfolder")
+    mk.add_argument("name")
+    mk.add_argument("parent", nargs="?", default=None)
     sub.add_parser("roundtrip")
     args = ap.parse_args()
 
@@ -153,20 +176,25 @@ def _cli():
         r = upload_file(args.path, parent_id=args.parent, service=svc)
         _emit({"status": "ok", **r})
 
+    elif args.cmd == "mkfolder":
+        r = create_folder(args.name, parent_id=args.parent, service=svc)
+        _emit({"status": "ok", **r})
+
     elif args.cmd == "roundtrip":
-        # Self-test via module API: upload tiny file -> download back -> verify -> delete
-        folder = os.environ.get("GOOGLE_DRIVE_DOCGEN_FOLDER_ID")
+        # Self-test: create folder -> upload tiny file into it -> download back ->
+        # verify -> delete folder (recursive). Exercises mkfolder + nested upload.
+        parent = os.environ.get("GOOGLE_DRIVE_DOCGEN_FOLDER_ID")
+        folder = create_folder("_breakdown_gdrive_roundtrip", parent_id=parent, service=svc)
         payload = b"breakdown-gdrive-roundtrip"
         media = MediaInMemoryUpload(payload, mimetype="text/plain")
-        body = {"name": "_breakdown_gdrive_roundtrip.txt"}
-        if folder:
-            body["parents"] = [folder]
-        created = svc.files().create(body=body, media_body=media,
-                                     fields="id", supportsAllDrives=True).execute()
+        created = svc.files().create(
+            body={"name": "probe.txt", "parents": [folder["id"]]},
+            media_body=media, fields="id", supportsAllDrives=True).execute()
         got = svc.files().get_media(fileId=created["id"]).execute()
         ok = got == payload
-        svc.files().delete(fileId=created["id"], supportsAllDrives=True).execute()
-        _emit({"status": "ok", "roundtrip": ok, "id": created["id"]})
+        # Deleting the folder removes its children too.
+        svc.files().delete(fileId=folder["id"], supportsAllDrives=True).execute()
+        _emit({"status": "ok", "roundtrip": ok, "folder_id": folder["id"]})
 
 
 if __name__ == "__main__":
