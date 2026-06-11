@@ -58,6 +58,9 @@
 ### 2026-06-09 afternoon session (Vimeo skill + J26085 log recovery)
 Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+Trello sync，但 session log 冇寫到。Kary 喺本 session 報告，Mugi 補建 `j26085_minerals_hang_seng_facility_management_award.md` per-job file + scaffold + Interaction Log entry。另一件事：Kary 要搵 EMSD Dems Briefing Vimeo links，Mugi 初次答「冇 Vimeo 整合」。Kary 即時更新 KB repo，加入 `skills/integration/vimeo-search.md` + CLAUDE.md routing entry；pull 後 Mugi 正確 read skill file、執行 `scripts/vimeo-search.js`，返 5 條 results。**Key takeaway**：Vimeo search 係 title-text search via REST script，唔係 cloud MCP；skill routing rule 已入 CLAUDE.md，下次直接 trigger。
 
+### 2026-06-11 morning session (J26082 status + Benjy J26077 + Magnific MCP)
+三條主線。(1) Benjy J26077 CWJ June：12 Calendar events + 12 Trello cards batch created，Katy/Max/Keith 分配完成——Benjy 首次 direct request，flow 順暢。(2) J26082 EMSTF 30A：Kary 喺 job channel 分享 Kelly@EMSD debrief（script revised，creative 型格化，content regrouped），建立 per-job file + Jun-16 Calendar event。Kary 糾正 shorthand 應用 `EMSTF 30A`（唔係 `EMSD Corp Video`）——已改 event + 入 memory。(3) Magnific：Kary 問 account balance → Mugi 冇 Magnific MCP → Kary 提供 `claude mcp add` command → 已 add，待 restart 生效。同時 CWJ alias 加入 J26075/J26077。**Key decision**：J26082 Calendar shorthand = `EMSTF 30A` 已 locked 入 memory + feedback file。
+
 ---
 
 ## Request Log
@@ -77,3 +80,6 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 | 2026-06-05 | All remaining open threads cleared by Kary instruction | ✅ |
 | 2026-06-09 | Benjy J26085 session log recovery (server restart before log) | Supplemented j26085 per-job file ✅ |
 | 2026-06-09 | Vimeo links — EMSD Dems Briefing | 5 results returned (vimeo-search.js) ✅ |
+| 2026-06-11 | J26082 Calendar shorthand correction → `EMSTF 30A` | Fixed existing event + saved to memory ✅ |
+| 2026-06-11 | J26082 Jun-16 Calendar event: Revise StoryFlow | ✅ Created (colorId 5) |
+| 2026-06-11 | Magnific account balance query | No MCP available → Kary provided `claude mcp add` command → added, pending restart |
