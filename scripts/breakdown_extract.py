@@ -47,8 +47,9 @@ from scenedetect import detect, ContentDetector
 from PIL import Image, ImageDraw, ImageFont
 
 # pHash same-shot merge is a quality refinement, not a hard requirement. If
-# imagehash is absent (e.g. before the Dockerfile rebuild lands it) we fall back
-# to raw scenedetect boundaries and flag phash_merge:false in the manifest.
+# imagehash is absent we fall back to raw scenedetect boundaries and flag
+# phash_merge:false in the manifest. (imagehash is installed on the container's
+# persistent volume, so this fallback only fires in a stripped env.)
 try:
     import imagehash
     HAVE_IMAGEHASH = True
@@ -73,13 +74,27 @@ def detect_source(url):
     )
 
 
-def download_youtube(url, work_dir):
+def yt_cookies_file(override=None):
+    """Path to a dof.internal YouTube cookies.txt, or None if not provisioned.
+
+    yt-dlp on a Zeabur datacenter IP gets 'Sign in to confirm you're not a bot'
+    without cookies. The file lives on the PERSISTENT volume (NOT in the git
+    repo -- it's a credential) and must be re-exported when it expires. Resolve
+    order: explicit --cookies override > $YOUTUBE_COOKIES_FILE > default path.
+    """
+    p = override or os.environ.get("YOUTUBE_COOKIES_FILE") \
+        or "/home/node/.config/yt-dlp/cookies.txt"
+    return p if os.path.exists(p) else None
+
+
+def download_youtube(url, work_dir, cookies=None):
     """Download a YouTube video with yt-dlp. Returns (path, title)."""
     out_tmpl = str(work_dir / "source.%(ext)s")
+    cookie_args = ["--cookies", cookies] if cookies else []
     # mp4-preferred, single progressive/merged file, capped at 1080p to keep
     # frame grabs fast -- breakdown only needs legible stills, not master quality.
     subprocess.run(
-        ["yt-dlp", "-q", "--no-warnings",
+        ["yt-dlp", "-q", "--no-warnings", *cookie_args,
          "-f", "bestvideo[height<=1080][ext=mp4]+bestaudio/best[height<=1080]/best",
          "--merge-output-format", "mp4",
          "-o", out_tmpl, url],
@@ -90,7 +105,7 @@ def download_youtube(url, work_dir):
         raise RuntimeError("yt-dlp produced no output file")
     video = files[0]
     title = subprocess.run(
-        ["yt-dlp", "-q", "--no-warnings", "--print", "%(title)s", url],
+        ["yt-dlp", "-q", "--no-warnings", *cookie_args, "--print", "%(title)s", url],
         capture_output=True, text=True,
     ).stdout.strip() or video.stem
     return video, title
@@ -230,7 +245,7 @@ def build_strip(path, frames_list, shot_idx, g, fps):
 
 # ---------- main ----------
 
-def run(url, threshold, phash_merge, n_override, source, work_dir):
+def run(url, threshold, phash_merge, n_override, source, work_dir, cookies=None):
     work_dir = Path(work_dir)
     frames_dir = work_dir / "frames"
     strips_dir = work_dir / "strips"
@@ -240,7 +255,7 @@ def run(url, threshold, phash_merge, n_override, source, work_dir):
 
     src_type = source if source != "auto" else detect_source(url)
     if src_type == "youtube":
-        video, title = download_youtube(url, work_dir)
+        video, title = download_youtube(url, work_dir, cookies=yt_cookies_file(cookies))
     else:
         video, title = download_drive(url, work_dir)
 
@@ -298,13 +313,16 @@ def _cli():
     ap.add_argument("--source", choices=["auto", "youtube", "drive"], default="auto")
     ap.add_argument("--phash", type=int, default=90)
     ap.add_argument("--work-dir", default=None, dest="work_dir")
+    ap.add_argument("--cookies", default=None,
+                    help="YouTube cookies.txt path (overrides $YOUTUBE_COOKIES_FILE)")
     a = ap.parse_args()
 
     threshold = a.threshold if a.threshold is not None \
         else (SENS[a.sensitivity] if a.sensitivity else 18.0)
     work_dir = a.work_dir or tempfile.mkdtemp(prefix="breakdown_")
 
-    manifest = run(a.url, threshold, a.phash, a.n_frames, a.source, work_dir)
+    manifest = run(a.url, threshold, a.phash, a.n_frames, a.source, work_dir,
+                   cookies=a.cookies)
     # Emit the full manifest as one line so Mugi parses the shot list + strip
     # paths directly; manifest.json on disk is the same payload for re-reads.
     print(json.dumps(manifest, ensure_ascii=False))
