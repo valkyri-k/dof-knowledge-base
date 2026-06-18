@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """
-get-youtube-token.py — one-time: obtain a youtube.readonly OAuth refresh token
-for the DOF dofofapple@gmail.com channel, used by scripts/youtube-search.js.
+get-youtube-token.py — one-time: obtain a `youtube` (manage) OAuth refresh token
+for the DOF dofofapple@gmail.com channel, used by scripts/youtube-search.js
+(read: search incl. unlisted) and scripts/youtube-edit.js (write: privacy /
+description / title). The `youtube` scope is a superset of readonly, so one token
+covers both search and edit.
 
 Reuses the existing dofofapple OAuth client (~/.credentials/youtube/client_secret.json,
 GCP project youtube-api-492515). Opens a browser for consent — you MUST log in as
 dofofapple@gmail.com (NOT karyto.dof). Writes the refresh token to
-~/.credentials/youtube/mugi-readonly-token.txt (chmod 600). Does NOT print the
+~/.credentials/youtube/mugi-token.txt (chmod 600). Does NOT print the
 token to stdout, to avoid leaking it into logs/chat.
 
 Usage: python3 scripts/get-youtube-token.py
@@ -18,8 +21,8 @@ import stat
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 CLIENT_SECRET = os.path.expanduser("~/.credentials/youtube/client_secret.json")
-OUT = os.path.expanduser("~/.credentials/youtube/mugi-readonly-token.txt")
-SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
+OUT = os.path.expanduser("~/.credentials/youtube/mugi-token.txt")
+SCOPES = ["https://www.googleapis.com/auth/youtube"]
 
 
 def main():
