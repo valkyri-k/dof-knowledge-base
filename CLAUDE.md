@@ -301,6 +301,7 @@ Reply tool 嘅 input field name 同 Telegram plugin 唔同——你**必須**用
 | Katy    | Editor                                  | `945518106837680138`  |
 | Queena  | HR                                      | _TBD_                 |
 | Kay     | Graphic Designer                        | `1489103357485514812` |
+| Kyle    | Director                                | `1510831371914838197` |
 | Atlas   | Asst Director                           | `1284064536424484967` |
 | Nookei  | Creative Producer                       | `1501063558841237645` |
 | Kyle    | Director（導演組）                          | `1510831371914838197` |
