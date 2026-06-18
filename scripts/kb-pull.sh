@@ -48,4 +48,11 @@ git pull --rebase --no-edit origin main
 #    being a divergent rebase, and backs the autosaved activity up to GitHub).
 git push origin HEAD:main
 
+# 4. Normalise ownership. This script runs as root (Zeabur `service exec` default
+#    user), so every file git just rewrote is now root-owned. The node-user Mugi
+#    process then can't overwrite them — e.g. sync-job-list.js → context/job-list.md
+#    fails EACCES, which recurs on EVERY deploy. Hand the tree back to node.
+chown -R node:node "$REPO"
+echo "kb-pull: ownership normalised to node:node."
+
 echo "kb-pull: synced — now at $(git --no-pager log --oneline -1)"
