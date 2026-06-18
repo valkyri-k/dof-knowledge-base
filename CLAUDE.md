@@ -303,6 +303,7 @@ Reply tool 嘅 input field name 同 Telegram plugin 唔同——你**必須**用
 | Kay     | Graphic Designer                        | `1489103357485514812` |
 | Atlas   | Asst Director                           | `1284064536424484967` |
 | Nookei  | Creative Producer                       | `1501063558841237645` |
+| Kyle    | Director（導演組）                          | `1510831371914838197` |
 
 **Discord mention 用法：** 需要 escalate 去某個同事時，用 `<@Discord_ID>` format 做精準 mention（e.g. `<@1489108444475686943>` = Sohling）。Queena 嘅 ID 暫時未填，等 Kary 之後補返。
 
@@ -401,6 +402,7 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 | 刷新 active job cache（由 Airtable Master Job Log sync `status = Current` rows 入 `context/job-list.md`） | `skills/producer/update-job-list.md` | "update job list"、"update current job list"、"sync job list"、"refresh job list"、"對下個 job list"、"更新 job list" |
 | 用片名搵 Vimeo 片（title-text search，返 share link + privacy；**唔掂 Job#**） | `skills/integration/vimeo-search.md` | "Vimeo link"、"Vimeo links of X"、"俾我 X 嘅 Vimeo link"、"搵 Vimeo X"、"X 條片個 link"、"Vimeo 有冇 X" |
 | 拆片 shot / 出分鏡表（**片 URL → shot breakdown Excel**，YouTube/Drive link）| `skills/director/video-breakdown-playbook.md` | "拆 shot"、"shot breakdown"、"分鏡表"、"breakdown 呢條片"、"幫我拆呢條片"、"出個 shot list"、"video breakdown" + 一條 URL |
+| Ad-hoc reminder：到時原文 post 一段嘢去某 channel（set / list / 改 / cancel；**one-off，非 recurring**）| `skills/integration/reminder-set.md` | "提我"、"remind me"、"到時提"、"今晚/聽日 post X 落 [channel]"、"夜啲出返 X"、"set 個 reminder"、"list 我啲 reminder"、"改/cancel 嗰個 reminder"、"唔使 post 喇" |
 
 **嚴格 routing rule：** 收到以上 keywords 嘅 request，**唔可以靠記憶答，必須先 read 對應 skill file**。Quick Reference 入面有的就直接答，Quick Reference 搵唔到就先 read context files，context files 搵唔到就 read skill files。
 
