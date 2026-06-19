@@ -75,6 +75,8 @@ function slim(rec) {
     target: f.target || '',
     type: f.type || '',
     status: f.status || '',
+    requested_by: f.requested_by || '',
+    requested_by_id: f.requested_by_id || '',
     payload: f.payload || '',
   };
 }
@@ -92,6 +94,10 @@ async function cmdSet() {
     type: (o.type && String(o.type).trim()) || 'replay',
     status: 'pending',
   };
+  // optional provenance: who issued the instruction (Discord envelope user / user_id)
+  for (const k of ['requested_by', 'requested_by_id']) {
+    if (o[k] && String(o[k]).trim()) fields[k] = String(o[k]).trim();
+  }
   const data = await apiCall('POST', '', { records: [{ fields }], typecast: true });
   console.log(JSON.stringify(slim(data.records[0]), null, 2));
 }
@@ -121,10 +127,10 @@ async function cmdEdit() {
   if (!id) throw new Error('edit: missing <recordId> (arg 3).');
   const o = await readJsonStdin('edit');
   const fields = {};
-  for (const k of ['label', 'fire_at', 'target', 'payload', 'type']) {
+  for (const k of ['label', 'fire_at', 'target', 'payload', 'type', 'requested_by', 'requested_by_id']) {
     if (o[k] !== undefined) fields[k] = k === 'payload' ? String(o[k]) : String(o[k]).trim();
   }
-  if (Object.keys(fields).length === 0) throw new Error('edit: stdin JSON had no editable field (label/fire_at/target/payload/type).');
+  if (Object.keys(fields).length === 0) throw new Error('edit: stdin JSON had no editable field (label/fire_at/target/payload/type/requested_by/requested_by_id).');
   const data = await apiCall('PATCH', '', { records: [{ id, fields }], typecast: true });
   console.log(JSON.stringify(slim(data.records[0]), null, 2));
 }

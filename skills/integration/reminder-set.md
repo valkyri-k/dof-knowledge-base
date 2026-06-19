@@ -43,10 +43,12 @@ n8n workflow `d4VcGHDHLfeVKjgr`（Reminder Poster）每 5 分鐘 poll，搵 `sta
 
 | 欄位 | 點 resolve |
 |---|---|
-| `payload` | **要 post 出去嗰段原文**。用戶口述咩就存咩，**唔好 paraphrase / 加料**。message 喺 set 嗰刻定稿。 |
+| `payload` | 要 post 出去嗰段。**唔好照抄原話** —— 跟下面〈Payload 點砌〉處理（動作內容逐字保留、排程時間語轉 fire-moment、提第二個人加 attribution）。 |
 | `fire_at` | 用戶講嘅時間 → 換成 **ISO 8601 連 +08:00 offset**（Asia/Hong_Kong），e.g.「今晚 9 點」→ `2026-06-18T21:00:00+08:00`。相對時間（「兩個鐘後」「聽日朝早」）由你按當前 HK 時間計。時間含糊（「夜啲」冇講幾點）→ 問清楚先,唔好估。⚠️ **Discord envelope `ts` 係 UTC**——計算相對 fire_at 之前，必須先 +08:00 換成 HKT（e.g. `ts="...T01:35Z"` = HKT 09:35）。 |
 | `target` | 見下面 Target Resolution |
 | `label` | 你生成嘅短標題（人睇，e.g.「提 Benjy 交 J26033 grade」），方便之後 list / 認返。 |
+| `requested_by` | **邊個 set 呢條**（人睇 + attribution 用）。攞 envelope `user_id` 去 **CLAUDE.md `Team（快速查找）` table** map 返 canonical DOF 名（e.g. `1328602029303791646` → `Kary`）；map 唔到 fallback envelope `user`（display name）。 |
+| `requested_by_id` | envelope `user_id` **原樣存**（穩定 audit key，名變 / 撞名都認得返）。 |
 
 **Target Resolution：**
 
@@ -56,6 +58,31 @@ n8n workflow `d4VcGHDHLfeVKjgr`（Reminder Poster）每 5 分鐘 poll，搵 `sta
 
 **Tag 人（@mention）：** payload 入面提到要 tag 邊個同事 → 查 **CLAUDE.md `Team（快速查找）` table** 攞 Discord ID → 喺 payload 寫成 `<@Discord_ID>`（poller 原文 post 就會真係 tag 到）。table 入面冇個名（e.g. 未 record）→ 同用戶講「我 record 入面冇 [name] 嘅 Discord ID，補返俾我就 tag 到」，唔好亂 tag。
 
+### Payload 點砌（核心 —— 唔係照抄原話）
+
+`payload` 喺 set 嗰刻就 draft 死、原文存，到時 poller 照 post。但**砌嘅時候要企喺「fire 嗰一刻」嘅視角寫**，因為呢段字係到時先有人睇。三條 rule：
+
+1. **動作內容逐字保留** —— 用戶想提醒做嘅嗰件事（check calendar / send grade / 問 client），原文唔好 paraphrase、唔好加油添醋、唔好換字。
+
+2. **排程時間語 → fire-moment deixis** —— 用戶句子入面**用嚟定 `fire_at` 嗰個時間詞**，唔屬於 message 內容，要按「到時睇返」嘅視角轉返：
+   - 「**星期一** check calendar」（星期一 = 幾時 fire）→ fire 嗰日就係星期一，message 講「**今日** check calendar」
+   - 「**聽日朝** send grade」→「**今朝** send grade」
+   - 「**兩個鐘後**提我食藥」→ 純相對排程詞，fire 嗰刻冇對應 deixis → drop 咗，淨低「**記得**食藥」
+   - 拿唔準點轉 → fallback「**記得 [動作]**」，唔好硬塞返個排程時間詞落 message。
+
+3. ⚠️ **分清「排程時間」定「內容時間」** —— 句子可以同時有兩個時間詞，**只有定 `fire_at` 嗰個**先轉 deixis；屬於動作內容嗰個**原文保留**。
+   - 例：「提我**聽日**問 client **星期五**得唔得」→ 聽日 = 排程（定 fire_at，轉 fire-moment）、星期五 = 內容（client 要答嘅嗰日，原文留）→ payload =「**記得問 client 星期五得唔得**」。
+
+### Attribution（提第二個人先加）
+
+當 **target 收件人 ≠ 設定人**（即係叫 Mugi 提另一個同事），message 結尾要 attribute 返係邊個叫提，收件人先知唔係 bot 自己出。
+
+- Format：`<@收件人Discord_ID> [砌好嘅內容] —— from [設定人 canonical 名]`
+- 設定人**淨係寫個名，唔好 @-tag**（避免重複 ping 個設定人；收件人先要 ping）。
+- 設定人 canonical 名 = `requested_by`（已由 envelope `user_id` map 好）。
+- **自己提自己**（收件人 = 設定人，e.g.「提我…」）→ **唔加 attribution**。
+- 例：Kary 講「提 Sohling 星期一 check calendar」→ payload =`<@SohlingId> 記得今日 check calendar —— from Kary`
+
 ### Step 2 — 寫入（stdin heredoc，避開 quoting）
 
 ```bash
@@ -64,12 +91,14 @@ node scripts/reminder.js set <<'JSON'
   "label": "提 Benjy 交 J26033 grade",
   "fire_at": "2026-06-18T21:00:00+08:00",
   "target": "1303...",
-  "payload": "<@1221464062085562441> 記得今晚 send J26033 嘅 grade reference 過嚟"
+  "payload": "<@1221464062085562441> 記得今晚 send J26033 嘅 grade reference 過嚟 —— from Kary",
+  "requested_by": "Kary",
+  "requested_by_id": "1328602029303791646"
 }
 JSON
 ```
 
-Script 回傳 `{ id, label, fire_at, target, type, status, payload }`。
+`requested_by` / `requested_by_id` 每次都帶埋（見 Step 1 表）；自己提自己都照存，淨係 payload 唔加 attribution wrapper。Script 回傳 `{ id, label, fire_at, target, type, status, requested_by, requested_by_id, payload }`。
 
 ### Step 3 — 覆述（直接寫入，唔 pre-confirm）
 
@@ -117,7 +146,7 @@ node scripts/reminder.js cancel <recordId>
 node scripts/reminder.js list
 ```
 
-回 JSON array。整理成人睇：逐條 **label → 幾時發 → 去邊 channel →（status）**。冇 pending → 講「而家冇未發嘅 reminder」。
+回 JSON array（每條含 `requested_by`）。整理成人睇：逐條 **label → 幾時發 → 去邊 channel → 邊個 set（`requested_by`）→（status）**。冇 pending → 講「而家冇未發嘅 reminder」。
 
 ---
 
@@ -125,4 +154,4 @@ node scripts/reminder.js list
 
 - **只做 one-off**。用戶要「每日 / 每週」recurring → 唔係呢個 skill（reminder queue 唔 model recurring）；同佢講要 recurring 要另開 n8n cron。
 - **唔好估時間**：含糊時間問清楚先寫。
-- **payload 唔 paraphrase**：原文存原文。
+- **Payload boundary（三層，見〈Payload 點砌〉）**：(1) 動作內容逐字保留、唔 paraphrase；(2) 排程時間詞轉 fire-moment deixis（星期一→今日），內容時間詞原文留；(3) 提第二個人加 `—— from [設定人]` attribution，自己提自己唔加。
