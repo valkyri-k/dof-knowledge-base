@@ -15,7 +15,7 @@
 
 同 [[youtube-search]] 完全一樣 —— 三個 Zeabur env var（`YOUTUBE_CLIENT_ID` / `YOUTUBE_CLIENT_SECRET` / `YOUTUBE_REFRESH_TOKEN`），refresh token consent 為 **dofofapple@gmail.com**，scope `youtube`（manage，已 cover read + write）。
 
-> 🚫 **絕對禁止用任何 cloud MCP 或 connected tool 去改 YouTube**，就算 `claude mcp list` 顯示 ✓ Connected 都唔好用。所有 edit 必須行 `scripts/youtube-edit.js`（內部用三個 env + OAuth refresh + `videos.update`）。冇例外。
+> 🚫 **絕對禁止用任何 cloud MCP 或 connected tool 去改 YouTube**，就算 `claude mcp list` 顯示 ✓ Connected 都唔好用。所有 edit 必須行 `/home/node/kb/scripts/youtube-edit.js`（內部用三個 env + OAuth refresh + `videos.update`）。冇例外。**用絕對路徑** —— Mugi cwd 係 `/home/node`，relative `scripts/...` 會搵唔到。
 
 ---
 
@@ -23,7 +23,7 @@
 
 呢個係**寫操作，改緊 client-facing 嘅片**。改錯 = 客即刻開唔到條 link，或者唔小心將 private 片放出去。所以**每一次寫之前必須**：
 
-1. **確認係邊條片** —— 先唔帶任何 flag 行一次 `scripts/youtube-edit.js <id>`（read-only），攞返**片名 + 當前 privacy + link**，畀用戶睇實係咪嗰條。
+1. **確認係邊條片** —— 先唔帶任何 flag 行一次 `/home/node/kb/scripts/youtube-edit.js <id>`（read-only），攞返**片名 + 當前 privacy + link**，畀用戶睇實係咪嗰條。
 2. **覆述改乜** —— 同用戶講清楚「`<片名>`：privacy `unlisted` → `private`」（或 description / title 改成點），等佢**明確 confirm** 先行寫。
 3. **一次一條** —— 唔可以一個 request 自動 loop 改多條。每條都要行 step 1–2。
 4. **改完 report before→after** —— 將 script 出嘅 `changes` 原原本本講返。
@@ -34,7 +34,7 @@
 
 ## No-Fallback Rule（hard）
 
-呢個 skill 嘅 edit **只可以**經 `scripts/youtube-edit.js` 做。**唔可以**：
+呢個 skill 嘅 edit **只可以**經 `/home/node/kb/scripts/youtube-edit.js` 做。**唔可以**：
 
 - 自己 call 任何 YouTube / cloud MCP / connected tool 去改
 - 自己手寫 `fetch()` / `curl` 打 `videos.update`（script 已做晒 OAuth refresh + GET-merge-PUT，避免 reset 其他 field）
@@ -49,7 +49,7 @@
 ### Step 1 — 讀當前狀態（confirm 用，唔寫）
 
 ```bash
-node scripts/youtube-edit.js dQw4w9WgXcQ
+node /home/node/kb/scripts/youtube-edit.js dQw4w9WgXcQ
 ```
 
 出 `{ id, mode: "read", current: { name, privacy, description, link } }`。攞嚟同用戶 confirm。
@@ -58,13 +58,13 @@ node scripts/youtube-edit.js dQw4w9WgXcQ
 
 ```bash
 # 收返做 private
-node scripts/youtube-edit.js dQw4w9WgXcQ --privacy private
+node /home/node/kb/scripts/youtube-edit.js dQw4w9WgXcQ --privacy private
 
 # 改 description（記得用引號包住成段）
-node scripts/youtube-edit.js dQw4w9WgXcQ --description "Final delivery cut — 2026 campaign"
+node /home/node/kb/scripts/youtube-edit.js dQw4w9WgXcQ --description "Final delivery cut — 2026 campaign"
 
 # 一次過改埋 title + privacy
-node scripts/youtube-edit.js dQw4w9WgXcQ --title "ClientX Brand Film (Final)" --privacy unlisted
+node /home/node/kb/scripts/youtube-edit.js dQw4w9WgXcQ --title "ClientX Brand Film (Final)" --privacy unlisted
 ```
 
 `--privacy` 只接受 `public` / `unlisted` / `private`。Script 會 GET 當前 snippet+status → 只覆寫你指定嗰幾項（其餘 writable field 照搬，唔會 reset）→ PUT `videos.update`。

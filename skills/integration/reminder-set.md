@@ -13,7 +13,7 @@
 
 ## Credentials
 
-所有 Airtable 操作行 `scripts/reminder.js`（內部用 Zeabur env `AIRTABLE_PAT` + REST 打 DOF Reminders base `appaAEiqHzUfLCGAU` / table `Reminders`）。
+所有 Airtable 操作行 `/home/node/kb/scripts/reminder.js`（內部用 Zeabur env `AIRTABLE_PAT` + REST 打 DOF Reminders base `appaAEiqHzUfLCGAU` / table `Reminders`）。**用絕對路徑** —— Mugi cwd 係 `/home/node`，relative `scripts/...` 會搵唔到（script 喺 `/home/node/kb/scripts/`）。
 
 > 🚫 **絕對禁止用任何 cloud MCP / connected Airtable tool**，就算 `claude mcp list` 顯示 ✓ Connected 都唔好用（同 Calendar / Vimeo 一樣：headless turn 唔保證有，亦違反 env-credential 原則）。
 
@@ -21,7 +21,7 @@
 
 ## No-Fallback Rule（hard）
 
-呢個 skill 嘅 Airtable 讀寫**只可以**經 `scripts/reminder.js`。**唔可以**：
+呢個 skill 嘅 Airtable 讀寫**只可以**經 `/home/node/kb/scripts/reminder.js`。**唔可以**：
 
 - 自己 call cloud Airtable MCP / connected tool
 - 自己手寫 `fetch()` / `curl` 打 Airtable（script 已做晒 auth / schema / pagination）
@@ -111,7 +111,7 @@ n8n workflow `d4VcGHDHLfeVKjgr`（Reminder Poster）每 5 分鐘 poll，搵 `sta
 ### Step 2 — 寫入（stdin heredoc，避開 quoting）
 
 ```bash
-node scripts/reminder.js set <<'JSON'
+node /home/node/kb/scripts/reminder.js set <<'JSON'
 {
   "label": "提 Benjy 交 J26033 grade",
   "fire_at": "2026-06-18T21:00:00+08:00",
@@ -155,7 +155,7 @@ JSON
 **EDIT**（改時間 / 改原文 / 改 target）：
 
 ```bash
-node scripts/reminder.js edit <recordId> <<'JSON'
+node /home/node/kb/scripts/reminder.js edit <recordId> <<'JSON'
 { "fire_at": "2026-06-18T22:30:00+08:00" }
 JSON
 ```
@@ -165,7 +165,7 @@ JSON
 **CANCEL**（un-fired，整條刪走）：
 
 ```bash
-node scripts/reminder.js cancel <recordId>
+node /home/node/kb/scripts/reminder.js cancel <recordId>
 ```
 
 回 `{ cancelled, deleted: true }` → 同用戶講「cancel 咗 [label]」。
@@ -173,7 +173,7 @@ node scripts/reminder.js cancel <recordId>
 **LIST**（default 只列 pending = 未發嘅 queue；要連 done/error 加 `--all`）：
 
 ```bash
-node scripts/reminder.js list
+node /home/node/kb/scripts/reminder.js list
 ```
 
 回 JSON array（每條含 `requested_by`）。整理成人睇：逐條 **label → 幾時發 → 去邊 channel → 邊個 set（`requested_by`）→（status）**。冇 pending → 講「而家冇未發嘅 reminder」。

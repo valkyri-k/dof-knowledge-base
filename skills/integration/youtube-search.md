@@ -25,7 +25,7 @@ YouTube Data API v3 冇 personal access token，行 **Google OAuth**（同 Googl
 >
 > 🔑 **同一個 token 兩用：** scope 係 `youtube`（manage，readonly 嘅 superset），所以呢個 search skill 同 [[youtube-edit]]（改 privacy / description）**共用**同一套三個 env + 同一個 refresh token。search 唔需要 write 權，但 manage scope 一樣讀得到。
 >
-> 🚫 **絕對禁止用任何 cloud MCP 或 connected tool 去打 YouTube**，就算 `claude mcp list` 顯示 ✓ Connected 都唔好用。interactive「Connected」唔保證 Discord-triggered headless turn 都喺度，亦違反 env-credential 原則。所有 search 必須行 `scripts/youtube-search.js`（內部用三個 env + REST + pagination）。冇例外。
+> 🚫 **絕對禁止用任何 cloud MCP 或 connected tool 去打 YouTube**，就算 `claude mcp list` 顯示 ✓ Connected 都唔好用。interactive「Connected」唔保證 Discord-triggered headless turn 都喺度，亦違反 env-credential 原則。所有 search 必須行 `/home/node/kb/scripts/youtube-search.js`（內部用三個 env + REST + pagination）。冇例外。**用絕對路徑** —— Mugi cwd 係 `/home/node`，relative `scripts/...` 會搵唔到。
 
 Refresh token 點 generate（一次性）：本機跑 `python3 scripts/get-youtube-token.py`，browser login dofofapple → token 寫落 `~/.credentials/youtube/mugi-token.txt`（唔 print）→ copy 上 Zeabur。
 
@@ -33,7 +33,7 @@ Refresh token 點 generate（一次性）：本機跑 `python3 scripts/get-youtu
 
 ## No-Fallback Rule（hard）
 
-呢個 skill 嘅 search **只可以**經 `scripts/youtube-search.js` 做。**唔可以**：
+呢個 skill 嘅 search **只可以**經 `/home/node/kb/scripts/youtube-search.js` 做。**唔可以**：
 
 - 自己 call 任何 YouTube / cloud MCP / connected tool 去 fetch
 - 自己手寫 `fetch()` / `curl` 去打 YouTube API（script 已經做晒 OAuth refresh + pagination + privacy resolve）
@@ -47,10 +47,10 @@ Refresh token 點 generate（一次性）：本機跑 `python3 scripts/get-youtu
 
 ### Step 1 — 行 search script
 
-喺 KB repo root 行（query term 用用戶講嘅 client / project / event 名）：
+行（絕對路徑，cwd 無關；query term 用用戶講嘅 client / project / event 名）：
 
 ```bash
-node scripts/youtube-search.js EMSD Dems Briefing
+node /home/node/kb/scripts/youtube-search.js EMSD Dems Briefing
 ```
 
 Script 會：OAuth refresh 攞 access token → 攞 channel uploads playlist → **本機 title cache 取 / 增量補新**（見下）→ 本機按片名 filter（**每個 query 字都要喺片名出現**，case-insensitive substring）→ `videos.list` 補 privacy + duration（**每次即時，唔 cache**）→ 喺 stdout print `{ query, mode, scanned, count, results[] }`，每個 result 有 `id` / `name` / `link`（`youtu.be/<id>`）/ `privacy` / `published` / `duration`。
@@ -68,7 +68,7 @@ Script 會：OAuth refresh 攞 access token → 攞 channel uploads playlist →
 **`--rebuild` flag：** 如果懷疑 cache 壞咗 / 片名對唔上 / 數量明顯唔啱，可加 `--rebuild`（或 `--full`）強制重 scan 全 channel：
 
 ```bash
-node scripts/youtube-search.js --rebuild EMSD Dems Briefing
+node /home/node/kb/scripts/youtube-search.js --rebuild EMSD Dems Briefing
 ```
 
 正常唔需要 —— cache 會自動 self-heal（file 缺 / corrupt → 自動 full-build）。Read-only fs 都 OK（淨係冇咗加速，search 照行）。

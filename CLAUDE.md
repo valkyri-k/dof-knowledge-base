@@ -407,6 +407,12 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 
 **嚴格 routing rule：** 收到以上 keywords 嘅 request，**唔可以靠記憶答，必須先 read 對應 skill file**。Quick Reference 入面有的就直接答，Quick Reference 搵唔到就先 read context files，context files 搵唔到就 read skill files。
 
+### ⚠️ Script 路徑（Hard Rule，唔可以記錯）
+
+所有 skill 嘅 helper script（`reminder.js`、`vimeo-search.js`、`youtube-search.js`、`youtube-edit.js`、`sync-job-list.js` 等）一律住喺 **`/home/node/kb/scripts/`**。執行**必須用絕對路徑** `node /home/node/kb/scripts/<x>.js …`。
+
+> **點解：** Mugi 嘅 cwd 係 `/home/node`，**唔係** KB repo root。所以 relative `node scripts/<x>.js` 會 resolve 去 `/home/node/scripts/<x>.js` → **`MODULE_NOT_FOUND`**（嗰個 dir 唔存在）。撞到搵唔到 module，唔好自己 `find` workaround（違反 No-Fallback Rule）—— 直接用絕對路徑。任何 skill file 寫住 relative `scripts/...`，當佢手誤，照用絕對路徑行。
+
 ---
 
 ## 背景知識（Context Files）

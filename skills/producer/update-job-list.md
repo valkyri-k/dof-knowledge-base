@@ -15,13 +15,13 @@ Airtable 操作用 **read-only PAT**（Zeabur env var `AIRTABLE_PAT`）+ 直接 
 
 > 🚫 **絕對禁止用任何 Airtable MCP tool**（`mcp__*airtable*`、claude.ai 嘅 "Airtable" connected tool 全部唔得，就算 `claude mcp list` 顯示 ✓ Connected 都唔好用）。
 > 原因同 Calendar 一樣：Mugi 嘅 Claude Code 以 `karyto.dof@gmail.com` 登入 claude.ai，會 silently 繼承 cloud MCP，但 interactive「Connected」唔保證 Discord-triggered headless turn 都喺度，而且唔好做第一個違反 env-credential 原則嘅 case。
-> 所有 fetch 必須行 `scripts/sync-job-list.js`（內部用 PAT + REST + pagination）。冇例外。
+> 所有 fetch 必須行 `/home/node/kb/scripts/sync-job-list.js`（內部用 PAT + REST + pagination）。冇例外。**用絕對路徑** —— Mugi cwd 係 `/home/node`，relative `scripts/...` 會搵唔到。
 
 ---
 
 ## No-Fallback Rule（hard）
 
-呢個 skill 嘅 fetch + merge + write **只可以**經 `scripts/sync-job-list.js` 做。**唔可以**：
+呢個 skill 嘅 fetch + merge + write **只可以**經 `/home/node/kb/scripts/sync-job-list.js` 做。**唔可以**：
 
 - 自己 call Airtable MCP / connected tool 去 fetch records
 - 自己手寫 `fetch()` / `curl` 去打 Airtable API（script 已經做晒 pagination + field resolve + merge）
@@ -35,10 +35,10 @@ Airtable 操作用 **read-only PAT**（Zeabur env var `AIRTABLE_PAT`）+ 直接 
 
 ### Step 1 — 行 sync script
 
-喺 KB repo root 行：
+行（絕對路徑，cwd 無關）：
 
 ```bash
-node scripts/sync-job-list.js
+node /home/node/kb/scripts/sync-job-list.js
 ```
 
 Script 會：fetch 所有 `status = Current` rows → merge 入現有 `context/job-list.md`（保留 manual aliases + no-channel annotation）→ rewrite Active Jobs table + 更新 `Last synced` line → 喺 stdout print 一個 JSON diff summary。

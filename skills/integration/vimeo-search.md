@@ -15,13 +15,13 @@ Vimeo 操作用 **personal access token**（Zeabur env var `VIMEO_TOKEN`，`priv
 
 > 🚫 **絕對禁止用任何 cloud MCP 或 connected tool 去打 Vimeo**，就算 `claude mcp list` 顯示 ✓ Connected 都唔好用。
 > 原因同 Calendar / Airtable 一樣：Mugi 嘅 Claude Code 以 `karyto.dof@gmail.com` 登入 claude.ai 會 silently 繼承 cloud MCP，但 interactive「Connected」唔保證 Discord-triggered headless turn 都喺度，亦唔好違反 env-credential 原則。
-> 所有 search 必須行 `scripts/vimeo-search.js`（內部用 `VIMEO_TOKEN` + REST + pagination）。冇例外。
+> 所有 search 必須行 `/home/node/kb/scripts/vimeo-search.js`（內部用 `VIMEO_TOKEN` + REST + pagination）。冇例外。**用絕對路徑** —— Mugi cwd 係 `/home/node`，relative `scripts/...` 會搵唔到。
 
 ---
 
 ## No-Fallback Rule（hard）
 
-呢個 skill 嘅 search **只可以**經 `scripts/vimeo-search.js` 做。**唔可以**：
+呢個 skill 嘅 search **只可以**經 `/home/node/kb/scripts/vimeo-search.js` 做。**唔可以**：
 
 - 自己 call 任何 Vimeo / cloud MCP / connected tool 去 fetch
 - 自己手寫 `fetch()` / `curl` 去打 Vimeo API（script 已經做晒 pagination + field resolve）
@@ -35,10 +35,10 @@ Vimeo 操作用 **personal access token**（Zeabur env var `VIMEO_TOKEN`，`priv
 
 ### Step 1 — 行 search script
 
-喺 KB repo root 行（query term 用用戶講嘅 client / project / event 名）：
+行（絕對路徑，cwd 無關；query term 用用戶講嘅 client / project / event 名）：
 
 ```bash
-node scripts/vimeo-search.js EMSD Dems Briefing
+node /home/node/kb/scripts/vimeo-search.js EMSD Dems Briefing
 ```
 
 Script 會：用 Vimeo 原生 `query` title search → paginate 攞晒 match → 喺 stdout print 一個 JSON `{ query, count, results[] }`，每個 result 有 `id` / `name` / `link` / `privacy` / `created` / `duration`。
