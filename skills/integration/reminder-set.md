@@ -83,6 +83,31 @@ n8n workflow `d4VcGHDHLfeVKjgr`（Reminder Poster）每 5 分鐘 poll，搵 `sta
 - **自己提自己**（收件人 = 設定人，e.g.「提我…」）→ **唔加 attribution**。
 - 例：Kary 講「提 Sohling 星期一 check calendar」→ payload =`<@SohlingId> 記得今日 check calendar —— from Kary`
 
+### Reply-to link（引用咗 message 先有）
+
+有陣時用戶係 **reply（引用）緊另一條 message** 嗰陣先叫 Mugi 提醒（e.g. Benjy send 咗條 message 叫人 follow up，Max reply 嗰條再 tag Mugi 講「remind me to follow up this tomorrow」）。Discord channel envelope 喺呢個情況會帶埋：
+
+| envelope 欄位 | 係咩 |
+|---|---|
+| `reply_to_link` | 跳返去被引用嗰條 message 嘅 Discord jump URL（`https://discord.com/channels/.../.../...`）|
+| `reply_to_excerpt` | 被引用嗰條 message 嘅頭 ~140 字摘要（fetch 唔到就冇）|
+| `reply_to_author` | 被引用嗰條 message 嘅作者 username（fetch 唔到就冇）|
+
+**規則：envelope 一帶 `reply_to_link`，就 append 落 payload 結尾**，等 fire 出嚟嗰陣收件人可以直接撳返入去 refer 返當時想提醒嘅原文。
+
+- Format：砌好嘅內容（連 attribution，如果有）之後另起一行 →
+  `↩︎ 原文（[reply_to_author]）：[reply_to_excerpt]\n[reply_to_link]`
+  - `reply_to_excerpt` / `reply_to_author` fetch 唔到 → 嗰部分 drop，淨係留 `↩︎ 原文：[reply_to_link]`。
+- **link 永遠原樣保留**，唔好改寫、唔好砌短，Discord 要靠完整 URL 先 jump 到。
+- self-reminder 同 other-directed 都照加（兩種情況收件人都用得着條 link）。
+- 用戶句子明顯指返被引用嗰件事（「呢件事」「this」「跟返」）→ 內容部分照〈Payload 點砌〉砌，link 純粹做 reference，**唔好**將 excerpt 當成動作內容塞入去 paraphrase。
+- 例（Max reply Benjy 條 message 講「remind me to follow up this tomorrow」）→ payload：
+  ```
+  記得今日 follow up 返呢件事
+  ↩︎ 原文（Benjy）：Max 你跟返 J26033 個 client feedback
+  https://discord.com/channels/123/456/789
+  ```
+
 ### Step 2 — 寫入（stdin heredoc，避開 quoting）
 
 ```bash
@@ -108,6 +133,11 @@ JSON
 > · 幾時發：[HK 可讀時間，e.g. 今晚 9:00]
 > · 去邊：[channel 名 / id]
 > · 原文：「[payload]」
+
+⚠️ **覆述兩個必守規矩：**
+1. **時間用 HKT** —— 寫你 set 時計嗰個 `+08:00` 香港時間，**唔好**攞 script 返回嘅 `fire_at`（Airtable 正規化成 UTC `Z`，e.g. `01:38:00.000Z`）原樣 render，否則會少 8 個鐘（曾經出過「今晚 1:38 AM」其實係 9:38 AM 嘅 bug）。
+2. **原文唔好真 mention** —— payload 入面嘅 `<@id>` 喺覆述度要寫成純文字 `@名`（查 Team table 還原個名），**唔好**保留 `<@id>` syntax，否則 confirm 嗰刻就 ping 多次收件人（poller 真正 post 出去嗰份先用真 `<@id>`）。
+3. **有 reply link 就講一聲** —— payload 帶咗 `↩︎ 原文…` jump link，覆述度簡單講「· 連返原文 link」就夠，唔使 render 成完整 URL。
 
 ### Step 4 — 記住 record id
 
@@ -154,4 +184,4 @@ node scripts/reminder.js list
 
 - **只做 one-off**。用戶要「每日 / 每週」recurring → 唔係呢個 skill（reminder queue 唔 model recurring）；同佢講要 recurring 要另開 n8n cron。
 - **唔好估時間**：含糊時間問清楚先寫。
-- **Payload boundary（三層，見〈Payload 點砌〉）**：(1) 動作內容逐字保留、唔 paraphrase；(2) 排程時間詞轉 fire-moment deixis（星期一→今日），內容時間詞原文留；(3) 提第二個人加 `—— from [設定人]` attribution，自己提自己唔加。
+- **Payload boundary（見〈Payload 點砌〉+〈Attribution〉+〈Reply-to link〉）**：(1) 動作內容逐字保留、唔 paraphrase；(2) 排程時間詞轉 fire-moment deixis（星期一→今日），內容時間詞原文留；(3) 提第二個人加 `—— from [設定人]` attribution，自己提自己唔加；(4) envelope 帶 `reply_to_link` 就 append `↩︎ 原文…` jump link（link 原樣保留）。
