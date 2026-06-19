@@ -44,7 +44,7 @@ n8n workflow `d4VcGHDHLfeVKjgr`（Reminder Poster）每 5 分鐘 poll，搵 `sta
 | 欄位 | 點 resolve |
 |---|---|
 | `payload` | **要 post 出去嗰段原文**。用戶口述咩就存咩，**唔好 paraphrase / 加料**。message 喺 set 嗰刻定稿。 |
-| `fire_at` | 用戶講嘅時間 → 換成 **ISO 8601 連 +08:00 offset**（Asia/Hong_Kong），e.g.「今晚 9 點」→ `2026-06-18T21:00:00+08:00`。相對時間（「兩個鐘後」「聽日朝早」）由你按當前 HK 時間計。時間含糊（「夜啲」冇講幾點）→ 問清楚先,唔好估。 |
+| `fire_at` | 用戶講嘅時間 → 換成 **ISO 8601 連 +08:00 offset**（Asia/Hong_Kong），e.g.「今晚 9 點」→ `2026-06-18T21:00:00+08:00`。相對時間（「兩個鐘後」「聽日朝早」）由你按當前 HK 時間計。時間含糊（「夜啲」冇講幾點）→ 問清楚先,唔好估。⚠️ **Discord envelope `ts` 係 UTC**——計算相對 fire_at 之前，必須先 +08:00 換成 HKT（e.g. `ts="...T01:35Z"` = HKT 09:35）。 |
 | `target` | 見下面 Target Resolution |
 | `label` | 你生成嘅短標題（人睇，e.g.「提 Benjy 交 J26033 grade」），方便之後 list / 認返。 |
 
