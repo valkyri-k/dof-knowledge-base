@@ -73,15 +73,16 @@ n8n workflow `d4VcGHDHLfeVKjgr`（Reminder Poster）每 5 分鐘 poll，搵 `sta
 3. ⚠️ **分清「排程時間」定「內容時間」** —— 句子可以同時有兩個時間詞，**只有定 `fire_at` 嗰個**先轉 deixis；屬於動作內容嗰個**原文保留**。
    - 例：「提我**聽日**問 client **星期五**得唔得」→ 聽日 = 排程（定 fire_at，轉 fire-moment）、星期五 = 內容（client 要答嘅嗰日，原文留）→ payload =「**記得問 client 星期五得唔得**」。
 
-### Attribution（提第二個人先加）
+### 收件人 ping（永遠 prepend）+ Attribution（提第二個人先加）
 
-當 **target 收件人 ≠ 設定人**（即係叫 Mugi 提另一個同事），message 結尾要 attribute 返係邊個叫提，收件人先知唔係 bot 自己出。
+**每個 reminder 都要 ping 返收件人** —— payload **開頭**一定 prepend 收件人嘅真 `<@Discord_ID>`，fire 出嚟先 cue 到佢（reminder 個 point 就係 tag 返要被提嘅人；冇 ping 就等於白提）。收件人 = 自己提自己嗰陣係**設定人本人**，提第二個人嗰陣係**嗰個同事**。
 
-- Format：`<@收件人Discord_ID> [砌好嘅內容] —— from [設定人 canonical 名]`
-- 設定人**淨係寫個名，唔好 @-tag**（避免重複 ping 個設定人；收件人先要 ping）。
-- 設定人 canonical 名 = `requested_by`（已由 envelope `user_id` map 好）。
-- **自己提自己**（收件人 = 設定人，e.g.「提我…」）→ **唔加 attribution**。
-- 例：Kary 講「提 Sohling 星期一 check calendar」→ payload =`<@SohlingId> 記得今日 check calendar —— from Kary`
+- **自己提自己**（收件人 = 設定人，e.g.「提我…」/「remind me…」）→ payload 開頭 prepend `<@requested_by_id>`（設定人自己嘅 Discord ID，即 envelope `user_id`），**唔加** `—— from` attribution suffix（冇第二者，唔使講邊個叫提）。
+  - 例：Kary 講「remind me in 5 mins to follow up this」→ payload 開頭 `<@1328602029303791646> 記得 follow up 返呢件事`
+- **提第二個人**（收件人 ≠ 設定人，叫 Mugi 提另一個同事）→ Format：`<@收件人Discord_ID> [砌好嘅內容] —— from [設定人 canonical 名]`，message 結尾 attribute 返邊個叫提，收件人先知唔係 bot 自己出。
+  - 設定人**淨係寫個名，唔好 @-tag**（避免重複 ping 設定人；淨係收件人要 ping）。
+  - 設定人 canonical 名 = `requested_by`（已由 envelope `user_id` map 好）。
+  - 例：Kary 講「提 Sohling 星期一 check calendar」→ payload =`<@SohlingId> 記得今日 check calendar —— from Kary`
 
 ### Reply-to link（引用咗 message 先有）
 
@@ -101,9 +102,9 @@ n8n workflow `d4VcGHDHLfeVKjgr`（Reminder Poster）每 5 分鐘 poll，搵 `sta
 - **link 永遠原樣保留**，唔好改寫、唔好砌短，Discord 要靠完整 URL 先 jump 到。
 - self-reminder 同 other-directed 都照加（兩種情況收件人都用得着條 link）。
 - 用戶句子明顯指返被引用嗰件事（「呢件事」「this」「跟返」）→ 內容部分照〈Payload 點砌〉砌，link 純粹做 reference，**唔好**將 excerpt 當成動作內容塞入去 paraphrase。
-- 例（Max reply Benjy 條 message 講「remind me to follow up this tomorrow」）→ payload：
+- 例（Max reply Benjy 條 message 講「remind me to follow up this tomorrow」）→ self-reminder，payload **開頭照 prepend Max 自己嘅 `<@id>`**（收件人 ping 同 reply link 兩樣都要）：
   ```
-  記得今日 follow up 返呢件事
+  <@MaxDiscordId> 記得今日 follow up 返呢件事
   ↩︎ 原文（Benjy）：Max 你跟返 J26033 個 client feedback
   https://discord.com/channels/123/456/789
   ```
@@ -184,4 +185,4 @@ node /home/node/kb/scripts/reminder.js list
 
 - **只做 one-off**。用戶要「每日 / 每週」recurring → 唔係呢個 skill（reminder queue 唔 model recurring）；同佢講要 recurring 要另開 n8n cron。
 - **唔好估時間**：含糊時間問清楚先寫。
-- **Payload boundary（見〈Payload 點砌〉+〈Attribution〉+〈Reply-to link〉）**：(1) 動作內容逐字保留、唔 paraphrase；(2) 排程時間詞轉 fire-moment deixis（星期一→今日），內容時間詞原文留；(3) 提第二個人加 `—— from [設定人]` attribution，自己提自己唔加；(4) envelope 帶 `reply_to_link` 就 append `↩︎ 原文…` jump link（link 原樣保留）。
+- **Payload boundary（見〈Payload 點砌〉+〈收件人 ping + Attribution〉+〈Reply-to link〉）**：(1) 動作內容逐字保留、唔 paraphrase；(2) 排程時間詞轉 fire-moment deixis（星期一→今日），內容時間詞原文留；(3) **payload 開頭永遠 prepend 收件人真 `<@id>`**（自己提自己 = 設定人 `<@requested_by_id>`；提第二個人 = 嗰位同事），冇 ping = 白提；(4) 提第二個人先加 `—— from [設定人]` attribution（設定人淨係寫名唔 @-tag），自己提自己唔加 suffix；(5) envelope 帶 `reply_to_link` 就 append `↩︎ 原文…` jump link（link 原樣保留）。
