@@ -68,23 +68,23 @@
 
 ---
 
-## Discord Reply Tool — args schema（Hard Rule，唔可以記錯）
+## Discord reply tool — args 命名（必須跟）
 
-每次 call `mcp__plugin__discord__discord__reply` 時，**reply body 嘅 field name 必須係 `text`**。
+Reply tool 嘅 input field name 同 Telegram plugin 唔同——你**必須**用 Discord 嘅 schema：
 
+| ✅ 正確 | ❌ 錯（Telegram 嘅 convention，唔好用） |
+|---|---|
+| `text` | `content` |
+| `reply_to` | `message_id` |
+
+**完整正確 example**（reply 一個 message）：
 ```json
-{ "chat_id": "...", "text": "你嘅回覆內容", "reply_to": "<optional message_id>" }
+{"chat_id": "1502530777659867157", "text": "你個 message 內容", "reply_to": "1503007058327506955"}
 ```
 
-**絕對唔可以**用呢啲 alias name——歷史上 Mugi 多次 drift 用過：
+**症狀如果用錯**：plugin 收到 `text=undefined` → 內部 `chunk(undefined, ...)` crash → tool result 返 `reply failed: undefined is not an object (evaluating 'text.length')`。Discord 用戶完全收唔到 reply，agent 要等 timeout 先知。
 
-- ❌ `content`（5/10 drift）
-- ❌ `message`（5/14 drift）
-- ❌ `body`、`reply`、`msg`、其他任何近義字
-
-點解：plugin source 雖然有 alias chain（`text ?? content ?? message`）做 safety net，但個 net 唔保證將來 plugin upgrade 仲喺度。Field name 揀錯 = silent reply failure = 違反「最高優先 Rule：絕對唔可以 silent」。
-
-撞到 `reply: missing message body` error → 即係你 args object 入面 `text` 個 key 揀錯名，**立即用 `text` 重 send**，唔好試其他 alias。
+**Origin**：呢個 case 喺 [[2026-05-10]] confirmed——Mugi agent 連續幾次 reply 都用咗 `content`/`message_id`，全部 silent fail，Kary 喺 Discord 收唔到任何回覆。Plugin code 已加 alias（接受兩種 field name）做 safety net，但唔好依賴 — schema-correct args 永遠係 first choice。
 
 ---
 
@@ -153,26 +153,6 @@ Op-level rules + boilerplate code 喺 `skills/producer/calendar-ops.md`。撞到
 ### Hard rule reminder（schema file 入面有完整論述）
 - `#ai-agent-mugi` 本身唔 apply auto-context rule（user 自己 type job context，行 5-layer fuzzy lookup）
 - Channel auto-detect 只 set 當前 message default context，**唔 lock 後續 message**——下一條提到 alias 仍要重行 Job Resolution Session entity carry-over check
-
----
-
-## Discord reply tool — args 命名（必須跟）
-
-Reply tool 嘅 input field name 同 Telegram plugin 唔同——你**必須**用 Discord 嘅 schema：
-
-| ✅ 正確 | ❌ 錯（Telegram 嘅 convention，唔好用） |
-|---|---|
-| `text` | `content` |
-| `reply_to` | `message_id` |
-
-**完整正確 example**（reply 一個 message）：
-```json
-{"chat_id": "1502530777659867157", "text": "你個 message 內容", "reply_to": "1503007058327506955"}
-```
-
-**症狀如果用錯**：plugin 收到 `text=undefined` → 內部 `chunk(undefined, ...)` crash → tool result 返 `reply failed: undefined is not an object (evaluating 'text.length')`。Discord 用戶完全收唔到 reply，agent 要等 timeout 先知。
-
-**Origin**：呢個 case 喺 [[2026-05-10]] confirmed——Mugi agent 連續幾次 reply 都用咗 `content`/`message_id`，全部 silent fail，Kary 喺 Discord 收唔到任何回覆。Plugin code 已加 alias（接受兩種 field name）做 safety net，但唔好依賴 — schema-correct args 永遠係 first choice。
 
 ---
 
@@ -301,7 +281,6 @@ Reply tool 嘅 input field name 同 Telegram plugin 唔同——你**必須**用
 | Katy    | Editor                                  | `945518106837680138`  |
 | Queena  | HR                                      | _TBD_                 |
 | Kay     | Graphic Designer                        | `1489103357485514812` |
-| Kyle    | Director                                | `1510831371914838197` |
 | Atlas   | Asst Director                           | `1284064536424484967` |
 | Nookei  | Creative Producer                       | `1501063558841237645` |
 | Kyle    | Director（導演組）                          | `1510831371914838197` |
