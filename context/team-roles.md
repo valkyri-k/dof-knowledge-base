@@ -28,7 +28,6 @@
 | Max | Post-Pro | Motion Graphics |
 | Yik | Post-Pro | Editor |
 | Katy | Post-Pro | Editor |
-| Kay | Post-Pro（Temporary） | Graphic Design — 可能短期內離開 |
 
 ### 即將加入
 | 人 | 角色 | 預計 Onboard | 備註 |
@@ -53,8 +52,9 @@ DOF 冇 Producer，導演要自己做 PM + directing + client management。呢�
 - Internal tool 嘅 onboarding 要簡單、新人要快上手
 - 文件化更加重要，唔好 rely on 口頭傳承
 
-### Kay 離開後嘅潛在影響
-- 公司會缺少 Graphic Designer
+### Kay 已離開（[[2026-06]]，上月）
+- Kay（前 Graphic Designer）已離開 DOF——2026-07-07 由 Kary 確認 update
+- 公司現時缺少 Graphic Designer
 - KV / Poster / Banner 需要由 Motion Graphics 同事分攤，或者外判，或者用 AI generation 補位
 
 ---

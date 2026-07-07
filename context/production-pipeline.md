@@ -112,8 +112,9 @@ DOF 冇 in-house shooting crew，全部 outsource freelancers。導演有慣用�
 |------|-----|------|
 | Editor | Yik、Katy | Video editing（剪接、footage 組合、初步 color） |
 | Motion Graphics | Keith、Max | 字卡、lower thirds、dividers、2D animation、infographics |
-| Graphic Design | Kay（temporary） | KV、poster、banner（static graphic） |
 | Post-Pro Supervisor | Sohling | 後期統籌、分工、QC、同導演對接 |
+
+> Graphic Design（KV、poster、banner static graphic）之前由 Kay 負責，Kay 已於 [[2026-06]] 離開 DOF——呢個位暫時冇人接手，見 `team-roles.md` §Kay 已離開。
 
 - Editor 同 Motion Graphics 用同一份 Google Doc 做 working document，各自睇自己負責嘅部分
 - 做完喺 Google Doc mark done，導演可以睇到進度

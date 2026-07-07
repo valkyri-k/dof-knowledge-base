@@ -280,7 +280,6 @@ Op-level rules + boilerplate code 喺 `skills/producer/calendar-ops.md`。撞到
 | Yik     | Editor                                  | `1489109497938186351` |
 | Katy    | Editor                                  | `945518106837680138`  |
 | Queena  | HR                                      | _TBD_                 |
-| Kay     | Graphic Designer                        | `1489103357485514812` |
 | Atlas   | Asst Director                           | `1284064536424484967` |
 | Nookei  | Creative Producer                       | `1501063558841237645` |
 | Kyle    | Director（導演組）                          | `1510831371914838197` |

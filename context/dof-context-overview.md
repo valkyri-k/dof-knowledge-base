@@ -40,8 +40,7 @@ Ki（MD / 老闆）
 ├── 後期組
 │   ├── Sohling（Post-Pro Supervisor）
 │   ├── Yik, Katy（Editor）
-│   ├── Keith, Max（Motion Graphics）
-│   └── Kay（Graphic Design, temporary）
+│   └── Keith, Max（Motion Graphics）
 └── HR
     └── Queena
 ```

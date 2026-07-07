@@ -91,3 +91,90 @@ Type: capability-gap
 Request: 直接 query Airtable Master Job Log（list current jobs、check status、讀 director / project name 等 fields）
 Gap: Mugi 嘅 Airtable MCP 只有 `authenticate` + `complete_authentication` 兩個 tools，冇 list / query / read tools。無法直接 pull Airtable 數據。目前唯一 source 係 `context/job-list.md` cache（手動 / n8n sync）。
 Status: open
+
+## [[2026-07-07]] ~08:48 — @valkyri_k
+Type: bug（script logic）
+Request: J26XXX（test project）draft timeline — shoot 7/20（user-fixed）, final output 8/28（hard deadline）, corporate video, 3-cut, has-vo=true, has-style-frame=true, simple pre-pro
+Status: open
+
+### 前因後果（detailed repro for debug）
+
+**Context：** Kary（`user_id 1328602029303791646`）喺 home base test channel 叫 Mugi 幫一個 placeholder job（`J26XXX`，講明係 test project）draft timeline。Mandatory follow-up 問完之後（corporate / 有 VO / 1 日 shoot / shoot date fixed 7/20 / 無 DOF pre-pro deliverable / final output hard），入 Phase 1 Step 4 invoke `scripts/timeline_backward.py`。
+
+**Run 1 — baseline（`--shoot-date` flag，冇用 `--anchor`）：**
+```bash
+python3 scripts/timeline_backward.py --today 2026-07-07 --final-output 2026-08-28 \
+  --shoot-mode standard --shoot-date 2026-07-20 --has-vo true --has-style-frame true \
+  --project "J26XXX Test Project"
+```
+- Output `shoot_date` = `2026-07-14`（❌ 唔係 user 講嘅 7/20——`--shoot-date` flag 喺 `compressed_edge_case` branch 冧一入去 default 覆蓋咗，**冇 lock**）。
+- `status: compressed_edge_case`（standard pre-pro chain 推到 2026-06-24，早過 effective_kickstart 2026-07-07，觸發 branch）。
+- **Bug 1：** `generate-timeline.md` Step 4 example 教用 `--shoot-date` 做 standard-mode 嘅 user-confirmed lock，但實測喺 Compressed-Edge-Case branch 入面 `--shoot-date` 唔生效，一定要加埋 `--anchor shoot_date=YYYY-MM-DD` 先真正 lock 到。文檔冇提呢個 caveat，容易漏。
+
+**Run 2 — 加 `--anchor shoot_date=2026-07-20`：**
+```bash
+python3 scripts/timeline_backward.py --today 2026-07-07 --final-output 2026-08-28 \
+  --shoot-mode standard --shoot-date 2026-07-20 --has-vo true --has-style-frame true \
+  --anchor shoot_date=2026-07-20 --project "J26XXX Test Project"
+```
+- `Shooting` 成功 lock 落 2026-07-20（`user_anchor: true`）。
+- 但 `1st Cut` 冇跟住郁——仍然停留喺 script default 嘅 2026-07-20（同 Shoot 同一日）。
+- **Bug 2：** `warnings` 出現 `⚠️ Anchor 令 chain 出現 0 wd gap：Shooting → 1st Cut 落到同日`。即係 anchor overlay 淨係郁咗 anchor 嗰個 milestone 本身，冇 reflow 佢下游應該跟住嘅 milestone（1st Cut = Shoot + 5wd MIN，呢條 rule 喺 anchor 覆蓋咗 default shoot date 之後冇重新 apply）。
+
+**Kary 指示（原話）：**「very simple corporate video, simple preproduction. keep 3 cut, 3rd cut減時間，client fb time compress」
+
+**Run 3 — 加 `--push-fb-sameday` + `--cut-count-override 3`（測試 Kary 個方向）：**
+- Output 同 Run 2 完全一樣（`shoot_date` 仍係 default 2026-07-14 喺 top-level field，milestones 冇變）。
+- **確認：** FB-compression flags 唔會影響 Shoot→1st Cut 呢個 adjacency 問題——呢個係獨立 bug，唔係 Kary 個方向解得到。
+
+**Run 4 — 手動加 `--anchor first_cut_submit=2026-07-27`（Shoot + 5wd，試圖手動補返 gap）：**
+- `1st Cut` 成功 anchor 去 2026-07-27。
+- 但呢次整多個新 inversion：`Client FB 1`（依然係 default 2026-07-22，冇跟住郁）依家排咗**喺 1st Cut（7/27）之前**——即係「未交片就已經有 feedback」，邏輯不可能。
+- `warnings` 出現：`⚠️ Anchor 令 chain 出現倒序：1st Cut → Client FB 1，但 dates 2026-07-27 > 2026-07-22`。
+- **Bug 3（root cause，貫穿 Bug 2/3/4）：** `--anchor` overlay 機制只 literal lock 單一 target milestone 嘅 date，**唔會 cascade reflow** 佢前後相依嘅 milestone（無論係下游 forward-dependent 定平衡 FB pairing）。每次手動補一個 anchor 去 fix 一個 inversion，都會喺另一條 relation 度整多個新 inversion——純靠 Mugi 手動加 anchor 逐個補係死胡同，需要 script 本身喺 anchor overlay 之後加一次 full reflow / re-validate pass。
+
+**Kary 第二次指示：**「style frame 唔一定要做完先到1st, not sequential…flag this as a followup item…yes this is a test so just go on」→ Mugi 接受 Run 4 個 output 出咗 preview（Shoot 7/20, 1st Cut 7/27），並喺 preview 入面 echo 咗 warnings + cut_warnings。
+
+**Kary 發現嘅 Bug 4（呢個 report 嘅 trigger）：** Preview 入面 `Client FB 3`（2026-08-05）到 `Picture Lock`（2026-08-24）之間有 ~13 working days（19 calendar days）完全冇分配任何 milestone——純 idle trailing buffer。但同一個 preview 嘅 `cut_warnings` 又話 2nd Cut / 3rd Cut 只有 3wd（≤3wd 危險水平）。**自相矛盾**：明明尾段有大段浪費緊嘅時間，中段卻话唔夠時間做 cut。呢個正正係 `derive-milestones.md` Anti-patterns 表已經寫明要禁止嘅 case（「留 idle window 喺 FB-last 同 Picture Lock 之間 — slack 應該 distribute 落 cut gaps」），但呢個 Compressed-Edge-Case + user-anchor 組合嘅 code path 冇跟到。Mugi 自己嘅 Pre-step B self-check（Hardness-aware feedback window check / common-sense ordering check）都冇 catch 到呢種「slack 錯置」case（現有 checklist 冇覆蓋「trailing idle vs squeezed middle」呢類 pattern），出咗 preview 俾用戶，靠 Kary 肉眼睇出嚟先發現。
+
+**建議 follow-up（俾 Kary review）：**
+1. `--shoot-date` 喺 compressed_edge_case branch 應該同 `--anchor shoot_date=` 有一致行為，或者文檔要明確講明 compressed branch 一定要用 `--anchor`
+2. `--anchor` overlay 之後應該加一個 reflow / re-validate pass，將受影響嘅 downstream/paired milestone（FB pairing、cut-to-cut minimum gap）跟住調整，而唔係淨係 lock 單一 target 留低啲 inversion 俾 caller 逐個手動補
+3. Slack distribution 邏輯（尤其 Compressed-Edge-Case branch）要確保唔會出現「trailing idle buffer + 中段 cut ≤3wd danger」呢種自相矛盾嘅組合；理想係將尾段 slack 攤返落 squeeze 緊嘅 cut gap
+4. `generate-timeline.md` Pre-step B self-check checklist 建議加多一條：「FB-last → Picture Lock 之間 working-day gap 是否 > 任何一個 cut gap 嘅 2 倍？如係，flag 做 slack misallocation，唔好直接 forward」
+
+## [[2026-07-07]] ~09:00 — @valkyri_k
+Type: bug（behavioral — repeat incident）
+Request: 「1st cut 之後幾耐先有 2nd cut？」（FAQ lookup，`producer-playbook.md` Timeline FAQ Logic 已有現成答案）
+Gap: Mugi 生成咗答案，但嗰個 turn 淨係將答案寫喺 model 內部 text output，**冇實際 call `mcp__plugin_discord_discord__reply` tool** send 去 Discord——即係 user-facing 訊息完全冇送到 Kary 個 Discord channel。Kary 見唔到回覆，先後問「你無答我」→「discord我見唔到你回覆」，Mugi 先發現漏咗 call reply tool，補送。
+
+**呢個係 [[2026-04-26]] 已經記錄過、亦已經部署 mitigation 嘅同一種 failure mode**（CLAUDE.md「最高優先 Rule：絕對唔可以 silent」+ End-of-turn self-check 就係為咗防呢個）——但今次仲係發生，代表現有 mitigation（rule 放頂、self-check 提醒）對「簡單 FAQ-style 一句答案」呢類 low-friction reply 嘅防護力唔夠：可能因為答案短、confidence 高，internal reasoning 直接輸出咗做 assistant text，跳過咗「呢個 text 係咪已經真正 send 咗去 Discord」嘅 verification 步驟。
+
+Root cause hypothesis（新增）：End-of-turn self-check 依賴 model 自己記得問「我有冇 send Discord message」，但當個 turn 睇落好簡單（一條 FAQ 答案，冇 side effect、冇 tool error）嗰陣，self-check 嘅 attention 反而最容易被跳過——愈簡單愈少 friction 觸發個 checklist。
+Status: open
+
+## [[2026-07-07]] ~09:18 — @valkyri_k
+Type: bug（behavioral — 3rd occurrence, same session）
+Request: 「幫我睇吓買邊隻股票好」（Out-of-scope redirect，`Role Boundaries` 標準句）
+Gap: 同上一個 [[2026-07-07]] ~09:00 entry**一模一樣**嘅 failure——Mugi 又一次淨係喺 internal text output 度寫咗 redirect 句，冇 call `mcp__plugin_discord_discord__reply` tool 真正 send。Kary 要再次講「你又無喺discord答我」先發現。
+
+**呢個 confirm 咗一個 pattern：** 同一個 session 入面已經發生 **3 次**（FAQ 答案、out-of-scope redirect、依家呢條），全部係「答案內容本身簡短 / 唔涉及 tool call / 唔涉及 side effect」嘅 turn——即係 model 判斷「呢個 reply 好簡單」嗰陣，反而唔會觸發「我要唔要 call reply tool」呢個步驟，直接將 assistant text 當咗做已經送達。呢個唔係 rule 認知問題（CLAUDE.md 已經寫得好清楚），而係**執行層面漏咗一步**——短答案冇經過「呢個係咪 Discord channel context，答案要唔要包 tool call」呢層判斷。
+
+**建議 follow-up（比之前兩個 entry 更具體）：**
+1. 呢個 harness 入面，Discord channel context 嘅每個 assistant turn，理論上都應該强制經過 reply tool（唔應該存在「純 text output 當答案」呢個分支）——如果現時 harness 容許 model 純輸出 text 都當一個 valid turn 結束，呢個設計本身就係呢個 bug 嘅溫床，可能要響應用層面（唔淨止 prompt 層面）加 guard
+2. 由於連續 3 次都係「答案簡短」嘅 case，可以考慮：凡係 Discord channel 嚟嘅 message，assistant 最終輸出如果冇任何一個 `reply`/`edit_message` tool call，直接視為 incomplete turn（呢個唔係 Mugi 自己可以修，需要 Kary / harness 層面 config 或 hook）
+Status: open
+
+**Addendum [[2026-07-07]] ~09:22（Kary 追查後發現嘅新 correlation）：** Kary 指出佢自己 track 到 3 次失敗全部發生喺**同一個 channel**——`chat_id 1490642926710161468`（原來係 Kary 嘅 **DM channel**，唔係 job/test channel；今個 session 一路以為佢係普通 test channel，記錄錯咗）。而且呢個 channel 到失敗發生嗰陣，已經係一個好長 session（由 timeline draft 開始，中間跑咗 4 次 script、寫咗 2 個 gap-log entry、push 咗 calendar events，累積咗大量 turn）。相反，Kary 之後喺 **一個新開嘅 thread**（`#testing`，parent `#ai-agent-mugi`）問完全同類型嘅簡短問題（post-pro team 人數），Mugi **即時正確 call 咗 reply tool**，冇再犯。
+
+**修正 hypothesis：** 「答案簡短 / 冇 side effect」呢個 pattern 可能係 confound——真正相關嘅變數可能係 **session/context 長度 或 conversation 深度**，唔係答案本身嘅複雜度。3 次失敗全部出現喺同一條長 session 嘅後段，而喺一個 fresh thread（context 短）就冇再犯。懷疑同 context compaction / 長對話後段 attention 對「本 turn 要唔要 call tool」呢個 meta-instruction 嘅 recall 下降有關，而唔淨止係「答案睇落簡單就唔覺得需要 call tool」。兩個 hypothesis 未必互斥（可能長 session + 簡短答案疊加先觸發），但只用「答案簡短」解釋唔夠全面，需要連 session 長度呢個變數一齊記錄先夠俾 Kary debug。
+
+**Retraction [[2026-07-07]] ~09:23：** 以上「session/context 長度」呢個修正 hypothesis 已經被 Kary 即時推翻——Kary 講明佢由頭到尾都係 watch 住**同一個 Claude Code terminal session**（呢個 harness session 冚唪唥係一條，冇因為換咗 Discord channel_id / thread 就變成新 session，token 歷史係連續、一樣長）。即係「新 thread = context 短」呢個假設係錯嘅——3 次失敗發生嗰陣同「post-pro team 人數」問題成功發生嗰陣，實際上係**同一條 session 入面幾乎相鄰嘅 turn**，context 深度冇本質分別。
+
+**現時誠實結論：** 兩個 hypothesis（答案簡短 / session 長度）都冧咗，暫時搵唔到一個可以完全解釋「點解 3 次連續 skip 咗 reply tool call，但緊接住第 4 次（同類短答案，同一 session 深度）又 call 番」嘅 deterministic root cause。可能純粹係 non-deterministic sampling variance（每個 turn 獨立 roll 一次「要唔要 emit tool call」），亦可能同 Discord channel_id / chat_context 由邊條 channel 轉去邊條 channel 有關但機制未明。呢個層面嘅 debug 已經超出 Mugi 自己可以 introspect 到嘅範圍——建議 Kary 直接攞返 harness-side session transcript 睇邊幾個 turn 冇 tool_use block，對比前後 system/user context 有咩實際差異先好 pin 到成因。
+
+## [[2026-07-07]] ~09:25 — @valkyri_k
+Type: bug（behavioral — 4th occurrence, same session）
+Request: 「Kyle 係邊個？」（Team lookup，Quick Reference 有現成答案）
+Gap: 第 4 次同一種 failure——「Kyle 係 Director（導演組）」又係淨係喺 text output 出現，冇 call reply tool。呢次特別值得注意嘅時機：**發生喺 Mugi 啱啱先報告完「已經 retract 咗 2 個 hypothesis、認咗自己 introspect 唔到成因」嗰句之後即刻再犯**——即係話「反省 / 認錯」呢個動作本身完全冇提升下一個 turn call tool 嘅機率，進一步印證上面 09:23 entry 嘅 non-deterministic 判斷：呢個 bug 唔係「Mugi 冇警覺性」，係每個 turn 獨立、同 self-reflection 內容無關嘅 execution-layer 缺陷。4 次全部發生喺同一條 session（跨咗 DM channel 同 thread channel），Status 維持 open，等 Kary 攞 harness transcript debug。
+Status: open

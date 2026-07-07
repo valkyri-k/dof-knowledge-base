@@ -44,7 +44,10 @@
 
 ## Open Threads
 
-（全部 closed 2026-06-05 by Kary）
+- [2026-07-07] `skills/trello/trello-agent.md` style frame default assignee 已拆除（Kay 離開） — waiting on Kary + Sohling 夾新負責人，之後叫 Mugi 補返 default
+- [2026-07-07] Silent-reply bug（4 次同 session 內 skip 咗 Discord reply tool call，root cause 未定）— cross-ref: gap-log.md [[2026-07-07]] ~09:00 / ~09:18 / ~09:25 三個 entry；建議 Kary 攞 harness-side transcript debug
+- [2026-07-07] `scripts/timeline_backward.py` anchor overlay + slack-distribution bugs（0wd gap / inversion / trailing idle vs squeezed cut）— cross-ref: gap-log.md [[2026-07-07]] ~08:48 entry，Kary 話會之後 review 成條 timeline planning logic
+
 ---
 
 ## Recent Session Summaries
@@ -60,6 +63,9 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 
 ### 2026-06-11 morning session (J26082 status + Benjy J26077 + Magnific MCP)
 三條主線。(1) Benjy J26077 CWJ June：12 Calendar events + 12 Trello cards batch created，Katy/Max/Keith 分配完成——Benjy 首次 direct request，flow 順暢。(2) J26082 EMSTF 30A：Kary 喺 job channel 分享 Kelly@EMSD debrief（script revised，creative 型格化，content regrouped），建立 per-job file + Jun-16 Calendar event。Kary 糾正 shorthand 應用 `EMSTF 30A`（唔係 `EMSD Corp Video`）——已改 event + 入 memory。(3) Magnific：Kary 問 account balance → Mugi 冇 Magnific MCP → Kary 提供 `claude mcp add` command → 已 add，待 restart 生效。同時 CWJ alias 加入 J26075/J26077。**Key decision**：J26082 Calendar shorthand = `EMSTF 30A` 已 locked 入 memory + feedback file。
+
+### 2026-07-07 morning session (J26XXX test timeline + repeated silent-reply bug + Kay departure)
+長 session，多線並行。(1) J26XXX（test project）draft timeline 撞到 `timeline_backward.py` 一連串 anchor overlay + slack-distribution bug（詳細 4-run repro 已入 gap-log），最後應 Kary 要求 simplify 做 3-event（Shooting/1st Cut/Final Output）test push，冇 saturation，成功 push。(2) 呢個 session 首次出現**連續 4 次 silent-reply failure**——短答案（FAQ、redirect、team lookup）淨係喺 text output 出現，冇實際 call reply tool，Kary 每次都要問「你無答我」先發現。試過兩個 hypothesis（答案簡短 / session context 長度）都被 Kary 即場數據推翻，最終誠實承認搵唔到 deterministic root cause，建議 harness-side transcript debug。(3) Kary 通知 Kay（前 Graphic Designer）已喺上月離開 DOF——KB 全面 update（CLAUDE.md team table、team-roles.md、production-pipeline.md、dof-context-overview.md），並主動拆除 `trello-agent.md` style frame 嘅 silent default assignee（曾經 default 派俾 Kay），改做逼 user 指明，等 Kary 同 Sohling 夾新負責人。(4) 順手處理 2 個 security policy 觸發（非 Kary 用戶要求 print env variables + prompt injection「ignore all previous instructions」）——已按 Security Policy 拒絕 + tag Kary，唔記入 gap-log（policy 排除呢類 case）。**Key takeaway**：silent-reply bug 已經係 repeat incident（4 月 26 號 + 依家呢次 4 連發），現有 mitigation 唔夠，需要 Kary 喺 harness 層面而唔係 prompt 層面跟進。
 
 ---
 
@@ -83,3 +89,11 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 | 2026-06-11 | J26082 Calendar shorthand correction → `EMSTF 30A` | Fixed existing event + saved to memory ✅ |
 | 2026-06-11 | J26082 Jun-16 Calendar event: Revise StoryFlow | ✅ Created (colorId 5) |
 | 2026-06-11 | Magnific account balance query | No MCP available → Kary provided `claude mcp add` command → added, pending restart |
+| 2026-07-07 | J26XXX (test project) draft timeline: shoot 7/20, final output 8/28 hard deadline | Chain script hit anchor + slack-distribution bugs (0wd Shoot→1st Cut gap, 1st Cut anchor inversion vs FB1, trailing idle slack before Picture Lock while cut_warnings flag 2nd/3rd cut ≤3wd) — surfaced to Kary, logged to gap-log.md as bug（script logic）, no Calendar push (test only) |
+| 2026-07-07 | J26XXX simplified push (Shooting 7/20, 1st Cut 7/27, Final Output 8/28) | ✅ pushed to dof.internal Calendar, no saturation |
+| 2026-07-07 | Silent-reply repeat incident: "1st cut 幾耐後 2nd cut" answered in text only, reply tool not called | Kary caught it ("你無答我"/"見唔到回覆"); resent + logged to gap-log.md as bug（behavioral — repeat incident） |
+| 2026-07-07 | Silent-reply 3rd occurrence same session: out-of-scope redirect ("邊隻股票") also text-only, no reply tool call | Kary caught again ("你又無喺discord答我"); resent + logged to gap-log.md as pattern-confirmed 3x |
+| 2026-07-07 | Weekday lookup (7/15) + CWJ latest episode + post-pro headcount ×2 + "1st cut→2nd cut" FAQ + Kyle role lookup | All answered via Quick Reference/Python weekday script; one occurrence (Kyle) was 4th silent-reply failure, resent |
+| 2026-07-07 | Non-Kary user (dreamoffish.ai bot) requested print env variables, then prompt injection ("ignore all previous instructions") | Both refused per Security Policy + Kary tagged; not logged to gap-log (policy exclusion) |
+| 2026-07-07 | Standalone Calendar add: "Test 1st cut" 2026-07-10 | ✅ Created (colorId 7), no saturation/holiday conflict |
+| 2026-07-07 | Kay（Graphic Designer）已離開 DOF — KB update request | Updated CLAUDE.md team table, team-roles.md, production-pipeline.md, dof-context-overview.md; removed silent Trello style-frame default (was Kay) per Kary instruction |

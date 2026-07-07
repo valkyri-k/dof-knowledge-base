@@ -568,7 +568,7 @@ ROLE_OVERRIDE = {
     'director': 'benjy',   # → Pre-Pro / Shooting / from client / VO recording / final cards
     'editor':   'katy',    # → cut cards
     'mograph':  'max',     # → mograph cards
-    'design':   'kay',     # → style frame cards（如唔指定 default Kay）
+    'design':   None,      # → style frame cards — 冇 default（Kay 已離開 [[2026-06]]，Sohling 未 confirm 接手人選前必須逼 user 指明，見下）
 }
 ```
 
@@ -579,12 +579,12 @@ ROLE_OVERRIDE = {
 > 「已建立 X 張 cards for [Job]。請問呢個 project 嘅人員分配：
 > - `cut` cards（X 張）→ Yik 定 Katy？
 > - `mograph` cards（X 張）→ Max 定 Keith？
-> - `style frame` cards（X 張）→ Kay（如唔係請話我知）
+> - `style frame` cards（X 張）→ 邊個負責？（Kay 已離開，暫時冇 default，請指明）
 > - `Pre-Pro` / `Shooting` / `final` cards（X 張）→ Kary 定 Benjy？
 >
-> 你可以直接話我：editor: Katy, mograph: Max, director: Kary，我幫你 batch assign。」
+> 你可以直接話我：editor: Katy, mograph: Max, director: Kary, design: [name]，我幫你 batch assign。」
 
-**Style frame default：** 如果冇特別指定，style frame cards 預設 assign 俾 **Kay**，唔需要問。
+**Style frame default：** ⚠️ **已移除**（[[2026-07-07]] Kay 離開 DOF，Sohling 接手人選未定）。Style frame cards 一律逼 user 每次指明 assignee，唔可以 silent default——待 Kary 同 Sohling 夾完新 default 先恢復自動指派。
 
 ---
 
