@@ -95,7 +95,7 @@ Status: open
 ## [[2026-07-07]] ~08:48 — @valkyri_k
 Type: bug（script logic）
 Request: J26XXX（test project）draft timeline — shoot 7/20（user-fixed）, final output 8/28（hard deadline）, corporate video, 3-cut, has-vo=true, has-style-frame=true, simple pre-pro
-Status: open
+Status: resolved（[[2026-07-07]] script fix — 見下方 Resolution addendum）
 
 ### 前因後果（detailed repro for debug）
 
@@ -142,6 +142,15 @@ python3 scripts/timeline_backward.py --today 2026-07-07 --final-output 2026-08-2
 2. `--anchor` overlay 之後應該加一個 reflow / re-validate pass，將受影響嘅 downstream/paired milestone（FB pairing、cut-to-cut minimum gap）跟住調整，而唔係淨係 lock 單一 target 留低啲 inversion 俾 caller 逐個手動補
 3. Slack distribution 邏輯（尤其 Compressed-Edge-Case branch）要確保唔會出現「trailing idle buffer + 中段 cut ≤3wd danger」呢種自相矛盾嘅組合；理想係將尾段 slack 攤返落 squeeze 緊嘅 cut gap
 4. `generate-timeline.md` Pre-step B self-check checklist 建議加多一條：「FB-last → Picture Lock 之間 working-day gap 是否 > 任何一個 cut gap 嘅 2 倍？如係，flag 做 slack misallocation，唔好直接 forward」
+
+### Resolution addendum [[2026-07-07]] — script fix shipped（獨立 followup session）
+
+`scripts/timeline_backward.py` 3 個 compressed-branch logic bug 修好，方案 Kary confirm 過先落刀。
+
+- **Fix B（Bug 3/4 — trailing slack）：** `compress_to_min` 之後加 `expand_to_window`，多出嘅 working-days 按 `EXPANSION_PRIORITY = (cut_production, cut_fb, pre_pro)` 灌返落 cut gaps（production 谷到 max 先），residual 做 1st Cut 前 buffer。standard + compressed edge-case 兩條 branch 都 call。
+- **Fix A（Bug 1/2 — anchor cascade）：** 新 `tag_reflow_metadata` 喺 assembly tag `min_gap_before` + `reflow_locked`（Picture Lock / Color-Sound-Sub / Final Output = locked）。`apply_anchors` 原本 warn-only feasibility scan 換成 cascade reflow：downstream 非-locked milestone 按 min-gap 推前；撞到 locked（user anchor 或尾段 backward-fixed）→ warn（唔 silent 改 locked、唔 corrupt）。compressed Style Frame overlay 係 parallel branch，tag `reflow_exempt` 避免俾 reflow 拖去 FB3 之後。
+
+**驗收（runner `python3.11`，全 pass）：** Bug 3 clean run（shoot 7/20, final 8/28）FB3 08-20 → Picture Lock 08-24 = 2wd、冇 idle tail、production max 6wd、`cut_warnings: []`；Bug 1 anchor shoot 07-20 → 1st Cut 07-22（2wd）；Bug 2 anchor 1st Cut 07-27 → FB1 cascade 07-28；多跳 cascade（anchor shoot 07-24）→ 1st Cut 07-28 → FB1 07-29；locked collision（anchor 3rd Cut 08-25）→ warn 倒序、冇 corrupt。Regressions：wide-window standard / standard anchor cascade / pure-post edit+animation（byte-identical）/ pure-post+anchor（inversion-only）/ 2-cut override 全 clean。無-anchor byte-identical。原 follow-up item 1（`--shoot-date` vs `--anchor` 文檔一致性）+ item 4（Pre-step B checklist 加條）未做，屬 skill/doc 層，另議。
 
 ## [[2026-07-07]] ~09:00 — @valkyri_k
 Type: bug（behavioral — repeat incident）

@@ -177,6 +177,41 @@ def parse_user_anchors(arg_list: list) -> tuple[dict, list]:
     return anchors, warnings
 
 
+# ---------- Reflow metadata (Fix A: anchor cascade) ----------
+
+# Min working-day gap each cut milestone needs after its business-sequence
+# predecessor. Applied ONLY when a shoot exists; pure-post leaves these at 0 so
+# the reflow degrades to inversion-prevention only (approved semantics).
+CUT_MIN_GAP_BEFORE = {
+    "1st Cut": 2,      # shoot_to_first_cut min
+    "Client FB 1": 1,  # cut_fb min
+    "2nd Cut": 2,      # cut_production min
+    "Client FB 2": 1,
+    "3rd Cut": 2,
+    "Client FB 3": 1,
+}
+
+# Backward-anchored tail: reflow must never move these, only warn if an upstream
+# push would collide. Picture Lock still needs ≥1 wd after the last feedback.
+REFLOW_LOCKED_NAMES = {"Picture Lock", "Color/Sound/Subtitle", "Final Output"}
+TAIL_MIN_GAP_BEFORE = {"Picture Lock": 1}
+
+
+def tag_reflow_metadata(milestones: list, shoot_date) -> None:
+    """Annotate milestones in place with `min_gap_before` (wd) + `reflow_locked`
+    for the apply_anchors cascade. Cut-chain mins apply only when a shoot exists;
+    all other milestones default to gap 0 (inversion-prevention only)."""
+    for ms in milestones:
+        name = ms.get("name")
+        gap = 0
+        if shoot_date is not None and name in CUT_MIN_GAP_BEFORE:
+            gap = CUT_MIN_GAP_BEFORE[name]
+        elif name in TAIL_MIN_GAP_BEFORE:
+            gap = TAIL_MIN_GAP_BEFORE[name]
+        ms["min_gap_before"] = gap
+        ms["reflow_locked"] = name in REFLOW_LOCKED_NAMES
+
+
 def apply_anchors(milestones: list, anchors: dict, holidays: set) -> tuple[list, list, list]:
     """Overlay user-supplied anchor dates onto already-assembled milestone list.
 
@@ -239,30 +274,48 @@ def apply_anchors(milestones: list, anchors: dict, holidays: set) -> tuple[list,
             "matched_milestone": matched_name,
             "status": status,
         })
-    # Feasibility scan: iterate by business sequence (order field). Caller may
-    # re-sort by date after this call, so we MUST scan before that — `order` here
-    # still reflects business sequence, not chronological.
+    # Cascade reflow (replaces the old warn-only scan). Iterate business sequence
+    # (order field — caller re-sorts by date AFTER this call, so `order` here still
+    # reflects business order). For each consecutive pair, enforce the successor's
+    # `min_gap_before`: push a non-locked successor forward to the earliest allowed
+    # working day; the mutation carries into the next iteration → natural downstream
+    # cascade. Locked successors (user anchor or backward-fixed tail) can't move, so
+    # a violation only warns. Only runs when anchors exist → no-anchor behaviour is
+    # byte-identical to before.
     infeasibility_warnings: list = []
     if anchor_results:
-        sorted_by_order = sorted(milestones, key=lambda x: x.get("order", 0))
+        sorted_by_order = [
+            ms for ms in sorted(milestones, key=lambda x: x.get("order", 0))
+            if not ms.get("reflow_exempt")
+        ]
         for i in range(1, len(sorted_by_order)):
             prev = sorted_by_order[i - 1]
             cur = sorted_by_order[i]
-            if cur.get("user_anchor") or prev.get("user_anchor"):
-                if cur["date"] < prev["date"]:
+            prev_date = date.fromisoformat(prev["date"])
+            cur_date = date.fromisoformat(cur["date"])
+            min_gap = cur.get("min_gap_before", 0)
+            earliest = add_wd(prev_date, min_gap, holidays)
+            if cur_date >= earliest:
+                continue
+            locked = cur.get("user_anchor") or cur.get("reflow_locked")
+            if locked:
+                if cur_date < prev_date:
                     infeasibility_warnings.append(
                         f"⚠️ Anchor 令 chain 出現倒序：business sequence {prev['name']} → "
                         f"{cur['name']}，但 dates {prev['date']} > {cur['date']}。"
-                        f"User 嘅 anchor 同其他 default milestone 衝突，"
-                        f"surrounding milestones 仍係 script default 計，"
+                        f"{cur['name']} 係 locked（user anchor / 尾段 backward-fixed），推唔到，"
                         f"可能要 user reconfirm 或者放鬆其中一邊。"
                     )
-                elif cur["date"] == prev["date"] and cur.get("user_anchor") != prev.get("user_anchor"):
+                else:
                     infeasibility_warnings.append(
-                        f"⚠️ Anchor 令 chain 出現 0 wd gap：business sequence {prev['name']} → "
-                        f"{cur['name']} 落到同日 ({cur['date']})。"
-                        f"Min gap 可能未滿足，留意 production feasibility。"
+                        f"⚠️ Anchor 迫使 business sequence {prev['name']} → {cur['name']} "
+                        f"gap 不足（需 ≥{min_gap} wd，實際 {prev['date']} → {cur['date']}）。"
+                        f"{cur['name']} 係 locked，推唔到，留意 production feasibility。"
                     )
+            else:
+                cur["date"] = earliest.isoformat()
+                cur["weekday"] = WEEKDAY_NAMES[earliest.weekday()]
+                cur["reflow_pushed"] = True
     return anchor_results, anchor_warnings + infeasibility_warnings, infeasibility_warnings
 
 
@@ -514,6 +567,64 @@ def compress_to_min(chain_spec: list, available_window: int) -> dict:
         "compressions_applied": compressions_applied,
         "infeasible": True,
         "deficit_wd": total - available_window,
+    }
+
+
+# Expansion priority (reverse intent of COMPRESSION_PRIORITY): relieve the
+# production crunch first — growing cut_production directly clears the ≤3 wd
+# danger flag — then client-feedback comfort, then pre-pro.
+EXPANSION_PRIORITY = ("cut_production", "cut_fb", "pre_pro")
+
+
+def expand_to_window(chain_spec: list, gaps: dict, available_window: int) -> dict:
+    """
+    Distribute trailing slack: when resolved gap total < available_window, grow
+    gaps from their current value toward `max` so the forward-built chain fills
+    the window instead of leaving idle slack before the backward-anchored tail
+    (bug: FB-last lands far before Picture Lock while mid-chain cuts sit at the
+    ≤3 wd danger floor — self-contradiction).
+
+    Grows production gaps first (clears the ≤3 wd cut warning), then feedback
+    gaps, round-robin within each category so slack spreads evenly across cuts
+    rather than dumping into the first gap. Each gap capped at its `max`; any
+    residual beyond all-max stays as front buffer before the earliest milestone
+    (caller's existing behaviour). Never grows total past available_window, so
+    the forward chain can't overshoot the tail anchor.
+
+    Returns a dict with keys: gaps (new dict), total_wd, expanded_wd. No-op
+    (expanded_wd = 0) when total >= available_window. Does not mutate inputs.
+    Only call on a feasible (non-infeasible) compress_to_min result.
+    """
+    grown = dict(gaps)
+    total = sum(grown.values())
+    excess = available_window - total
+    if excess <= 0:
+        return {"gaps": grown, "total_wd": total, "expanded_wd": 0}
+
+    spec_by_name = {g["name"]: g for g in chain_spec}
+    expanded_wd = 0
+    for category in EXPANSION_PRIORITY:
+        cat_names = [g["name"] for g in chain_spec if g["category"] == category]
+        if not cat_names:
+            continue
+        progressed = True
+        while excess > 0 and progressed:
+            progressed = False
+            for name in cat_names:
+                if excess <= 0:
+                    break
+                if grown[name] < spec_by_name[name]["max"]:
+                    grown[name] += 1
+                    excess -= 1
+                    expanded_wd += 1
+                    progressed = True
+        if excess <= 0:
+            break
+
+    return {
+        "gaps": grown,
+        "total_wd": sum(grown.values()),
+        "expanded_wd": expanded_wd,
     }
 
 
@@ -1395,6 +1506,11 @@ def run_standard(args, effective_kickstart, today, final_output, tail,
             dof_pre_pro_entries=dof_pre_pro_entries,
             user_anchors=user_anchors,
         )
+    # Distribute trailing slack into cut gaps (production-first → max) so the
+    # forward chain fills the window instead of leaving idle before Picture Lock.
+    compression["gaps"] = expand_to_window(
+        chain_spec, compression["gaps"], available_cut_window
+    )["gaps"]
     cut_chain, cut_warnings = walk_cut_chain_forward(
         shoot_date, chain_spec, compression["gaps"], cut_count, holidays
     )
@@ -1502,6 +1618,11 @@ def run_compressed_edge_case(args, effective_kickstart, today, final_output, tai
             available_window, compression["deficit_wd"], holidays, warnings
         )
 
+    # Distribute trailing slack into cut gaps (production-first → max) so the
+    # forward chain fills the window instead of leaving idle before Picture Lock.
+    compression["gaps"] = expand_to_window(
+        chain_spec, compression["gaps"], available_cut_window
+    )["gaps"]
     cut_chain, cut_warnings = walk_cut_chain_forward(
         shoot_date, chain_spec, compression["gaps"], cut_count, holidays
     )
@@ -1669,6 +1790,7 @@ def _run_pure_post_modes(args, effective_kickstart, today, final_output,
     # are built in chronological order already; overlay then re-sort + re-order.
     anchor_results: list = []
     if user_anchors:
+        tag_reflow_metadata(milestones, None)  # pure-post: no shoot → inversion-only
         anchor_results, anchor_warnings, _infeas = apply_anchors(
             milestones, user_anchors, holidays
         )
@@ -1973,14 +2095,21 @@ def build_output(*, status, scenario_label, effective_kickstart, final_output,
         milestones.append(m(order, label, d, color, party, title))
         order += 1
 
-    # Compressed-Edge-Case: Style Frame parallel with 1st Cut + FB1
+    # Compressed-Edge-Case: Style Frame parallel with 1st Cut + FB1. These are a
+    # parallel overlay (pinned to 1st Cut / FB1), not part of the linear business
+    # chain — appended here they get a late `order`, so mark them reflow_exempt so
+    # the anchor cascade neither pushes them nor treats them as a predecessor.
     if compressed_style_frame_in_post and "1st Cut" in cut_chain_dict:
         fb1_date = cut_chain_dict.get("Client FB 1", cut_chain_dict["1st Cut"])
-        milestones.append(m(order, "Submit Style Frame", cut_chain_dict["1st Cut"], "9", "DOF",
-                            f"Submit Style Frame - {project}"))
+        sf_submit = m(order, "Submit Style Frame", cut_chain_dict["1st Cut"], "9", "DOF",
+                      f"Submit Style Frame - {project}")
+        sf_submit["reflow_exempt"] = True
+        milestones.append(sf_submit)
         order += 1
-        milestones.append(m(order, "Confirm Style Frame", fb1_date, "2", "Client",
-                            f"Confirm Style Frame - {project}"))
+        sf_confirm = m(order, "Confirm Style Frame", fb1_date, "2", "Client",
+                       f"Confirm Style Frame - {project}")
+        sf_confirm["reflow_exempt"] = True
+        milestones.append(sf_confirm)
         order += 1
 
     # Picture Lock
@@ -2029,6 +2158,7 @@ def build_output(*, status, scenario_label, effective_kickstart, final_output,
     # knows; we surface non-wd as warning but don't move). Sort happens below.
     anchor_results: list = []
     if user_anchors:
+        tag_reflow_metadata(milestones, shoot_date)
         anchor_results, anchor_warnings, _infeas = apply_anchors(
             milestones, user_anchors, holidays
         )
