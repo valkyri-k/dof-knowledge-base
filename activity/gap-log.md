@@ -95,7 +95,7 @@ Status: open
 ## [[2026-07-07]] ~08:48 — @valkyri_k
 Type: bug（script logic）
 Request: J26XXX（test project）draft timeline — shoot 7/20（user-fixed）, final output 8/28（hard deadline）, corporate video, 3-cut, has-vo=true, has-style-frame=true, simple pre-pro
-Status: resolved（[[2026-07-07]] script fix — 見下方 Resolution addendum）
+Status: reopened（[[2026-07-07]] script fix shipped `bc74522`，但 [[2026-07-08]] live Discord test 仍衰咗 — script date math 唔係 root cause，問題喺 Mugi 解讀層；見下方 Reopen addendum。Timeline generation 由 Kary 新 session re-plan）
 
 ### 前因後果（detailed repro for debug）
 
@@ -151,6 +151,16 @@ python3 scripts/timeline_backward.py --today 2026-07-07 --final-output 2026-08-2
 - **Fix A（Bug 1/2 — anchor cascade）：** 新 `tag_reflow_metadata` 喺 assembly tag `min_gap_before` + `reflow_locked`（Picture Lock / Color-Sound-Sub / Final Output = locked）。`apply_anchors` 原本 warn-only feasibility scan 換成 cascade reflow：downstream 非-locked milestone 按 min-gap 推前；撞到 locked（user anchor 或尾段 backward-fixed）→ warn（唔 silent 改 locked、唔 corrupt）。compressed Style Frame overlay 係 parallel branch，tag `reflow_exempt` 避免俾 reflow 拖去 FB3 之後。
 
 **驗收（runner `python3.11`，全 pass）：** Bug 3 clean run（shoot 7/20, final 8/28）FB3 08-20 → Picture Lock 08-24 = 2wd、冇 idle tail、production max 6wd、`cut_warnings: []`；Bug 1 anchor shoot 07-20 → 1st Cut 07-22（2wd）；Bug 2 anchor 1st Cut 07-27 → FB1 cascade 07-28；多跳 cascade（anchor shoot 07-24）→ 1st Cut 07-28 → FB1 07-29；locked collision（anchor 3rd Cut 08-25）→ warn 倒序、冇 corrupt。Regressions：wide-window standard / standard anchor cascade / pure-post edit+animation（byte-identical）/ pure-post+anchor（inversion-only）/ 2-cut override 全 clean。無-anchor byte-identical。原 follow-up item 1（`--shoot-date` vs `--anchor` 文檔一致性）+ item 4（Pre-step B checklist 加條）未做，屬 skill/doc 層，另議。
+
+### Reopen addendum [[2026-07-08]] — live test 仍衰咗，root cause 唔喺 script
+
+上面 Resolution addendum 標「全 pass」係**本機 regression battery 綠燈**，但 [[2026-07-08]] Kary 喺 Discord 用真 scenario（shoot 7/20 lock、final 8/28）live test Mugi，output **反而衰過原本**。診斷（本機 read-only 重驗 deployed `bc74522`）：**date math 層合理** — 3rd Cut 08-18 gap 健康、`cut_warnings: []`、Style Frame（post-pro）正確排喺 shoot 之後。真問題喺 **Mugi 解讀層**：
+
+- **(a) milestone taxonomy 錯** — Mugi 將 post-pro 嘅 Style Frame 當成 pre-pro / shoot-linked，於是誤報「Style Frame 排喺 shoot 後 = 倒序 bug」。Kary 更正（原話）：**「Style Frame 無所謂，佢同 shooting 無關，佢係屬於 post-pro 嘅『前期』，所以順序無錯。」**
+- **(b)** Mugi reasoning 死板、唔識 sanity-check（Kary：「比以前更加死板」）。
+- **(c)** Mugi 可能冇忠實用 script output（hard-code / hallucinate；單 session 33 次 script invocation）。
+
+**結論**：單 revert / patch script **修唔到**解讀層問題。Kary 會喺**新 session 用好啲 model re-plan 成個 timeline generation**。耐用 fix 方向 = script JSON output 每 milestone 明確標 `phase: pre_pro | production | post_pro`（Mugi 唔使估 pre/post，就係佢估錯 Style Frame 嗰個 error class）+ 改正 producer skill milestone taxonomy。Interim：`bc74522` 留喺 container 唔 revert，等 re-plan 覆蓋。Full post-mortem（vault）= `raw/chat-logs/chat-log_2026-07-08_mugi-timeline-fix-postmortem.md`。
 
 ## [[2026-07-07]] ~09:00 — @valkyri_k
 Type: bug（behavioral — repeat incident）
