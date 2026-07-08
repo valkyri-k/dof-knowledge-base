@@ -116,3 +116,4 @@ Verification: 一次 full-rebuild dry-read（唔真 rebuild，逐步對 checklis
 <!-- 執行途中彈出嘅 WHAT/WHY-level 嘢先擺呢度，一行一個，boundary 開 vault session 由 /project-sync 讀走 -->
 - [decision] D1（prompt relocate vs symlink）+ D2（wrapper retire vs 保留）Phase 1 定案後入 `00-System/decisions/`
 - [scope] 若 D2 = retire wrapper → 影響 `plan-execution-workflow` Mugi variant + repo-skills index
+- [decision] 2026-07-08 Kary 定 priority：timeline re-plan（operation 優先）行先；Option A cwd surgery + lean-claude-md 屬修補，押後。plan 寫好 park 住等 timeline 完先執行
