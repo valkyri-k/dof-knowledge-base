@@ -2,7 +2,7 @@
 
 > Source of truth: Airtable Master Job Log (base `appld5YU1iZm3Hx5F`, table `Projects`)
 > Scope: `status = Current` only（active production jobs）
-> Last synced: 2026-06-18（auto-sync via `scripts/sync-job-list.js`）
+> Last synced: 2026-07-10（auto-sync via `scripts/sync-job-list.js`）
 > Sync mechanism: Stage 1 (n8n auto-sync) 待實作。期間如有新 Current job，手動 trigger re-sync 或 patch 此 file。
 
 ---
@@ -15,26 +15,21 @@
 | J26010 | Cartier | Cartier Prince Building - the making of video |  | Current | Benjy | 1504037605006770176 | j26010-cartier-prince-building_the-making-of-videography-production |
 | J26016 | HSUHK | HSUHK Student Excellence Video Production_Final |  | Current | Kary | 1489144435869483059 | j26016_hsuhk-student-excellence-video-series |
 | J26020 | EMSD | EMSD Engineer & Technician Trainee Graduation Ceremony event with director blog video production |  | Current | — | 1509779734777696266 | j26020_emsd-engineer-technician-trainee-graduation-ceremony-event-with-director-blog-video-productio |
-| J26027 | EMSD | EMSD 15th National Games for CS Outstanding Awards video production | NG15;全運會 | Current | Benjy | 1501787539642650706 | j26027_emsd_15th_national_game_for_cs_award |
-| J26050 | CUHK | CUHK Bid for IFOS 2030 Promotional video |  | Current | — | 1509800199588020284 | j26050_cuhk-bid-for-ifos-2030-promotional-video |
+| J26050 | CUHK | CUHK Bid for IFOS 2030 Promotional video |  | Current | Kyle | 1509800199588020284 | j26050_cuhk-bid-for-ifos-2030-promotional-video |
 | J26056 | DFI | DFI Own Brand H & B KV production |  | Current | Sohling | 1511303483716796557 | j26056_dfi-own-brand-h-and-b-kv-production |
-| J26057 | HKTB | HKTB Incentive Playbook all-in-one Fam video update |  | Current | Sohling | 1493606268449984642 | j26057_hktb_incentive_playbook_all-in-one_fam_video_update |
 | J26062 | Orbis | Orbis Future Vision Leader and From Blur to Clear Campaign |  | Current | Kary | 1493117424201891952 | j26062_orbis-future-vision-leader-and-from-blur-to-clear-campaign |
-| J26063 | EMSD | EMSD HKMA GWIN |  | Current | Benjy | 1493811545497538560 | j26063_emsd-hkma-gwin |
 | J26064 | Megaworks | Megaworks Private Birthday Party event video and photo service |  | Current | Ki | — (no channel by design) | — (no channel by design) |
-| J26069 | CLP | CLP MD aand COO speech event |  | Current | Benjy | 1501043831829954570 | j26069-clp-md-aand-coo-speech-event |
 | J26071 | Buttons | Button InvestHK Motion graphic videos production |  | Current | Kary | 1502220628424396821 | j26071-button-investhk-motion-graphic-videos-production |
-| J26075 | CLP | CLP Chat With Joe May episode external version | Joe Chat;CWJ | Current | Benjy | 1502249491296817314 | j26075-clp-chat-with-joe-may-ep-external-ver |
-| J26076 | DFI | DFI DFIQ corporate video |  | Current | Benjy | 1512390997894496367 | j26076-dfi-dfiq-corporate-video |
+| J26076 | DFI | DFI DFIQ corporate video |  | Current | Benjy;Kyle | 1512390997894496367 | j26076-dfi-dfiq-corporate-video |
 | J26077 | CLP | CLP Chat with Joe June 2026 | Joe Chat;CWJ | Current | Benjy | 1500803244144721970 | j26077_chat_with_joe_ep_june |
-| J26081 | Department of Health | MDD 10K Listing video |  | Current | Benjy | 1509079387339751464 | j26081_mdd_10k_listing_video_cant_vers |
+| J26081 | Department of Health | MDD 10K Listing video |  | Current | Benjy;Atlas | 1509079387339751464 | j26081_mdd_10k_listing_video_cant_vers |
 | J26082 | EMSD | EMSD Corporate Video 2026 | EMSTF 30A | Current | Kary | 1503674382030209094 | j26082_emsd_corporate_video_2026 |
-| J26084 | Department of Health | MDD 10K Listing video, English and Mandarin versions |  | Current | — | 1509079823383924747 | j26084_mdd_10k_listing_video_eng_mand_vers |
+| J26084 | Department of Health | MDD 10K Listing video, English and Mandarin versions |  | Current | Benjy;Atlas | 1509079823383924747 | j26084_mdd_10k_listing_video_eng_mand_vers |
 | J26085 | — | Minerals Hang Seng Facility Management Award | HS Facility Award | Current | Benjy | 1509112179339694212 | j26085_minerals_hang_seng_facility_management_award |
 | J26091 | DFI_711 | DFI 7 eleven Trade show 2026 |  | Current | Kyle | 1509860999631470643 | j26091_dfi-711-trade-show-present-video |
-| J26094 | — | DFI Own Brand KV adult diapers |  | Current | — | — | — |
-| J26095 | — | Plan B EMSD Engineer & Technician Trainee Graduation Ceremony event kick off video |  | Current | — | 1515917378746323066 | j26095_plan-b-emsd-engineer-technician-trainee-graduation-ceremony-event-kick-off-video |
-| J26096 | — | Button Invest HK exhibition board production |  | Current | — | — | — |
+| J26094 | — | DFI Own Brand KV adult diapers |  | Current | Sohling | — | — |
+| J26095 | — | Plan B EMSD Engineer & Technician Trainee Graduation Ceremony event kick off video |  | Current | Sohling | 1515917378746323066 | j26095_plan-b-emsd-engineer-technician-trainee-graduation-ceremony-event-kick-off-video |
+| J26102 | HKCEC | HKCEC Leap East video production |  | Current | — | 1523524215771369474 | j26102_hkcec-leap-east-video-production |
 
 ---
 
