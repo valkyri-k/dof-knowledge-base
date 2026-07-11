@@ -1954,8 +1954,9 @@ def _build_pure_post_milestones(*, mode, project, pre_pro_dates, cut_dates,
             calendar_emit=True, client_facing=False, party="DOF")
         add("vo_end", "VO Recording End", tail["vo_end"],
             calendar_emit=True, client_facing=False, party="DOF")
+    # Doc-only row (client transparency); never a calendar event.
     add("color_sound", "Color / Sound / Subtitle", tail["cs"],
-        calendar_emit=True, client_facing=False, party="DOF")
+        calendar_emit=False, client_facing=False, party="DOF")
     # Final output is implicit (= tail end), but emit for completeness.
     # final_output is passed via main; reuse tail["cs"]+1wd? Actually final_output
     # is the anchor — emit from caller's final_output. Skipping here; payload

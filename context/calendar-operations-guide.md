@@ -274,8 +274,8 @@ Compressed pre-pro total：T0 → Shoot ≈ **9–10 wd (~2 週)**
 | 係咪保留 | **係**——唔好 skip，即使只係 1 wd |
 | Party column | DOF |
 | 日子點計 | VO Window 結束之後 1 wd（如冇 VO 就 Picture Lock 之後 1 wd） |
-| Calendar push? | 係（colorId 7 Peacock，當 Post-Pro） |
-| Calendar title | `Color/Sound/Subtitle - [Project]` |
+| Calendar push? | **唔係**——doc-only。純粹係俾客人睇嘅 deliverable checkpoint，team internal 執行唔需要見到，Calendar 唔 create event |
+| Calendar title | —（唔 push；doc row 顯示用 colorId 7 Peacock 色系歸類 Post-Pro） |
 
 ---
 

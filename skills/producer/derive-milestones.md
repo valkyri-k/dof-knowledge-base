@@ -67,7 +67,7 @@
 | # | Milestone | Calendar Title | Party | colorId | 點計 |
 |---|-----------|---------------|-------|---------|------|
 | 16 | VO Recording (window) | `([N] Days) VO Recording - [Project]` | DOF | 1 (Lavender) | **Backward-derived**：window end ≤ #18 - 2 wd；長度 2 wd；start = end - 2 wd + 1 day。**Optional**——冇 VO recording / 用 AI VO 就 skip。Window 詳細 logic（working day cross check / preview format）見 `_reference.md` |
-| 17 | Color, Sound Mixing, Subtitle | `Color/Sound/Subtitle - [Project]` | DOF | 7 (Peacock) | **Backward-derived**：#18 - 1 wd。Doc 必須保留，Calendar 亦 push |
+| 17 | Color, Sound Mixing, Subtitle | `Color/Sound/Subtitle - [Project]` | DOF | 7 (Peacock) | **Backward-derived**：#18 - 1 wd。Doc 必須保留（client transparency）；**Calendar 唔 create event**——純粹係俾客人睇嘅 deliverable checkpoint，team internal 執行唔需要見到 |
 | 18 | Final Output | `Final Output - [Project]` | DOF | 3 (Grape) | **Client deadline anchor**——hard anchor，**永遠唔向前 pull**。冇 client deadline → 主動問用戶。 |
 
 ---
@@ -102,6 +102,8 @@
 1. Timeline preview（chat reply 入面俾用戶睇嘅 markdown table）
 2. Document generation（寫入 Timeline_Template 嘅每一行）
 3. Calendar push list（push 上 dof.internal Calendar 嘅每個 event）
+
+> 例外：Optional Milestone Handling 表列明 **doc-only** 嘅 milestone（Color/Sound/Subtitle）出現喺 1、2，但**唔入** 3——呢個係規則，唔係漏。
 
 ### Optional Milestone Handling
 
