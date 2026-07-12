@@ -81,7 +81,7 @@
 
 **Calendar Name:** DOF Internal
 **Calendar ID:** `dof.internal@gmail.com`
-**存取方式:** Service Account（`agent-mugi@gen-lang-client-0234599134.iam.gserviceaccount.com`）
+**存取方式:** Service Account（`agent-mugi@agent-mugi.iam.gserviceaccount.com`）
 **Credentials:** 存放喺 Zeabur Variable `GOOGLE_CALENDAR_CREDENTIALS`
 
 **主要用途：**
