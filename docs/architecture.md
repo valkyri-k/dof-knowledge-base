@@ -85,6 +85,35 @@ Discord interface 睇唔到 Mugi 內部 process（thinking / loading / 有冇 ca
 
 **日常 CLAUDE.md 更新流程（最常用）：** `git pull`（喺 container 入面）→ Discord message Mugi 叫佢 re-read CLAUDE.md → done。唔需要 restart service。
 
+> ⚠️ **第三種情況：platform 靜靜 recreate（上表冇覆蓋）** — 平台自動 re-pull `latest` image（image update / host 遷移）唔係 user 按 dashboard「Restart service」嗰種 process-restart，而係 **RECREATE** container（writable layer reset）。真 entrypoint `/opt/startup.sh` 唯讀、**唔 auto-start Mugi agent** → Kary 見到嘅只係「Mugi 突然冇反應」，唔知發生咗 restart。Volume-mounted path（kb / memory）survive，但行緊嘅 agent process + writable-layer 改動（`.profile`、pip 裝嘅 dep）冇咗。下面 auto-recover + watcher 兩件套 close 呢個 loop。
+
+### Silent restart — auto-recover + 外部 watcher（[[2026-07-12]]）
+
+**Part 1 — login-gated auto-recover（container 側，`/home/node/.profile`）**
+Web terminal 一 login（non-TMUX shell）就檢查有冇 agent 行緊，冇就喺 tmux `main` session 重啟。實際 block（加喺 `.profile` 尾）：
+
+```sh
+# mugi agent autostart — auto-recover Claude Code agent on web-terminal login.
+if [ -z "$TMUX" ]; then
+  if ! pgrep -f "claude --dangerously-skip-permissions" >/dev/null 2>&1; then
+    tmux kill-session -t main 2>/dev/null
+    tmux new-session -d -s main "exec env DISCORD_BOT_TOKEN='$DISCORD_BOT_TOKEN' claude --dangerously-skip-permissions --channels plugin:discord@claude-plugins-official"
+    echo "  [mugi] Claude Code agent auto-started in tmux session 'main'"
+  fi
+fi
+```
+- `pgrep` guard：agent 已行就唔重啟（避免 double-launch）。用 `kill-session` + `new-session` 而唔用 `tmux new -As main -- claude`，因為後者遇到已存在嘅空 `main` session 會 no-op（净係 attach，唔 launch）。
+- ⚠️ `.profile` 喺 **writable layer** → full rebuild / recreate 會清走，要重加（見 Full Rebuild Checklist step 8.5）。同場 `kb/mugi-status/launch.sh` monitor autostart（2026-06-09 加）一樣 login-gated。
+
+**Part 2 — 外部 restart watcher（home Mac mini 側）**
+Login-gated 有 gap：Kary 要**知道**發生咗 restart 先會去開 terminal。Watcher 補呢個 signal：home Mac mini launchd（`com.kary.mugi-restart-watch`，每 5 分鐘）`zeabur service exec` poll container **PID 1 start time**（`stat -c %Y /proc/1`）→ 一變 = container recreate → POST Discord webhook（#mugi-status）叫 Kary 去開 web terminal 觸發 Part 1。連續 3 次探唔到（~15min）另發 warning。
+- **Signal 揀 PID 1 唔用 `/proc/uptime`**：`/proc/uptime` = **host kernel** uptime（container 共享 host kernel，顯示成日，冇用）；PID 1 start epoch 先反映 container recreate。
+- **點解 host 揀 home mini 唔用 n8n**：Discord 冇 REST presence API（online/offline 净係 Gateway WebSocket，n8n 維持唔到）；`zeabur service exec` 又要 zeabur CLI + auth（n8n on Railway 冇）→ 得 home mini（always-on + CLI + auth）做到。
+- **Caveats**：home mini 要長開；zeabur CLI auth 過期會出 false「探唔到」alert（`zeabur profile info` check）。
+- Machine-scoped detail（script path / launchd plist / webhook secret）留喺 Mac 側，唔入 KB repo。
+
+**真 durable fix（未做）**：bake deps + agent auto-start 入 image / startup hook，令 login-gated recover + 外部 watcher 兩者都唔再需要 → vault Project 007 Open Question「Container Python deps provisioning gap」。
+
 ### In-place 重啟 Mugi（改咗 settings.json / launch flags 先需要）
 
 Settings（`/home/node/.claude/settings.json`）改動要 claude process 重啟先食到。唔使 restart Zeabur service —— 喺 container 入面（以 node user）重啟 tmux session 就得：
@@ -163,6 +192,10 @@ chown -R node:node /home/node/.claude/hooks
 # 唔可以改用 --strict-mcp-config（會殺埋 discord plugin tools）。
 # 兩個 Stop block 分開（唔合併）→ reply_guard 嘅 block-decision stdout 唔會同 chown log 撈埋。
 # 寫完 chown node:node + chmod 644 settings.json。當前 container backup：/home/node/.claude/settings.json.bak-2026-07-07
+
+# 8.5 Login auto-recover — 重加 /home/node/.profile 尾嘅 mugi agent autostart block（writable layer，rebuild 清走）。
+# 完整 block 見上面 Restart Checklist「Silent restart」section。冇呢個 block，之後 platform 靜靜 recreate container，
+# login 唔會自動重啟 agent，Kary 只會見到 Mugi 靜靜死。
 
 # 9. 啟動 Mugi（tmux，cwd 必須 /home/node/kb —— 見上面 In-place 重啟 section）
 su node -s /bin/sh -c 'cd /home/node/kb && tmux new -d -s main -- /home/node/.local/bin/claude --dangerously-skip-permissions --channels plugin:discord@claude-plugins-official'
