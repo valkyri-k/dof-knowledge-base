@@ -50,3 +50,8 @@ _(Google Calendar is source of truth — this is reference snapshot only)_
 ### [[2026-06-11]] morning — Add Calendar event: Revise StoryFlow
 - **Kary 問**：Jun-16 mark calendar: Revise StoryFlow
 - **Mugi 做**：Created "Revise StoryFlow - EMSD Corp Video" on 2026-06-16 (Tue), colorId 5
+
+### [[2026-07-13]] afternoon — 查呢個禮拜 schedule
+- **Kary 問**：job schedule of this week
+- **Mugi 做**：搜 Calendar，回覆 3 個 milestone：3rd Cut 7/13(一)、Picture Lock 7/15(三)、VO Recording(TBC) 7/16(四)
+- **Followup**：（none）

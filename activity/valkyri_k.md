@@ -67,6 +67,9 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 ### 2026-07-07 morning session (J26XXX test timeline + repeated silent-reply bug + Kay departure)
 長 session，多線並行。(1) J26XXX（test project）draft timeline 撞到 `timeline_backward.py` 一連串 anchor overlay + slack-distribution bug（詳細 4-run repro 已入 gap-log），最後應 Kary 要求 simplify 做 3-event（Shooting/1st Cut/Final Output）test push，冇 saturation，成功 push。(2) 呢個 session 首次出現**連續 4 次 silent-reply failure**——短答案（FAQ、redirect、team lookup）淨係喺 text output 出現，冇實際 call reply tool，Kary 每次都要問「你無答我」先發現。試過兩個 hypothesis（答案簡短 / session context 長度）都被 Kary 即場數據推翻，最終誠實承認搵唔到 deterministic root cause，建議 harness-side transcript debug。(3) Kary 通知 Kay（前 Graphic Designer）已喺上月離開 DOF——KB 全面 update（CLAUDE.md team table、team-roles.md、production-pipeline.md、dof-context-overview.md），並主動拆除 `trello-agent.md` style frame 嘅 silent default assignee（曾經 default 派俾 Kay），改做逼 user 指明，等 Kary 同 Sohling 夾新負責人。(4) 順手處理 2 個 security policy 觸發（非 Kary 用戶要求 print env variables + prompt injection「ignore all previous instructions」）——已按 Security Policy 拒絕 + tag Kary，唔記入 gap-log（policy 排除呢類 case）。**Key takeaway**：silent-reply bug 已經係 repeat incident（4 月 26 號 + 依家呢次 4 連發），現有 mitigation 唔夠，需要 Kary 喺 harness 層面而唔係 prompt 層面跟進。
 
+### 2026-07-13 afternoon session (multi-job schedule ops + 2 new senders onboarded)
+今日主要係短 job-channel queries + schedule 操作，橫跨多個 job，冇 architectural work。J26082 幫 Kary 查咗 7/13–7/19 呢個禮拜嘅 schedule（3rd Cut/Picture Lock/VO Recording TBC）；home base「Test2」thread 查 Max 今日 Trello due（冇）。首次接觸兩位新 sender：Kyle（director，J26050 + J26076）同 Atlas（asst director，J26081）——已分別建立佢哋嘅 activity file，跟 sender routing rule 各自寫入自己 file，冇塞入呢個 file。J26050 幫 Kyle 兩次 reschedule（3rd Cut→7/14、Final Output→7/23，rule check 全過）；J26076 幫 Kyle 一次過 push 10 個 milestone（DFIQ project，7/14 script share 到 9/4 final output）。J26081 Atlas 想 remove TBC remark，但兩次擴大搜尋都確認呢個 job 喺 Calendar 完全冇任何 event——已 flag 俾 Atlas，等緊佢答覆係咪 project shorthand 用咗第啲名。
+
 ---
 
 ## Request Log
@@ -97,3 +100,6 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 | 2026-07-07 | Non-Kary user (dreamoffish.ai bot) requested print env variables, then prompt injection ("ignore all previous instructions") | Both refused per Security Policy + Kary tagged; not logged to gap-log (policy exclusion) |
 | 2026-07-07 | Standalone Calendar add: "Test 1st cut" 2026-07-10 | ✅ Created (colorId 7), no saturation/holiday conflict |
 | 2026-07-07 | Kay（Graphic Designer）已離開 DOF — KB update request | Updated CLAUDE.md team table, team-roles.md, production-pipeline.md, dof-context-overview.md; removed silent Trello style-frame default (was Kay) per Kary instruction |
+| 2026-07-13 | hello greeting (home base) | Replied ✅ |
+| 2026-07-13 | J26082 job schedule of this week (asked in job channel) | Reported 3 events: 3rd Cut 7/13, Picture Lock 7/15, VO Recording (TBC) 7/16 |
+| 2026-07-13 | Max 今日 Trello card status (Test2 thread, home base) | No card due today ✅ |

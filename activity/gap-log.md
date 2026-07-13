@@ -47,6 +47,20 @@ Post team 用 Planyway 管理工作。Planyway 有 Calendar sync 功能，但 sy
 Type: capability-gap
 Request: Storyboard card 加 checklist，items `Video 1` assign Max / `Video 2` assign Keith
 Gap: Trello 嘅 checklist item member assignment 係 Advanced Checklists feature（Standard+ plan power-up），呢個 board 而家冇 enable。試過 `PUT /cards/{id}/checkItem/{iid}` 加 `idMember` param —— API return 200 但 silent ignore（GET 返嚟 `idMember: null`）。Verify 過 board `premiumFeatures` 冇相關 flag。Fallback 用咗 `@username` mention 加落 item 個名度（Trello auto-link 但唔算 formal assignment，唔入 Workload view）。可能 fix：upgrade Trello workspace plan，或者 default 將「assign 到 checklist item」嘅 request 自動轉做 split-cards approach（card-level member assignment 係 free）。
+
+---
+
+## [[2026-07-07]] 15:57 — @valkyri_k
+
+Type: capability-gap
+Request: J26999 test project — Shoot 7/20（已 fix）、Final Output 8/28（hard deadline）、client provide 晒 pre-pro materials，跑 `scripts/timeline_backward.py` 出 timeline。
+Gap: `timeline_backward.py` 冇一個 code path 可以同時「fixed 用戶 supplied shoot date」+「compressed pre-pro chain（fit 入 kickstart→shoot 嘅緊窄 window）」：
+- 用 `--shoot-date 2026-07-20`（literal fix）→ 觸發 `run_compressed_edge_case`（因為 standard pre-pro 塞唔晒 9 wd window），但呢個 branch 內部 `shoot_date = add_wd(pre_pro["script_lock"], 1, holidays)` **無視傳入嘅 `--shoot-date`，self-recompute 咗個 ASAP shoot date**（7/14，早過用戶要求嘅 7/20）
+- 用 `--anchor shoot_date=2026-07-20`（overlay 保留日子）→ `apply_anchors()` 只係 post-hoc overwrite milestone date，唔會觸發 compressed pre-pro 重新計；milestone 組裝仍然行 standard 5-6wd pre-pro chain（由 `pre_pro_standard` 起計），結果 Script Lock（7/22）跑到 Shooting（7/20）之後，出現 ordering inversion warning
+- 兩條 path 各自解決一半：一個啱日子錯邏輯，一個啱邏輯錯日子；冇 combined path 表達「用戶已經 confirm 個 shoot date，但 pre-pro 要用 compressed sequential chain 塞入嗰個 window」
+
+可能 fix 方向：`run_compressed_edge_case` 應該接受 `--shoot-date` 作為 hard upper bound（如果 user 供嘅 date ≥ ASAP compressed shoot date，直接用 user 個 date，pre-pro compressed chain 照跑），而唔係全部 self-derive。
+Status: open
 Status: open
 
 ---
