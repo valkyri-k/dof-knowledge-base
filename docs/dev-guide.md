@@ -16,7 +16,7 @@ Mugi runtime 以 `cwd = /home/node/kb` 行 Claude Code，即係：
 
 1. **唔准改名 / 取代 root `CLAUDE.md`** 做 dev instructions —— Mugi 下次 restart 會讀錯 system prompt
 2. **唔准加 `.claude/`、`AGENTS.md`、`GEMINI.md` 落 repo root** —— 會漏入 Mugi runtime
-3. Dev session 開喺 wrapper folder（`../DOF-knowledge-base-dev/`）—— 嗰度先有 dev CLAUDE.md + `/plan` `/wrap` skills
+3. Dev session 開喺 wrapper folder（`../DOF-knowledge-base-dev/`）—— 嗰度先有 dev CLAUDE.md + `/park` `/wrap` skills
 
 `docs/` 呢個 folder 對 Mugi runtime 零影響（冇 dispatch row 指過嚟，Mugi 唔會 load），所以 dev docs / plans 放呢度安全。
 
@@ -54,6 +54,6 @@ Mugi runtime 以 `cwd = /home/node/kb` 行 Claude Code，即係：
 
 ## Plans
 
-- 位置：`docs/plans/<feature>.md`，由 wrapper `/plan` skill 產生，commit 落 feature branch
+- 位置：`docs/plans/<feature>.md`，由 wrapper `/park` skill 產生，commit 落 feature branch
 - Vault（DOF_Build `projects/007-agent-mugi/`）管 WHAT/WHY；plan file 管 HOW —— 唔好 duplicate，link
 - Plan 未 commit = 唔存在（第二部機睇唔到）

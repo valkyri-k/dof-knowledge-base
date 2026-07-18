@@ -2,7 +2,7 @@
 
 Mugi（DOF AI Agent）嘅 context knowledge base。
 
-> **要改 Mugi？唔好喺呢個 repo 開 dev session。** Dev 入口 = 同層 wrapper `../DOF-knowledge-base-dev/`（cockpit CLAUDE.md + `/plan` `/wrap` skills）。喺嗰度開 Claude Code，`/plan` `/wrap` 先 load。呢個 repo root 唔可以擺 `.claude/` —— Mugi runtime（`cwd=/home/node/kb`）會食咗佢做自己嘅 config。
+> **要改 Mugi？唔好喺呢個 repo 開 dev session。** Dev 入口 = 同層 wrapper `../DOF-knowledge-base-dev/`（cockpit CLAUDE.md + `/park` `/wrap` skills）。喺嗰度開 Claude Code，`/park` `/wrap` 先 load。呢個 repo root 唔可以擺 `.claude/` —— Mugi runtime（`cwd=/home/node/kb`）會食咗佢做自己嘅 config。
 
 ## Structure
 
