@@ -408,6 +408,7 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 | Calendar standalone ops 詳細規則（search/update/batch/add、TBC events） | `context/calendar-operations-guide.md` |
 | 用咩工具、Discord 規則、Internal tools 關係 | `context/tools.md` |
 | Active job lookup（J#、client、project name、alias、Discord channel mapping）| `context/job-list.md` |
+| VO recording studio 地址 / 現場聯絡（DoubleDouble 等，Calendar 只擺 raw 地址對唔到 studio 名時查呢度） | `context/vo-studios.md` |
 
 **Context routing rule：** 複雜問題先 check Quick Reference，搵唔到答案先 read 對應 context file。**搵唔到就讀，唔好靠記憶答（記憶會錯）。**
 
