@@ -53,6 +53,19 @@
   drafted_by: mugi
   drafted_at: 2026-07-23
 
+### [[2026-07-23]] afternoon
+- entry: 答問題（尤其 asset / 資料查詢）要簡潔、action-oriented——直接俾最快攞到嘢嘅 path，唔好長篇解釋、唔好過度 escalate（唔使要嗰陣唔好搵 supervisor / 第三方）。
+  category: response-guidance
+  confidence: medium
+  source: corrected
+  evidence:
+    - [[2026-07-23]] Kary DM 更正 Kyle CWB clean-version 答得太長：「唔駛咁詳細答佢，直接叫佢自己睇 DOF server…更加唔需要搵 sohling」
+    - 主題呼應同日 link-hygiene candidate（俾人最快 path 攞 asset）
+  proposed_visibility: team-shared
+  status: pending-review
+  drafted_by: mugi
+  drafted_at: 2026-07-23
+
 ---
 
 ## Open Threads
@@ -61,6 +74,7 @@
 - [2026-07-07] Silent-reply bug（4 次同 session 內 skip 咗 Discord reply tool call，root cause 未定）— cross-ref: gap-log.md [[2026-07-07]] ~09:00 / ~09:18 / ~09:25 三個 entry；建議 Kary 攞 harness-side transcript debug。**又疑似 recur [[2026-07-23]]**：Kary 02:47 講「clear」後隔咗約 1 個鐘冇任何 Discord reply，Kary 03:55 chase「做完未？有又無喺discord覆我」先觸發處理——未能確定係 Mugi skip reply 定 harness 冇 invoke，但 pattern 同已知 bug 一致
 - [2026-07-07] `scripts/timeline_backward.py` anchor overlay + slack-distribution bugs（0wd gap / inversion / trailing idle vs squeezed cut）— cross-ref: gap-log.md [[2026-07-07]] ~08:48 entry，Kary 話會之後 review 成條 timeline planning logic
 - [2026-07-20] Vimeo skill example fix — offered 更新 `skills/integration/vimeo-search.md` Step 3 example 用帶 privacy-hash 嘅 full link（而家係 bare `vimeo.com/<id>`，unlisted 片會甩 hash 開唔到）；Kary 未答，低優先
+- [2026-07-23] Clean-version handling rule（clean/textless 從來唔上 YT/Vimeo，喺 DOF server，直接叫 user 自己揾）— 暫時淨喺 Mugi memory（feedback-clean-version-on-server）+ gap-log；Kary 講「will review later using gap log」再決定使唔使 promote 入 KB（CLAUDE.md / context/）做 canonical rule。cross-ref: gap-log.md [[2026-07-23]] ~04:10
 
 ---
 
@@ -86,6 +100,9 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 
 ### 2026-07-14 to 07-23 session (Coca-Cola folder, J26082 VO ops, link-hygiene fixes, VO studios → KB)
 橫跨多日嘅 mixed ops session，主線係 Drive/Calendar 操作 + 兩個 link-hygiene 教訓入 memory + 一個新 KB context file。(1) **J25115 Coca-Cola Sales Kickoff**：由 Airtable Master Job Log（REST + PAT，非 cloud MCP）查到 job#/name（Completed job，唔喺 Current cache），跟現有 Drive 命名格式（lowercase hyphen-slug，全部住喺 Discord-files folder）create job folder。Kary 即場 correct：create 完淨係報 folder 名唔夠，一定要俾埋 clickable link →入 memory（feedback_drive_include_link）。(2) **J26082 EMSTF 30A VO ops**：job channel 內 add VO Recording 22/7 下午 3-4 時 @ DoubleDouble（timed event, colorId 1）；主動 flag 到原有 7/16 VO (TBC) placeholder superseded，Kary confirm 後 delete；再 move Final Output 7/20→7/24（五）。全部行 date/holiday/saturation check。(3) **Vimeo link 甩 hash**：Kary 報 JoeChat_Feb_CNY link 睇唔到——root cause 係片 unlisted，link 一定要帶 privacy hash，之前俾嘅 bare link 甩咗 →修正 + 入 memory（feedback_vimeo_full_link_hash）+ offer 改 skill example。(4) **好醫工 = EMSD 16th China Best CE Award**：中文片名 0 hit，轉英文 title-search 搵到 4 個 unlisted 版本，flag 最新 5/8 Ver3。(5) **VO studios → KB**：Kary 問過往 VO event 搵 DoubleDouble 地址——搜 53 條 VO event 發現 Calendar 只擺 raw 地址、冇 studio 名，唔敢估；Kary 提供 2 個 studio + contact，先入 memory，再應 Kary「要加落 KB context」authorize 整咗 `context/vo-studios.md` + CLAUDE.md routing pointer，commit ff4d281（push 撞 non-ff，rebase 後成功）。**Key learnings**：兩個 deliverable-link 教訓（Drive create 要連 link、Vimeo unlisted 要連 hash）已 durable 入 memory；DoubleDouble = 荃灣 One MidTown（唔係最常用嗰個觀塘 studio），好彩問咗冇估錯。**同時**：Kyle（kyleyeungdof_29223）07-23 喺 home base 問 J25072 CWB clean version，已按 sender routing flush 去佢自己 file。呢個 session 尾 clear 觸發後疑似 silent-reply recur（見 Open Threads）。
+
+### 2026-07-23 afternoon micro-session (clean-version handling correction)
+緊接 morning clear 之後嘅短 DM 交流。Kyle 問 J25072 CWB clean version，Mugi 搜 YT/Vimeo/Drive 覆咗一大段仲 offer tag Sohling；Kary DM 更正：clean/textless version 從來唔上 YT/Vimeo，一定喺 DOF server，應該直接叫 user 自己入 job folder 揾，唔使長篇、唔使搵 Sohling。已精簡覆返 Kyle、rule 入 memory（feedback-clean-version-on-server）、gap-log entry 由 capability-gap 改成 not-a-gap。Kary 再問「你點記低呢個 rule」→ 解釋 memory vs KB 分別 + offer promote 入 KB canonical；Kary 話會之後自己用 gap-log review 再決定。**Learning**：asset 查詢要簡潔 + 俾 self-serve path，唔好過度 search / escalate。
 
 ---
 
@@ -128,3 +145,5 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 | 2026-07-13 | hello greeting (home base) | Replied ✅ |
 | 2026-07-13 | J26082 job schedule of this week (asked in job channel) | Reported 3 events: 3rd Cut 7/13, Picture Lock 7/15, VO Recording (TBC) 7/16 |
 | 2026-07-13 | Max 今日 Trello card status (Test2 thread, home base) | No card due today ✅ |
+| 2026-07-23 | Kyle J25072 CWB clean-version reply 過長 — Kary DM 更正 handling | 精簡覆返 Kyle（clean version 喺 DOF server 自己揾，唔上 YT/Vimeo，唔搵 Sohling）；rule 入 memory (feedback-clean-version-on-server)；gap-log 改 not-a-gap；resolve Kyle open thread ✅ |
+| 2026-07-23 | Kary：你點記低呢個 rule？ | 解釋記咗 2 處（Mugi memory + gap-log audit trail），surface memory≠KB 分別，offer promote 入 KB canonical rule；Kary 話 will review later via gap-log |

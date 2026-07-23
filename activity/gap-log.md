@@ -219,3 +219,5 @@ Gap: 兩層缺口疊加——(1) **J#→video mapping 未 build**（Vimeo/YouTub
 Status: resolved — not a real gap
 
 **Resolution [[2026-07-23]] ~04:37（Kary DM 澄清）：** 呢個唔算 capability gap。Clean/textless version **by design 從來唔會 upload 上 YouTube/Vimeo**，一定係喺 DOF server job folder。正確 handling 唔係搜 channel 或搵 Sohling，而係**直接叫 user 自己入 DOF server 個 job folder 㩒一㩒攞**（user self-serve，Mugi 唔需要 browse server）。已將呢個 rule 存入 Mugi memory（feedback-clean-version-on-server）。唯一殘留、唔阻塞嘅底層限制係 J#→video/asset mapping 未 build，但對 clean-version 呢個 use case 唔相關（user 自己喺 server 揾）。
+
+**KB promotion [[2026-07-23]]：** Kary 話會之後自己用 gap-log review 再決定使唔使將呢條 clean-version handling rule promote 入 KB（CLAUDE.md / context/）做 team-wide canonical。暫時 rule 淨喺 Mugi memory（feedback-clean-version-on-server）+ 呢條 entry。← Kary 待辦 review item
