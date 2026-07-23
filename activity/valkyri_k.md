@@ -40,13 +40,27 @@
 ## Pending Profile Review
 （Mugi Pre-Clear Sequence draft，等 Claude Code review approve / reject。冇 candidate 留空。）
 
+### [[2026-07-23]] morning
+- entry: 交付任何 created / found resource（Drive file/folder、Vimeo/YouTube 片、doc）俾 Kary 時，一定要連埋 clickable link，唔可以淨係報名 / 描述。
+  category: response-guidance
+  confidence: high
+  source: corrected
+  evidence:
+    - [[2026-07-14]] Kary create 完 Coca-Cola folder 後 correct：「you should have show me the link 等我易啲㩒去睇, not only the folder name」
+    - [[2026-07-20]] 延伸：Vimeo unlisted link 甩 privacy hash 令 Kary 開唔到——同一個「俾可用 link」原則
+  proposed_visibility: team-shared
+  status: pending-review
+  drafted_by: mugi
+  drafted_at: 2026-07-23
+
 ---
 
 ## Open Threads
 
 - [2026-07-07] `skills/trello/trello-agent.md` style frame default assignee 已拆除（Kay 離開） — waiting on Kary + Sohling 夾新負責人，之後叫 Mugi 補返 default
-- [2026-07-07] Silent-reply bug（4 次同 session 內 skip 咗 Discord reply tool call，root cause 未定）— cross-ref: gap-log.md [[2026-07-07]] ~09:00 / ~09:18 / ~09:25 三個 entry；建議 Kary 攞 harness-side transcript debug
+- [2026-07-07] Silent-reply bug（4 次同 session 內 skip 咗 Discord reply tool call，root cause 未定）— cross-ref: gap-log.md [[2026-07-07]] ~09:00 / ~09:18 / ~09:25 三個 entry；建議 Kary 攞 harness-side transcript debug。**又疑似 recur [[2026-07-23]]**：Kary 02:47 講「clear」後隔咗約 1 個鐘冇任何 Discord reply，Kary 03:55 chase「做完未？有又無喺discord覆我」先觸發處理——未能確定係 Mugi skip reply 定 harness 冇 invoke，但 pattern 同已知 bug 一致
 - [2026-07-07] `scripts/timeline_backward.py` anchor overlay + slack-distribution bugs（0wd gap / inversion / trailing idle vs squeezed cut）— cross-ref: gap-log.md [[2026-07-07]] ~08:48 entry，Kary 話會之後 review 成條 timeline planning logic
+- [2026-07-20] Vimeo skill example fix — offered 更新 `skills/integration/vimeo-search.md` Step 3 example 用帶 privacy-hash 嘅 full link（而家係 bare `vimeo.com/<id>`，unlisted 片會甩 hash 開唔到）；Kary 未答，低優先
 
 ---
 
@@ -70,6 +84,9 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 ### 2026-07-13 afternoon session (multi-job schedule ops + 2 new senders onboarded)
 今日主要係短 job-channel queries + schedule 操作，橫跨多個 job，冇 architectural work。J26082 幫 Kary 查咗 7/13–7/19 呢個禮拜嘅 schedule（3rd Cut/Picture Lock/VO Recording TBC）；home base「Test2」thread 查 Max 今日 Trello due（冇）。首次接觸兩位新 sender：Kyle（director，J26050 + J26076）同 Atlas（asst director，J26081）——已分別建立佢哋嘅 activity file，跟 sender routing rule 各自寫入自己 file，冇塞入呢個 file。J26050 幫 Kyle 兩次 reschedule（3rd Cut→7/14、Final Output→7/23，rule check 全過）；J26076 幫 Kyle 一次過 push 10 個 milestone（DFIQ project，7/14 script share 到 9/4 final output）。J26081 Atlas 想 remove TBC remark，但兩次擴大搜尋都確認呢個 job 喺 Calendar 完全冇任何 event——已 flag 俾 Atlas，等緊佢答覆係咪 project shorthand 用咗第啲名。
 
+### 2026-07-14 to 07-23 session (Coca-Cola folder, J26082 VO ops, link-hygiene fixes, VO studios → KB)
+橫跨多日嘅 mixed ops session，主線係 Drive/Calendar 操作 + 兩個 link-hygiene 教訓入 memory + 一個新 KB context file。(1) **J25115 Coca-Cola Sales Kickoff**：由 Airtable Master Job Log（REST + PAT，非 cloud MCP）查到 job#/name（Completed job，唔喺 Current cache），跟現有 Drive 命名格式（lowercase hyphen-slug，全部住喺 Discord-files folder）create job folder。Kary 即場 correct：create 完淨係報 folder 名唔夠，一定要俾埋 clickable link →入 memory（feedback_drive_include_link）。(2) **J26082 EMSTF 30A VO ops**：job channel 內 add VO Recording 22/7 下午 3-4 時 @ DoubleDouble（timed event, colorId 1）；主動 flag 到原有 7/16 VO (TBC) placeholder superseded，Kary confirm 後 delete；再 move Final Output 7/20→7/24（五）。全部行 date/holiday/saturation check。(3) **Vimeo link 甩 hash**：Kary 報 JoeChat_Feb_CNY link 睇唔到——root cause 係片 unlisted，link 一定要帶 privacy hash，之前俾嘅 bare link 甩咗 →修正 + 入 memory（feedback_vimeo_full_link_hash）+ offer 改 skill example。(4) **好醫工 = EMSD 16th China Best CE Award**：中文片名 0 hit，轉英文 title-search 搵到 4 個 unlisted 版本，flag 最新 5/8 Ver3。(5) **VO studios → KB**：Kary 問過往 VO event 搵 DoubleDouble 地址——搜 53 條 VO event 發現 Calendar 只擺 raw 地址、冇 studio 名，唔敢估；Kary 提供 2 個 studio + contact，先入 memory，再應 Kary「要加落 KB context」authorize 整咗 `context/vo-studios.md` + CLAUDE.md routing pointer，commit ff4d281（push 撞 non-ff，rebase 後成功）。**Key learnings**：兩個 deliverable-link 教訓（Drive create 要連 link、Vimeo unlisted 要連 hash）已 durable 入 memory；DoubleDouble = 荃灣 One MidTown（唔係最常用嗰個觀塘 studio），好彩問咗冇估錯。**同時**：Kyle（kyleyeungdof_29223）07-23 喺 home base 問 J25072 CWB clean version，已按 sender routing flush 去佢自己 file。呢個 session 尾 clear 觸發後疑似 silent-reply recur（見 Open Threads）。
+
 ---
 
 ## Request Log
@@ -92,6 +109,14 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 | 2026-06-11 | J26082 Calendar shorthand correction → `EMSTF 30A` | Fixed existing event + saved to memory ✅ |
 | 2026-06-11 | J26082 Jun-16 Calendar event: Revise StoryFlow | ✅ Created (colorId 5) |
 | 2026-06-11 | Magnific account balance query | No MCP available → Kary provided `claude mcp add` command → added, pending restart |
+| 2026-07-14 | Check Coca-Cola Sales Kickoff 2025 job# + name, then create GDrive job folder | J25115 (Airtable Master Job Log, Completed); created `j25115_button-coca-cola-sales-kickoff-video-kv-design-2025` under Discord-files ✅. Kary feedback: post-create reply must include clickable link → saved to memory |
+| 2026-07-20 | J26082: add VO Recording 22/7 下午3-4時 @ DoubleDouble Studio | Created timed event VO Recording - EMSTF 30A (colorId 1) ✅; flagged pre-existing 7/16 VO Recording (TBC) as superseded — awaiting delete/keep decision |
+| 2026-07-20 | J26082: (a) delete 7/16 TBC VO + move Final Output to Friday | Deleted 7/16 TBC VO ✅; moved Final Output - EMSTF 30A 7/20→7/24(Fri) ✅ (weekday/holiday/saturation checked) |
+| 2026-07-20 | JoeChat_Feb_CNY Vimeo link 睇唔到 | Re-ran vimeo-search: video is unlisted → correct link needs privacy hash `https://vimeo.com/1195579838/e56a6dbb4c`; earlier bare link dropped hash. Saved lesson to memory; offered to fix skill examples |
+| 2026-07-21 | EMSD 好醫工 video YouTube link | 好醫工 (Chinese) 冇 match → English "Best CE Award" hit: EMSD 16thChinaBestCEAwardComptition, 4 unlisted versions. Gave all + flagged latest 20260508 Ver3 (youtu.be/Y5MjAsrNolU); asked which is final client ver |
+| 2026-07-22 | 過往 VO Recording event 搵 DoubleDouble 地址 | Swept 53 VO events 2024–now; none labelled "DoubleDouble" (only raw addresses), KB 無 studio→address record. Presented recurring studio addrs: ①觀塘鴻圖道63-65號鴻運工廠大廈7C (12×, most likely) ②荃灣One MidTown 821室. Asked Kary confirm which = DoubleDouble → then update 7/22 event location. **Pending confirm** |
+| 2026-07-22 | Kary confirmed DoubleDouble = ② One MidTown; 記低 2 VO studios | Saved reference to memory (studio-vo-addresses: ①Kwun Tong 鴻運工廠7C / Gerry 90712049; ②DoubleDouble One MidTown 821室 / Elaine 91046282). Updated 7/22 VO event location = full DoubleDouble addr + Elaine contact in desc ✅. Offered to also persist into KB context (pending Kary go) |
+| 2026-07-22 | Kary: 要加落KB context | Created `context/vo-studios.md` + CLAUDE.md context-table routing row; committed + pushed (ff4d281, rebased onto remote 22e3aec after non-ff reject) ✅ |
 | 2026-07-07 | J26XXX (test project) draft timeline: shoot 7/20, final output 8/28 hard deadline | Chain script hit anchor + slack-distribution bugs (0wd Shoot→1st Cut gap, 1st Cut anchor inversion vs FB1, trailing idle slack before Picture Lock while cut_warnings flag 2nd/3rd cut ≤3wd) — surfaced to Kary, logged to gap-log.md as bug（script logic）, no Calendar push (test only) |
 | 2026-07-07 | J26XXX simplified push (Shooting 7/20, 1st Cut 7/27, Final Output 8/28) | ✅ pushed to dof.internal Calendar, no saturation |
 | 2026-07-07 | Silent-reply repeat incident: "1st cut 幾耐後 2nd cut" answered in text only, reply tool not called | Kary caught it ("你無答我"/"見唔到回覆"); resent + logged to gap-log.md as bug（behavioral — repeat incident） |

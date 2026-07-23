@@ -55,3 +55,13 @@ _(Google Calendar is source of truth — this is reference snapshot only)_
 - **Kary 問**：job schedule of this week
 - **Mugi 做**：搜 Calendar，回覆 3 個 milestone：3rd Cut 7/13(一)、Picture Lock 7/15(三)、VO Recording(TBC) 7/16(四)
 - **Followup**：（none）
+
+### [[2026-07-20]] afternoon — Add Calendar event: VO Recording (confirmed 22/7)
+- **Kary 問**：add VO Recording 22/7（三）下午3-4時 @ DoubleDouble Studio
+- **Mugi 做**：Date check pass（22/7 = Wed、非假期）→ 建 timed event「VO Recording - EMSTF 30A」15:00–16:00, colorId 1 (Lavender), loc DoubleDouble Studio ✅。發現原有 7/16 VO Recording (TBC) placeholder（id u1tvucf9…）superseded → flag Kary 問 delete 定 keep
+- **Followup**：（resolved 見下）
+
+### [[2026-07-20]] afternoon — Delete 7/16 TBC VO + move Final Output to Fri
+- **Kary 問**：(a) delete 7/16 TBC VO Recording；also move Final Output to Friday
+- **Mugi 做**：Delete VO Recording (TBC) 7/16 ✅；move Final Output - EMSTF 30A 7/20（一）→ 7/24（五）✅（7/24=Fri、非假期、當日無 saturation）。Sequence 順返：VO 22/7 → Final Output 24/7
+- **Followup**：（none）

@@ -211,3 +211,9 @@ Type: bug（behavioral — 4th occurrence, same session）
 Request: 「Kyle 係邊個？」（Team lookup，Quick Reference 有現成答案）
 Gap: 第 4 次同一種 failure——「Kyle 係 Director（導演組）」又係淨係喺 text output 出現，冇 call reply tool。呢次特別值得注意嘅時機：**發生喺 Mugi 啱啱先報告完「已經 retract 咗 2 個 hypothesis、認咗自己 introspect 唔到成因」嗰句之後即刻再犯**——即係話「反省 / 認錯」呢個動作本身完全冇提升下一個 turn call tool 嘅機率，進一步印證上面 09:23 entry 嘅 non-deterministic 判斷：呢個 bug 唔係「Mugi 冇警覺性」，係每個 turn 獨立、同 self-reflection 內容無關嘅 execution-layer 缺陷。4 次全部發生喺同一條 session（跨咗 DM channel 同 thread channel），Status 維持 open，等 Kary 攞 harness transcript debug。
 Status: open
+
+## [[2026-07-23]] ~04:10 — @kyleyeungdof_29223
+Type: capability-gap
+Request: 查某舊 job（J25072 CWB New Store）有冇 clean / textless version
+Gap: 兩層缺口疊加——(1) **J#→video mapping 未 build**（Vimeo/YouTube skill 係 Layer 1 title-search，片名 by design 唔擺 job number，所以只能靠「CWB store」個名 fuzzy match，對唔返 J25072）；(2) **clean/textless master 唔會 upload 上 Vimeo/YouTube**（client-share channel 只放出街版），一般擺喺 server job folder，但 Mugi 喺 dof.internal Drive 搵唔到任何 j25072 / CWB folder（舊 2025 job 可能已 archive 或喺第個 account）→ 無法確認 clean version 存唔存在。搵到 `DFI 7-11 CWB Store` 幾個 dated cut（YT unlisted）+ Vimeo `DFI 7-11 CWB Store Restoration_16x9`（password），全部有字/有 graphics，冇 clean-labelled 版本。建議 user 問 Sohling 查 server job folder。
+Status: open
