@@ -35,8 +35,6 @@
 ## Open Threads
 （pending items，resolved 即時刪）
 
-- [2026-07-23] J25072 CWB「clean version」查詢 — 未 confirm「CWB New Store」= `DFI 7-11 CWB Store`（Vimeo/YouTube 對唔到 J#）；searchable channel 冇 clean/textless 版本，clean master 可能喺 server job folder。等 Kyle confirm 片身份 + 決定要唔要 Mugi tag Sohling 查 server folder。Cross-ref: gap-log.md [[2026-07-23]] ~04:10
-
 ---
 
 ## Recent Session Summaries

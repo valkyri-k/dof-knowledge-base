@@ -216,4 +216,6 @@ Status: open
 Type: capability-gap
 Request: 查某舊 job（J25072 CWB New Store）有冇 clean / textless version
 Gap: 兩層缺口疊加——(1) **J#→video mapping 未 build**（Vimeo/YouTube skill 係 Layer 1 title-search，片名 by design 唔擺 job number，所以只能靠「CWB store」個名 fuzzy match，對唔返 J25072）；(2) **clean/textless master 唔會 upload 上 Vimeo/YouTube**（client-share channel 只放出街版），一般擺喺 server job folder，但 Mugi 喺 dof.internal Drive 搵唔到任何 j25072 / CWB folder（舊 2025 job 可能已 archive 或喺第個 account）→ 無法確認 clean version 存唔存在。搵到 `DFI 7-11 CWB Store` 幾個 dated cut（YT unlisted）+ Vimeo `DFI 7-11 CWB Store Restoration_16x9`（password），全部有字/有 graphics，冇 clean-labelled 版本。建議 user 問 Sohling 查 server job folder。
-Status: open
+Status: resolved — not a real gap
+
+**Resolution [[2026-07-23]] ~04:37（Kary DM 澄清）：** 呢個唔算 capability gap。Clean/textless version **by design 從來唔會 upload 上 YouTube/Vimeo**，一定係喺 DOF server job folder。正確 handling 唔係搜 channel 或搵 Sohling，而係**直接叫 user 自己入 DOF server 個 job folder 㩒一㩒攞**（user self-serve，Mugi 唔需要 browse server）。已將呢個 rule 存入 Mugi memory（feedback-clean-version-on-server）。唯一殘留、唔阻塞嘅底層限制係 J#→video/asset mapping 未 build，但對 clean-version 呢個 use case 唔相關（user 自己喺 server 揾）。
