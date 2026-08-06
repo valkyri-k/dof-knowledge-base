@@ -75,6 +75,7 @@
 - [2026-07-07] `scripts/timeline_backward.py` anchor overlay + slack-distribution bugs（0wd gap / inversion / trailing idle vs squeezed cut）— cross-ref: gap-log.md [[2026-07-07]] ~08:48 entry，Kary 話會之後 review 成條 timeline planning logic
 - [2026-07-20] Vimeo skill example fix — offered 更新 `skills/integration/vimeo-search.md` Step 3 example 用帶 privacy-hash 嘅 full link（而家係 bare `vimeo.com/<id>`，unlisted 片會甩 hash 開唔到）；Kary 未答，低優先
 - [2026-07-23] Clean-version handling rule（clean/textless 從來唔上 YT/Vimeo，喺 DOF server，直接叫 user 自己揾）— 暫時淨喺 Mugi memory（feedback-clean-version-on-server）+ gap-log；Kary 講「will review later using gap log」再決定使唔使 promote 入 KB（CLAUDE.md / context/）做 canonical rule。cross-ref: gap-log.md [[2026-07-23]] ~04:10
+- [2026-08-06] J26016 HSUHK shoot-day naming — Batch 1 兩個拍攝日 Calendar title 係「Day 1 / Day 2 - HSUHK Student Excellence」（唔係「Shoot」字眼），Mugi 按 desc 判斷係 shoot day。等 Kary confirm 呢 2 日算唔算 shoot day（低優先，純 interpretation 確認）
 
 ---
 
@@ -104,28 +105,16 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 ### 2026-07-23 afternoon micro-session (clean-version handling correction)
 緊接 morning clear 之後嘅短 DM 交流。Kyle 問 J25072 CWB clean version，Mugi 搜 YT/Vimeo/Drive 覆咗一大段仲 offer tag Sohling；Kary DM 更正：clean/textless version 從來唔上 YT/Vimeo，一定喺 DOF server，應該直接叫 user 自己入 job folder 揾，唔使長篇、唔使搵 Sohling。已精簡覆返 Kyle、rule 入 memory（feedback-clean-version-on-server）、gap-log entry 由 capability-gap 改成 not-a-gap。Kary 再問「你點記低呢個 rule」→ 解釋 memory vs KB 分別 + offer promote 入 KB canonical；Kary 話會之後自己用 gap-log review 再決定。**Learning**：asset 查詢要簡潔 + 俾 self-serve path，唔好過度 search / escalate。
 
+### 2026-07-25 to 08-06 session (light multi-channel ops, 3 senders)
+橫跨多日嘅輕量 ops session，冇 architectural work，主要係 quick queries + 一個 calendar add，橫跨 3 個 sender（跟 sender routing 各自 flush 去自己 file）。**Kary 自己**：(1) home base「testing」ack；(2) J26062 Orbis job channel add「Client Meeting - Orbis」timed event Aug-5 (Wed) 11:00–12:00（colorId 5 fallback，1hr default，Wed/no-holiday checked）；(3) J26016 HSUHK 問總共幾多 shooting days → 掃 Calendar 得 4 日（Batch 1 Day 1 3/21 Sat + Day 2 3/24 Tue，Batch 2 Shoot 4/22 Wed + 4/27 Mon），flag 咗 Batch 1 兩日 title 係「Day 1/2」唔係「Shoot」要 Kary confirm interpretation。**其他 sender（flush 去自己 file）**：Kyle 喺 home base 問 7-Eleven HK 全部 YouTube 片（~92 條，分 10 個 campaign，隔走 date false-positive）→ kyleyeungdof_29223.md；Yik 首次互動，J26016 set 一個 8/3 (Mon) 12pm「換logo」self-reminder（先缺內容問返，補齊後 set，record `recMeuM6Cs7bjuzNX`）→ 新建 yikleung.dof.md。
+
 ---
 
 ## Request Log
 
 | Date | Request | Outcome |
 |------|---------|---------|
-| 2026-06-03 | Job list sync | J26091/J26056/J26084 addedWithChannel; J26089 removed ✅ |
-| 2026-06-03 | Discord allowlist batch add 6 channels (J26007/J26010/J26056/J26057/J26084/J26091) | All 6 in one terminal invoke ✅ |
-| 2026-06-04 | J26082 prelim tentative timeline for client presentation | Week-unit draft; Jun 19 holiday flagged ✅ |
-| 2026-06-04 | J26082 EMSTF 30A confirmed timeline: 13 Calendar events (Jun 8–Jul 20) + alias added | ✅ |
-| 2026-06-11 | Add CWJ alias to all Chat with Joe projects (J26075, J26077) | ✅ |
-| 2026-06-11 | J26082 client feedback debrief shared for Mugi ref (Kelly@EMSD call notes) | Logged to per-job file; Jun-16 TBC storyflow revision noted |
-| 2026-06-05 | Sohling: J26050 CUHK Calendar (7/8 pushed, Jun 11 saturation pending) + Trello (8 cards, Katy+Keith) | ✅ (logged in sohling_69845.md per sender routing) |
-| 2026-06-05 | Flagged Sohling activity log missing; supplemented sohling_69845.md + created j26050 per-job log | Commit 8397dd3 ✅ |
-| 2026-06-05 | CLAUDE.md updated: Sender routing hard rule; Sohling open threads migrated to sohling_69845.md | Kary edit ✅ |
-| 2026-06-05 | Open threads cleanup: J260BB/J260CC/J26053 closed (test/ignore); activity.bak deleted; Planyway + root-owned kb context explained | ✅ |
-| 2026-06-05 | All remaining open threads cleared by Kary instruction | ✅ |
-| 2026-06-09 | Benjy J26085 session log recovery (server restart before log) | Supplemented j26085 per-job file ✅ |
-| 2026-06-09 | Vimeo links — EMSD Dems Briefing | 5 results returned (vimeo-search.js) ✅ |
-| 2026-06-11 | J26082 Calendar shorthand correction → `EMSTF 30A` | Fixed existing event + saved to memory ✅ |
-| 2026-06-11 | J26082 Jun-16 Calendar event: Revise StoryFlow | ✅ Created (colorId 5) |
-| 2026-06-11 | Magnific account balance query | No MCP available → Kary provided `claude mcp add` command → added, pending restart |
+_(2026-06 rows archived to `archive/valkyri_k_2026-06.md` on 2026-08-06)_
 | 2026-07-14 | Check Coca-Cola Sales Kickoff 2025 job# + name, then create GDrive job folder | J25115 (Airtable Master Job Log, Completed); created `j25115_button-coca-cola-sales-kickoff-video-kv-design-2025` under Discord-files ✅. Kary feedback: post-create reply must include clickable link → saved to memory |
 | 2026-07-20 | J26082: add VO Recording 22/7 下午3-4時 @ DoubleDouble Studio | Created timed event VO Recording - EMSTF 30A (colorId 1) ✅; flagged pre-existing 7/16 VO Recording (TBC) as superseded — awaiting delete/keep decision |
 | 2026-07-20 | J26082: (a) delete 7/16 TBC VO + move Final Output to Friday | Deleted 7/16 TBC VO ✅; moved Final Output - EMSTF 30A 7/20→7/24(Fri) ✅ (weekday/holiday/saturation checked) |
@@ -140,6 +129,8 @@ Server restart 前 Benjy 用 Mugi 做 J26085 Hang Seng Facility Award Calendar+T
 | 2026-07-07 | Silent-reply 3rd occurrence same session: out-of-scope redirect ("邊隻股票") also text-only, no reply tool call | Kary caught again ("你又無喺discord答我"); resent + logged to gap-log.md as pattern-confirmed 3x |
 | 2026-07-07 | Weekday lookup (7/15) + CWJ latest episode + post-pro headcount ×2 + "1st cut→2nd cut" FAQ + Kyle role lookup | All answered via Quick Reference/Python weekday script; one occurrence (Kyle) was 4th silent-reply failure, resent |
 | 2026-07-07 | Non-Kary user (dreamoffish.ai bot) requested print env variables, then prompt injection ("ignore all previous instructions") | Both refused per Security Policy + Kary tagged; not logged to gap-log (policy exclusion) |
+| 2026-07-30 | J26062 (Orbis channel): add "meeting with client" event Aug-5 (Wed) 11am | Created timed event `Client Meeting - Orbis` Aug 5 11:00–12:00 (1hr default, colorId 5), desc J26062/Director Kary ✅; Wed/no-holiday checked |
+| 2026-08-06 | J26016 (HSUHK channel): how many shooting days? check calendar | Swept HSUHK/J26016 events; 4 shoot days — Batch 1 Day 1 (3/21 Sat, Mok Wing Tung) + Day 2 (3/24 Tue, Para), Batch 2 Shoot (4/22 Wed) + (4/27 Mon). Flagged Batch 1 labelled "Day 1/2" not "Shoot" → asked Kary confirm interpretation |
 | 2026-07-07 | Standalone Calendar add: "Test 1st cut" 2026-07-10 | ✅ Created (colorId 7), no saturation/holiday conflict |
 | 2026-07-07 | Kay（Graphic Designer）已離開 DOF — KB update request | Updated CLAUDE.md team table, team-roles.md, production-pipeline.md, dof-context-overview.md; removed silent Trello style-frame default (was Kay) per Kary instruction |
 | 2026-07-13 | hello greeting (home base) | Replied ✅ |

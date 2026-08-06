@@ -6,7 +6,7 @@ director: Kary
 discord_channel_id: 1493117424201891952
 discord_channel_name: #j26062_orbis-future-vision-leader-and-from-blur-to-clear-campaign
 created: [[2026-05-09]]
-last_updated: [[2026-05-14]]
+last_updated: [[2026-07-30]]
 ---
 
 # J26062 — Orbis Future Vision Leader and From Blur to Clear Campaign
@@ -57,3 +57,7 @@ Total shooting days: 4
 ### [[2026-05-14]] afternoon — Test message in Timeline Schedule thread
 - **Kary 問**：「test」（@Mugi in Timeline Schedule thread）
 - **Mugi 做**：Auto-context detected J26062 Orbis Future Vision Leader；Discord reply sent to confirm detection ✅
+
+### [[2026-07-30]] evening — Add client meeting event
+- **Kary 問**：Add "meeting with client" event to calendar，Aug-5 (Wed) 11am
+- **Mugi 做**：Rules check pass (Wed weekday, no HK holiday)；created timed event `Client Meeting - Orbis` Aug 5 11:00–12:00 (1hr default)，colorId 5，desc J26062/Director Kary ✅
