@@ -186,6 +186,19 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 
 **⚠️ 呢個 policy 只係 standalone ops。Producer Playbook 嘅 timeline push 一定要有 job number + director——嗰個場景用戶係坐定定計 timeline，information 齊。**
 
+### Title vs Description — 時間以外嘅 info 一律 append 落 description（HARD RULE，2026-08-11 Kary 定）
+
+用戶開 event 俾嘅嘢，Mugi 要自己分邊樣入 Title、邊樣入 Description，**唔使用戶每次特別講**：
+
+- **入 Title（`summary`）**：event 係咩 —— milestone / meeting 名 + project shorthand。簡短、identifiable。
+  - e.g.「Shoot Day 1 - Swire Summer Intern (SCC)」、「DFIQ 1st Draft Feedback (Client Mtg)」
+- **Append 落 Description**：**用戶提供嘅時間以外所有 info，一律 append，唔好丟**。包括——
+  - **Meeting event**：Teams / Zoom **join link、Meeting ID、Passcode、organizer**（meeting **一定** append 呢啲；收到 invite 截圖 forward 都要 transcribe 入 description）
+  - **Shoot / 其他**：intern / talent 名、location / 地址、crew call time（TBC 都寫）、remarks、on-site contact 等
+  - **Job number / director**（如用戶有提供）
+
+**判斷原則**：時間（date / start-end）→ 去 `start`/`end` field；event「叫咩名」→ Title；**其餘全部 → Description**。唔肯定某 field 擺 Title 定 Description → **擺 Description**（安全 default），Title 保持簡短。呢條 rule apply 落**任何** event creation（standalone add / timeline push / meeting invite），唔淨止 meeting。
+
 ### Add Event
 
 **Tool path：用上面 Credentials section 嘅 Service Account boilerplate + `service.events().insert(calendarId='dof.internal@gmail.com', ...)`。唔好用任何 Calendar MCP tool。**
@@ -230,7 +243,10 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 | Post-Production | 1st Cut, 2nd Cut, 3rd Cut, Picture Lock, Color/Sound/Subtitle | `"7"` | Peacock（淺藍色）|
 | VO Recording | VO Recording window | `"1"` | Lavender（薰衣草紫）|
 | Final Output | Final Output | `"3"` | Grape（葡萄紫）|
+| Meeting | Client / internal meeting（Teams / Zoom / physical，含 feedback meeting、client briefing）| `"6"` | Tangerine（橙色）|
 | 其他 | Site Recce, Wardrobe Fitting 等 | `"5"` | Banana（fallback）|
+
+> ⚠️ **Meeting ≠ Client FB milestone（2026-08-11 Kary 定）**：一個真係約人開嘅 meeting event（有 Teams/Zoom link、organizer、時段）= **Tangerine `"6"`**，唔好當做 timeline 上面「Client FB 1/2/3」嗰種 deliverable-due milestone（嗰啲先係 Sage `"2"`）。收到 client / 內部 meeting invite（e.g. 截圖 forward、「開個 meeting event」）→ default `"6"`。
 
 **判斷關鍵詞：**
 - 「拍攝」「shoot」「shooting」→ `"11"`
@@ -240,6 +256,7 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 - 「final output」「交片」「出片」→ `"3"`
 - 「VO」「配音」「voice over」→ `"1"`
 - 「script received」「video flow」「graphics ref」→ `"5"`
+- 「meeting」「會議」「開個 meeting」「client meeting」「feedback meeting」「Teams/Zoom invite」→ `"6"`（Tangerine）
 
 **技術注意：**
 - colorId 係 string（`"7"`，唔係 `7`）
