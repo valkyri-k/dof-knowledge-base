@@ -65,3 +65,8 @@ _(Google Calendar is source of truth — this is reference snapshot only)_
 - **Kary 問**：(a) delete 7/16 TBC VO Recording；also move Final Output to Friday
 - **Mugi 做**：Delete VO Recording (TBC) 7/16 ✅；move Final Output - EMSTF 30A 7/20（一）→ 7/24（五）✅（7/24=Fri、非假期、當日無 saturation）。Sequence 順返：VO 22/7 → Final Output 24/7
 - **Followup**：（none）
+
+### [[2026-08-10]] evening — Set reminder: 聽朝處理 final output
+- **Yik 問**：提我聽朝 11 點處理 final output
+- **Mugi 做**：Set one-off replay reminder（record `reczZmA921DLtCRFl`）8/11（二）11:00，target = 呢個 channel，payload「@Yik 記得今朝處理 final output」(self-reminder)。覆述 confirm ✅
+- **Followup**：poller 8/11 11:00 fire

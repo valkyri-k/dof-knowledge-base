@@ -60,3 +60,4 @@ Kyle 喺 home base 問 dofofapple YouTube channel 全部同 7-Eleven HK 有關�
 | 2026-07-13 | J26076 DFIQ — batch push 10-milestone schedule to Calendar | ✅ 10 events created (7/14 script share → 9/4 final output), all rule checks passed |
 | 2026-07-23 | J25072 CWB New Store — 有冇 clean version | Searched YT/Vimeo/dof.internal Drive；found DFI 7-11 CWB Store cuts (all with-text/graphics, unlisted) + Vimeo Restoration_16x9 (password)；**冇 clean/textless master**。對唔到 J#（片名無 J#）；Drive 搵唔到 j25072 folder。Flagged + offered tag Sohling。gap-log logged |
 | 2026-07-27 | All 7-Eleven HK videos in YouTube channel | youtube-search.js swept 7eleven/7-11/711 → ~92 genuine clips (date false-positives filtered)；grouped into 10 campaigns，private/unlisted flagged ✅ |
+| 2026-08-07 | J26091 (in job channel) — 問 Google Drive server folder location | Searched dof.internal Drive → `My Drive / job-files / j26091_dfi-711-trade-show-present-video`；replied w/ clickable link ✅ |
