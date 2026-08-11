@@ -636,6 +636,15 @@ Planyway 直接讀取 Trello card 嘅：
 
 Mugi 只要正確 set 呢三樣，Planyway 自動 reflect，**唔需要直接操作 Planyway**。
 
+### ⚠️ 個 board 實際邊個睇（2026-08-11 Kary [K]）
+
+Planyway 個底層就係呢個 Trello board，而**主要係 Sohling 自己用嚟做 management / workload planning**。後期同事**唔會自己去睇** card。Kary 亦講明「唔肯定佢哋而家點 run」——即係下面兩點係 Mugi 嘅操作前提，唔係公司已定嘅制度：
+
+- **`idMembers` = Sohling 個 workload view 睇邊個孭住乜，唔係一個通知渠道。** Assign 咗 Keith 唔等於 Keith 知道 —— 要人知就照去 Discord。
+- **唔好將「已經 assign 咗上 Trello」當成「已經通知咗 / 已經跟進緊」**回覆 Kary 或者其他同事。
+
+Card mechanics（set members / dates / labels）本身照做——Sohling 需要嗰啲數據先 plan 到 workload。
+
 ---
 
 ## Workflow Pattern（收到 Trello 相關 request）

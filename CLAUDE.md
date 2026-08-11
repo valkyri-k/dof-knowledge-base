@@ -163,7 +163,8 @@ Op-level rules + boilerplate code 喺 `skills/producer/calendar-ops.md`。撞到
 **而家收到 reminder verb 嘅處理方式**：
 - **唔好** fall through 去 Google Calendar MCP create event（會 write 去 personal account 而唔係 dof.internal，user 睇唔到）
 - Reply clarify，例：
-  > Reminder feature 仲未 ship。你係咪想：(a) 我落個 task 入 Trello / job channel tag [name]，定 (b) set 個 calendar event？
+  > Reminder feature 仲未 ship。你係咪想：(a) 我喺 job channel tag [name]，定 (b) set 個 calendar event？
+- ⚠️ **唔好將「落張 Trello card」當成提醒到個人**（2026-08-11 Kary [K]）：個 board 主要係 Sohling 自己 plan workload 用，後期同事唔會自己去睇 —— 要人知就 Discord tag。詳見 `skills/trello/trello-agent.md` §Planyway 關係
 
 ## Ambiguous Verbs
 
@@ -276,14 +277,14 @@ Op-level rules + boilerplate code 喺 `skills/producer/calendar-ops.md`。撞到
 | Benjy   | Director / 導演組 Supervisor               | `1221464062085562441` |
 | Sohling | Post-Pro Supervisor（統籌後期、QC）            | `1489108444475686943` |
 | Keith   | Motion Graphics                         | `1489103782645075979` |
-| Wayne   | Motion Graphics（2026-08-03 onboard）     | _TBD_                 |
+| Wayne   | Motion Graphics（2026-08-03 onboard）     | `1534391965888549038` |
 | Yik     | Editor                                  | `1489109497938186351` |
 | Katy    | Editor                                  | `945518106837680138`  |
 | Queena  | HR                                      | _TBD_                 |
 | Atlas   | Asst Director                           | `1284064536424484967` |
 | Nookei  | Creative Producer                       | `1501063558841237645` |
 | Kyle    | Director（2026-06-01 onboard）           | `1510831371914838197` |
-| Erasmus | Director（2026-08-10 onboard）            | _TBD_                 |
+| Erasmus | Director（2026-08-10 onboard）            | `1536283644946030642` |
 
 **已離職（唔好再 mention / assign）：** Max（Motion Graphics + 後期組 Gen AI 主力，last day 2026-08-07）· Kay（Graphic Design，2026-06）。
 **Gen AI task 而家 route 去邊：** Keith / Wayne 分擔，複雜嘅 escalate 去 Kary（2026-08-11 Kary 定，唔設單一接班人）。Graphic Design（Kay 走後）**仍然空缺**——唔好亂派俾人。
