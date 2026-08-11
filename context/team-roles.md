@@ -14,6 +14,8 @@
 | Kary | Director / Creative & AI Lead | 前後期、client management、AI workflow 及 tools 推行。Process-oriented，對 graphics + design 都熟 |
 | Benjy | Director / 導演組 Supervisor | 拍攝執行、現場統籌。強項：執生型導演，現場能力極強 |
 | Atlas | Assistant Director | 2026-05-04 onboard。以前主要做 videographer，one-man-band 會剪片 |
+| Kyle | Director | 2026-06-01 onboard。有導演經驗，唔熟悉 Graphics 同 Project Management |
+| Erasmus | Director | 2026-08-10 onboard。背景 / 專長未知——Mugi 唔好假設佢熟悉現有流程 |
 
 ### Creative Production（獨立位置）
 | 人 | 角色 | 職責 |
@@ -25,14 +27,19 @@
 |----|------|------|
 | Sohling | Post-Production Supervisor | 後期統籌、分工、QC。同 Kary 一齊負責 Master Job List 維護 |
 | Keith | Post-Pro | Motion Graphics |
-| Max | Post-Pro | Motion Graphics |
+| Wayne | Post-Pro | Motion Graphics — 2026-08-03 onboard，接上 Max 走後嘅產能。同 Keith 一齊分擔 Gen AI 工作（2026-08-11 起），實際熟練程度未知 |
 | Yik | Post-Pro | Editor |
 | Katy | Post-Pro | Editor |
 
+### 已離職
+| 人 | 角色 | Last day | 影響 |
+|----|------|----------|------|
+| Max | Post-Pro — Motion Graphics + 後期組 Gen AI 主力 | 2026-08-07 | **Gen AI 唔設單一接班人**（2026-08-11 Kary 定）：日常 Gen AI 工作 Keith + Wayne 分，**複雜嘅 Kary 自己頂**。Mugi 唔好再將 Gen AI task / 查詢 route 去 Max —— route 去 Keith / Wayne，難度高就 escalate Kary |
+| Kay | Post-Pro (Temporary) — Graphic Design | 2026-06 | Graphic Designer 位置一直空缺 |
+
 ### 即將加入
-| 人 | 角色 | 預計 Onboard | 備註 |
-|----|------|-------------|------|
-| Kyle | 導演組（Director） | 2026 年 6 月頭 | 有導演經驗，唔熟悉 Graphics 和 Project Management |
+
+暫時冇人喺 pipeline（2026-08-11）。Kyle 已於 2026-06-01 入職，見上面導演組表。
 
 ---
 
@@ -83,7 +90,7 @@ DOF 冇 Producer，導演要自己做 PM + directing + client management。呢�
 
 | 群組 | AI 使用程度 |
 |------|-------------|
-| 後期組（Keith、Max 等） | 最成熟 — Gen AI 做片、做相、design 都用 |
+| 後期組（Keith 等） | ⚠️ **要重新評估（2026-08-11）** — 原本「最成熟」嘅判斷好大程度靠 Max，佢 2026-08-07 離職後實際程度未知。而家 Gen AI 由 Keith + Wayne 分擔，複雜嘅 escalate 返 Kary，即係後期組實際 ceiling 未知 |
 | 導演組 (Kary) | 成熟 — AI coding tools、workflow automation、prompt engineering |
 | 導演組 (Benjy / 新導演) | 基本 — brainstorm、簡單 queries |
 | Management (Ki) | 低 — 知道想用 AI，但唔識執行 |

@@ -44,7 +44,7 @@ Pre-pro total：T0 → Shoot ≈ **17–18 wd (~3.5 週)**
 - **Script Received → Submit Video Flow（5–6 wd）：** DOF 需要時間將 script breakdown 成 visual treatment + graphic reference。Compressed 可收縮至 3–4 wd 但唔建議。
 - **Submit Video Flow → Script Lock（5 wd）：** Client 通常要做 internal review，可能涉及 senior approval。Compressed min 3 wd。
 - **Script Lock → Shoot（7 wd standard / 3 wd min）：** Props、location confirm、crew briefing、shotlist finalize。壓縮到 3 wd 會影響 prep quality。
-- **Graphics Ref bundle with Video Flow：** Default 同日 submit + 同日 confirm，費事 client 分開 approve。Calendar 入面係獨立 events——post team（Keith、Max、Kay）需要分開 track。
+- **Graphics Ref bundle with Video Flow：** Default 同日 submit + 同日 confirm，費事 client 分開 approve。Calendar 入面係獨立 events——post team（Keith、Wayne）需要分開 track。
 
 **Script Lock 嘅 semantics：** Script Lock = Confirm Video Flow（同一回事，一個 milestone）。Script 至少 90% firm，之後「飛紙仔」係允許的但唔影響 structure。
 

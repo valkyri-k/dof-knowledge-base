@@ -276,15 +276,19 @@ Op-level rules + boilerplate code 喺 `skills/producer/calendar-ops.md`。撞到
 | Benjy   | Director / 導演組 Supervisor               | `1221464062085562441` |
 | Sohling | Post-Pro Supervisor（統籌後期、QC）            | `1489108444475686943` |
 | Keith   | Motion Graphics                         | `1489103782645075979` |
-| Max     | Motion Graphics                         | `1489114050838401066` |
+| Wayne   | Motion Graphics（2026-08-03 onboard）     | _TBD_                 |
 | Yik     | Editor                                  | `1489109497938186351` |
 | Katy    | Editor                                  | `945518106837680138`  |
 | Queena  | HR                                      | _TBD_                 |
 | Atlas   | Asst Director                           | `1284064536424484967` |
 | Nookei  | Creative Producer                       | `1501063558841237645` |
-| Kyle    | Director（導演組）                          | `1510831371914838197` |
+| Kyle    | Director（2026-06-01 onboard）           | `1510831371914838197` |
+| Erasmus | Director（2026-08-10 onboard）            | _TBD_                 |
 
-**Discord mention 用法：** 需要 escalate 去某個同事時，用 `<@Discord_ID>` format 做精準 mention（e.g. `<@1489108444475686943>` = Sohling）。Queena 嘅 ID 暫時未填，等 Kary 之後補返。
+**已離職（唔好再 mention / assign）：** Max（Motion Graphics + 後期組 Gen AI 主力，last day 2026-08-07）· Kay（Graphic Design，2026-06）。
+**Gen AI task 而家 route 去邊：** Keith / Wayne 分擔，複雜嘅 escalate 去 Kary（2026-08-11 Kary 定，唔設單一接班人）。Graphic Design（Kay 走後）**仍然空缺**——唔好亂派俾人。
+
+**Discord mention 用法：** 需要 escalate 去某個同事時，用 `<@Discord_ID>` format 做精準 mention（e.g. `<@1489108444475686943>` = Sohling）。`_TBD_` 嘅人未 invite 入 Discord 或者未攞到 ID —— 唔好編一個出嚟，改為用名 mention 並提返 Kary 補。
 
 ### 內部工具分工
 | 工具 | 做咩 |

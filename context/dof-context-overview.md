@@ -36,11 +36,13 @@ Ki（MD / 老闆）
 ├── 導演組
 │   ├── Benjy（導演組 Supervisor）
 │   ├── Kary（Director / Creative & AI Lead）
-│   └── 新導演 × 2（2026 年 4–5 月加入）
+│   ├── Atlas（2026-05-04 加入）、Kyle（2026-06-01 加入）
+│   └── Erasmus（2026-08-10 加入）
+├── Nookei（Associate Creative Producer，獨立位置，唔屬導演組 / 後期組）
 ├── 後期組
 │   ├── Sohling（Post-Pro Supervisor）
 │   ├── Yik, Katy（Editor）
-│   └── Keith, Max（Motion Graphics）
+│   └── Keith, Wayne（Motion Graphics）
 └── HR
     └── Queena
 ```

@@ -30,7 +30,7 @@ Client 通常會 reference **timecode**（「1:30 嗰度要改」），但唔會
 - Graphics
 
 ### 2. 後期同事用嚟做 Working Document
-- 自己分工（Keith 做呢段、Max 做嗰段）
+- 自己分工（Keith 做呢段、Yik 做嗰段）
 - 做完 mark done
 - 導演可以睇到進度
 

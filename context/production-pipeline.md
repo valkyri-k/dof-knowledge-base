@@ -111,10 +111,11 @@ DOF 冇 in-house shooting crew，全部 outsource freelancers。導演有慣用�
 | 角色 | 人 | 職責 |
 |------|-----|------|
 | Editor | Yik、Katy | Video editing（剪接、footage 組合、初步 color） |
-| Motion Graphics | Keith、Max | 字卡、lower thirds、dividers、2D animation、infographics |
+| Motion Graphics | Keith、Wayne | 字卡、lower thirds、dividers、2D animation、infographics |
 | Post-Pro Supervisor | Sohling | 後期統籌、分工、QC、同導演對接 |
 
 > Graphic Design（KV、poster、banner static graphic）之前由 Kay 負責，Kay 已於 [[2026-06]] 離開 DOF——呢個位暫時冇人接手，見 `team-roles.md` §Kay 已離開。
+> Max（Motion Graphics + 後期組 Gen AI 主力）已於 2026-08-07 離職；Motion Graphics 產能由 Keith + Wayne（2026-08-03 onboard）承接。**Gen AI 唔設單一接班人**（2026-08-11 Kary 定）：日常由 Keith + Wayne 分，複雜嘅 Kary 自己頂。
 
 - Editor 同 Motion Graphics 用同一份 Google Doc 做 working document，各自睇自己負責嘅部分
 - 做完喺 Google Doc mark done，導演可以睇到進度
@@ -148,7 +149,7 @@ DOF 有共用 **DOF Internal** Google Calendar，所有同事可見。
 
 ### 用途
 - 記錄每個 project 嘅 milestones
-- 後期組（Sohling、Max、Keith、Yik、Katy）睇住 calendar 安排工作量
+- 後期組（Sohling、Keith、Wayne、Yik、Katy）睇住 calendar 安排工作量
 - 全 team 追蹤排期
 
 ### 標準 Milestone Set

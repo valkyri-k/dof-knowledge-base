@@ -310,8 +310,8 @@ def get_checklists(card_id):
 | Label | 意思 | 負責人 |
 |-------|------|--------|
 | `cut` | Editor 做嘅所有 task：任何版次 cut（1st / 2nd / 3rd / picture lock）、color grading、sound mixing、subtitle | Yik、Katy（editor 同事） |
-| `mograph` | Motion graphics 同事做嘅所有 task：motion、animation、name tag / card、design、graphic、collage、lower third | Max、Keith（mograph 同事）、Kay（部分 design task） |
-| `style frame` | Style frame 相關（Submit / Confirm / Reference）。**獨立 label，唔同時加 `mograph`。** | Kay（主責）、Max |
+| `mograph` | Motion graphics 同事做嘅所有 task：motion、animation、name tag / card、design、graphic、collage、lower third | Keith、Wayne（mograph 同事） |
+| `style frame` | Style frame 相關（Submit / Confirm / Reference）。**獨立 label，唔同時加 `mograph`。** | Keith、Wayne（原主責 Kay / Max 已離職，未重新指派——唔肯定就問 Sohling） |
 | `Pre-Pro` | 前期製作 task：PPM、call sheet、storyboard、script、site recce | Kary、KT |
 | `Shooting` | 拍攝日相關 task | — |
 | `from client` | 來自客戶嘅 feedback / comment / material | — |
@@ -357,7 +357,7 @@ DIRECTOR_LABEL_MAP = [
 
 **Rule 2 — Style frame keyword → 獨立 label，唔疊加 `mograph`**
 
-`style frame` 係獨立類別。一旦 task 名有 style frame 相關字眼，**只加 `style frame`，唔同時加 `mograph`**，就算 assigned 俾 Max / Kay 都係。
+`style frame` 係獨立類別。一旦 task 名有 style frame 相關字眼，**只加 `style frame`，唔同時加 `mograph`**，就算 assigned 俾 mograph 同事都係。
 
 **Rule 3 — Task keyword（member 唔係 mograph/editor 時才 fallback 用）**
 
@@ -426,7 +426,7 @@ def infer_labels(task_name: str, assigned_member_name: str = '') -> list[str]:
 **Rule 4 — 唔確定（infer 唔到）→ 建 card 但唔加 label，回覆時提一句**
 
 ```
-「已喺 J26039 British Council 建立 card「Revise Name Tag」，assign: Max，label: mograph。」
+「已喺 J26039 British Council 建立 card「Revise Name Tag」，assign: Wayne，label: mograph。」
 # 如果搵唔到 label：
 「已建立 card，唔確定 label 類別，請你手動加。」
 ```
@@ -439,12 +439,12 @@ def infer_labels(task_name: str, assigned_member_name: str = '') -> list[str]:
 
 | 用戶講 | Label | 原因 |
 |--------|-------|------|
-| "Max今日要改British Council comment, need to revise name tag" | `mograph` | Max = mograph member |
+| "Wayne今日要改British Council comment, need to revise name tag" | `mograph` | Wayne = mograph member |
 | "Keith 做 HSUHK 嘅 motion for 1st cut" | `mograph` | Keith = mograph member，唔雙標 cut |
 | "Yik 做 J26047 嘅 2nd cut editing" | `cut` | Yik = editor member |
-| "Kay 做 EMSD 嘅 style frame" | `style frame` | style frame keyword 優先 |
-| "Kay 做 HKTB 嘅 name tag design" | `mograph` | Kay + design/name tag keyword |
-| "Submit style frame 俾客（Max 做）" | `style frame` | style frame keyword 優先，唔加 mograph |
+| "Keith 做 EMSD 嘅 style frame" | `style frame` | style frame keyword 優先 |
+| "Wayne 做 HKTB 嘅 name tag design" | `mograph` | mograph member + design/name tag keyword |
+| "Submit style frame 俾客（Keith 做）" | `style frame` | style frame keyword 優先，唔加 mograph |
 | "Kary 負責 HKTB PPM" | `Pre-Pro` | Kary = director member + PPM keyword |
 | "Benjy 做 EMSD 嘅 Shooting D1" | `Shooting` | Benjy = director member + shoot keyword |
 | "Kary — comment from client HSUHK" | `from client` | Kary = director member + from client keyword |
@@ -560,14 +560,14 @@ def event_to_dates(event: dict) -> tuple:
 
 **Mode A — 用戶喺 command 入面已指定 member**
 
-例：「sync calendar to trello for J26054 EMSD QA, director: Benjy, editor: Katy, mograph: Max」
+例：「sync calendar to trello for J26054 EMSD QA, director: Benjy, editor: Katy, mograph: Keith」
 
 → 直接按呢個 mapping assign：
 ```python
 ROLE_OVERRIDE = {
     'director': 'benjy',   # → Pre-Pro / Shooting / from client / VO recording / final cards
     'editor':   'katy',    # → cut cards
-    'mograph':  'max',     # → mograph cards
+    'mograph':  'keith',   # → mograph cards（Max 已離職 2026-08-07；mograph 同事 = Keith / Wayne）
     'design':   None,      # → style frame cards — 冇 default（Kay 已離開 [[2026-06]]，Sohling 未 confirm 接手人選前必須逼 user 指明，見下）
 }
 ```
@@ -578,11 +578,11 @@ ROLE_OVERRIDE = {
 
 > 「已建立 X 張 cards for [Job]。請問呢個 project 嘅人員分配：
 > - `cut` cards（X 張）→ Yik 定 Katy？
-> - `mograph` cards（X 張）→ Max 定 Keith？
-> - `style frame` cards（X 張）→ 邊個負責？（Kay 已離開，暫時冇 default，請指明）
+> - `mograph` cards（X 張）→ Keith 定 Wayne？
+> - `style frame` cards（X 張）→ 邊個負責？（Kay / Max 已離開，暫時冇 default，請指明）
 > - `Pre-Pro` / `Shooting` / `final` cards（X 張）→ Kary 定 Benjy？
 >
-> 你可以直接話我：editor: Katy, mograph: Max, director: Kary, design: [name]，我幫你 batch assign。」
+> 你可以直接話我：editor: Katy, mograph: Keith, director: Kary, design: [name]，我幫你 batch assign。」
 
 **Style frame default：** ⚠️ **已移除**（[[2026-07-07]] Kay 離開 DOF，Sohling 接手人選未定）。Style frame cards 一律逼 user 每次指明 assignee，唔可以 silent default——待 Kary 同 Sohling 夾完新 default 先恢復自動指派。
 
