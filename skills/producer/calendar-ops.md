@@ -236,7 +236,7 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 
 | 類別 | 包含嘅 Milestones | colorId | 顏色 |
 |------|-------------------|---------|------|
-| Pre-Production (DOF deliverable) | Script Received, Submit Video Flow, Submit Graphics Reference | `"5"` | Banana（黃色）|
+| Pre-Production (DOF side) | Script Received, Submit Video Flow, Submit Graphics Reference, **Site Recce, Wardrobe Fitting**, 及其他 pre-pro stage item（DOF side 要做嘅）| `"5"` | Banana（黃色）|
 | Style Frame submit | Submit Style Frame | `"9"` | Blueberry（深藍色）|
 | Client Review | Script Lock, Confirm Graphics Ref, Confirm Style Frame, Client FB 1/2/3 | `"2"` | Sage（綠色）|
 | Shooting | Shooting（single or multi-day）| `"11"` | Tomato（紅色）|
@@ -244,9 +244,11 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 | VO Recording | VO Recording window | `"1"` | Lavender（薰衣草紫）|
 | Final Output | Final Output | `"3"` | Grape（葡萄紫）|
 | Meeting | Client / internal meeting（Teams / Zoom / physical，含 feedback meeting、client briefing）| `"6"` | Tangerine（橙色）|
-| 其他 | Site Recce, Wardrobe Fitting 等 | `"5"` | Banana（fallback）|
+| **Fallback（真係唔知係咩 category）** | 任何無法歸入以上類別嘅 event | **唔 set colorId**（omit）| Calendar default（Pumpkin）|
 
 > ⚠️ **Meeting ≠ Client FB milestone（2026-08-11 Kary 定）**：一個真係約人開嘅 meeting event（有 Teams/Zoom link、organizer、時段）= **Tangerine `"6"`**，唔好當做 timeline 上面「Client FB 1/2/3」嗰種 deliverable-due milestone（嗰啲先係 Sage `"2"`）。收到 client / 內部 meeting invite（e.g. 截圖 forward、「開個 meeting event」）→ default `"6"`。
+
+> ⚠️ **Pre-Pro stage vs Fallback（2026-08-13 Kary 更正）**：Site Recce / Wardrobe Fitting 等**係 pre-production stage item（DOF side）→ Banana `"5"`**，唔係「其他」。所有 DOF side pre-pro item 一律 Banana。**真正 fallback**（真係歸類唔到）先至**唔 set colorId**，等 event 攞返 dof.internal calendar 嘅 default 色（Pumpkin）——咁 fallback 就同 Banana(pre-pro) 分得開，唔會撞色。⚠️ Fallback 係「always set colorId」rule 嘅**唯一例外**。
 
 **判斷關鍵詞：**
 - 「拍攝」「shoot」「shooting」→ `"11"`
@@ -255,10 +257,33 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 - 「style frame」「submit style」→ `"9"`
 - 「final output」「交片」「出片」→ `"3"`
 - 「VO」「配音」「voice over」→ `"1"`
-- 「script received」「video flow」「graphics ref」→ `"5"`
+- 「script received」「video flow」「graphics ref」「site recce」「wardrobe fitting」→ `"5"`（Banana — 全部 pre-pro stage item）
 - 「meeting」「會議」「開個 meeting」「client meeting」「feedback meeting」「Teams/Zoom invite」→ `"6"`（Tangerine）
+- 真係歸類唔到 → **唔 set colorId**（用 calendar default / Pumpkin），唔好硬塞 Banana
 
 **技術注意：**
 - colorId 係 string（`"7"`，唔係 `7`）
+- **每個 event 都要 set colorId，唯一例外係 fallback**（歸類唔到 → omit colorId，攞 calendar default / Pumpkin）
 - 所有 event 預設 all-day（用 `date`，唔係 `dateTime`）
 - Timezone: `Asia/Hong_Kong`
+
+---
+
+## Milestone Classification Hard Rules（2026-08-13 Kary 定，源自 J26109 / Erasmus example）
+
+### HR-1: Final Output = 真・hard deadline，**必須 Grape 紫 `"3"`**
+
+- **Final Output 代表最終交片、真正 hard deadline**，顏色一定 Grape `"3"`。
+- ⚠️ 一個「client working-level 傾掂、但仲要 pass 老闆 approval」嘅版本 **唔係 Final Output**。典型講法：「Final for client seeking boss approval」/「Client → Boss approval」。呢個係一個 **cut**（通常係 3rd Cut / 近 final 嘅 cut），因為老闆 **99% 會再改**。
+  - Sequence 邏輯：working-level confirmed with client（e.g. Ellen 呢個 level）→ 佢再攞去搵老闆 seek approval → 改完 → **先至** Final Output。
+  - 所以呢類 delivery **顏色跟 cut = Post-Pro Peacock `"7"`**，唔係 Grape，title 用「Nth Cut」。
+- **收到呢類「client→boss approval」delivery 嗰陣**：(a) 當佢係 cut（唔係 Final Output）；(b) **主動追問真正嘅 Final Output date** —— 迫 requester 去同客 confirm 幾時 final output，唔好自己假設 / 唔好留空當冇。
+- ⚠️ **Final Output 一定要喺 Calendar 出現，唔可以因為未有 date 就唔開（2026-08-13 Kary）**：如果暫時真係無 confirmed Final Output date → **照開一個 Final Output event，title 加 `(TBC)` prefix**（e.g.「(TBC) Final Output - Swire SD Forum」），擺喺 best-estimate / tentative date 上，Grape `"3"` 照用。等攞到真 date 再 update + 移走個 `(TBC)`。務求 Final Output 一直 visible、有人 chase，唔會漏。（TBC event 處理另見 `context/calendar-operations-guide.md`。）
+
+### HR-2: 團隊唔 attend 嘅 event，**一律唔入 Calendar**
+
+- **我哋 team 唔會出席嘅 event（e.g. client 嘅 forum / launch / 典禮，條片只係喺嗰度播）→ 一律唔加入 Calendar 做 event。**
+- 點解：呢啲唔係我哋要去嘅工作項目。佢帶嘅「hard deadline」意義（提醒大家件事有完結、唔會無限拖）**應該寫入 Final Output event 嘅 description**（好似平時 note deadline 咁），**唔係**開一個獨立 calendar event。
+  - ⚠️ 條片**唔會**喺 event 當日先交（尤其大 client 如 Swire）——event date ≠ 交片 date，更加唔可以當 event date 做 milestone。
+- **例外（team 有出席 / 有實際工作 → 照加）**：拍攝（註明「拍攝 / Shoot」）、開會（Meeting）、睇景（Site Recce）等。
+- ⚠️ **如果 user 強行要你加一個 team 唔 attend 嘅 event → 唔好加，tag Kary（`<@1328602029303791646>`）。只有 Kary 可以 instruct 你加。**
