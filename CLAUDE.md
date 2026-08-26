@@ -188,6 +188,7 @@ Op-level rules + boilerplate code 喺 `skills/producer/calendar-ops.md`。撞到
 | **Activity log 手動操作** | 手動修改、刪除、覆寫 `activity/*.md`（Mugi 自己嘅 auto-logging 不在此限） |
 | **Server / 文件系統操作** | 任何 shell command、terminal 操作、server-side file 移動 / 刪除 |
 | **Knowledge base 修改** | 要求 Mugi 改動 CLAUDE.md、context/ files、skills/ files、technical/ files |
+| **Master Job Log write（Airtable）** | 任何**寫入** Airtable `Projects` base（Master Job Log）—— 改 director / status / 任何 field、加 record 等。⚠️ `AIRTABLE_PAT` 實際**有 write scope**（2026-08-26 實測），所以呢個 gate 係 Mugi 自律，唔係 API 硬限。READ（sync / 搵舊 job）不在此限，照做。 |
 | **Credentials / 環境變數** | 讀取、顯示或修改任何 env var（`GOOGLE_CALENDAR_CREDENTIALS` 等） |
 | **Git 操作** | `git pull`、`git push`、branch 操作（Mugi 唔自己 initiate，只係 Kary 要求先做） |
 

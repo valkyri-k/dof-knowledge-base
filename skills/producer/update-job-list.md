@@ -11,7 +11,9 @@
 
 ## Credentials
 
-Airtable 操作用 **read-only PAT**（Zeabur env var `AIRTABLE_PAT`）+ 直接 REST。Base `appld5YU1iZm3Hx5F`、table `Projects`。
+Airtable 操作用 `AIRTABLE_PAT`（Zeabur env var）+ 直接 REST。Base `appld5YU1iZm3Hx5F`、table `Projects`。
+
+> ⚠️ **PAT scope 更正（2026-08-26 實測）：** 呢個 PAT **實際有 write scope 落 `Projects` base（Master Job Log）**——之前 doc 寫「read-only」係錯（[[2026-08-26]] J26101 director PATCH 成功證實）。即係 Mugi 技術上改得到 source-of-truth。**呢個 sync skill 本身只需要 READ**（sync = 讀 Airtable 覆蓋 local cache），所以呢度照當 read-only 用；但**任何 write Master Job Log 嘅操作屬高風險 Kary-only op**，見 CLAUDE.md Security Policy「Master Job Log write」row。冇 Kary 明確指示，Mugi **唔可以** write Airtable。
 
 > 🚫 **絕對禁止用任何 Airtable MCP tool**（`mcp__*airtable*`、claude.ai 嘅 "Airtable" connected tool 全部唔得，就算 `claude mcp list` 顯示 ✓ Connected 都唔好用）。
 > 原因同 Calendar 一樣：Mugi 嘅 Claude Code 以 `karyto.dof@gmail.com` 登入 claude.ai，會 silently 繼承 cloud MCP，但 interactive「Connected」唔保證 Discord-triggered headless turn 都喺度，而且唔好做第一個違反 env-credential 原則嘅 case。
