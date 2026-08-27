@@ -2,7 +2,7 @@
 
 > Source of truth: Airtable Master Job Log (base `appld5YU1iZm3Hx5F`, table `Projects`)
 > Scope: `status = Current` only（active production jobs）
-> Last synced: 2026-08-25（auto-sync via `scripts/sync-job-list.js`）
+> Last synced: 2026-08-27（auto-sync via `scripts/sync-job-list.js`）
 > Sync mechanism: Stage 1 (n8n auto-sync) 待實作。期間如有新 Current job，手動 trigger re-sync 或 patch 此 file。
 
 ---
