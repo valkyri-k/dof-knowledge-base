@@ -49,8 +49,9 @@ Script 會：用 Vimeo 原生 `query` title search → paginate 攞晒 match →
 
 Vimeo `query` 係 broad title match，會帶埋鬆散嘅 hit。睇 JSON 自己收窄：
 
+- **⭐ Latest-edit-first（預設，2026-09-02 Kary 定）：** DOF 交 edit 俾 client 會 upload 多個 version（同一條片有 V2 / date / 版本後綴嘅重複 edit）。User 淨係話「俾我 X 個 link」→ **預設只揀嗰條片最新 edit（by `created` date，最新嗰條）俾佢，唔好一次過 dump 晒所有 version**。User 再問先列其餘 version。
+  - 同一條片嘅 version（base 名一樣、淨後綴/date/V2 唔同）= 收埋淨俾最新；base 名唔同（唔同 client / event / 集數）= 唔同片，各自俾最新一條。
 - 用戶講嘅 keyword 全部命中嘅排先（e.g.「EMSD Dems Briefing」→ 片名同時有 EMSD + Dems + Briefing）。
-- 有 `(Copy)` / `_Trailer` / 版本後綴嘅，照列但標清楚係邊條，唔好擅自當重複剔走。
 - `privacy` 值要連埋講（見下面 privacy 對照），因為影響條 link 俾出去啱唔啱。
 
 ### Step 3 — Report

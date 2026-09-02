@@ -79,11 +79,20 @@ node /home/node/kb/scripts/youtube-search.js --rebuild EMSD Dems Briefing
 
 Filter 係「全部 query 字命中」，已經幾窄；但仲要睇 JSON 自己判斷：
 
-- 有 `(Copy)` / `_Trailer` / 版本後綴嘅，照列但標清楚係邊條，唔好擅自當重複剔走。
+- **⭐ Latest-edit-first（預設，2026-09-02 Kary 定）：** DOF 交 edit 俾 client 會 upload **好多個 version** 上 YouTube（同一條片會有 V2 / Ver2 / 唔同 upload date 嘅重複 edit）。當 user 淨係話「俾我 X 個 link」→ **預設只揀嗰條片嘅最新 edit（by upload / published date，最新嗰條）俾佢，唔好一次過 dump 晒所有 version**。User 再問「有冇其他 version / 舊版」先至列其餘。目的：避免好似 [[gap-log]] 2026-09-02 咁 reply 一堆重複緊同一集嘅 link。
+  - 點分「同一條片嘅 version」vs「唔同片」：片名 base 一樣、淨係後綴 / date / V2 唔同 = version（收埋淨俾最新）；base 名唔同（唔同 client / event / 集數）= 唔同片（各自俾最新 edit 一條）。
 - 字命中但明顯唔啱 context 嘅，提返用戶但唔好獨斷剔走。
 - `privacy` 值要連埋講（見下面對照），因為影響條 link 俾出去啱唔啱。
 
 如果 query 字太多／太死 filter 到冇 match，但你估片真係喺度 → 用少啲 keyword 重行，唔好亂估 link。
+
+#### CWJ（Chat with Joe）片名命名（2026-09-02 Kary）
+
+CWJ 片名格式 = **`CLP ChatwithJoe [Ep月份] [upload YYYYMMDD]`**，e.g.「CLP ChatwithJoe Sept 20260827」= **9 月嗰集**、upload date 係 **2026-08-27**（後面串 YYYYMMDD 係 upload date，唔係集數月份）。
+
+- **每月一集**（有啲月份會 skip 或 rename，唔齊唔緊要，唔使當漏）。
+- 所以**同一個「Ep月份」token 出現多條 = 嗰集嘅唔同 edit version** → 按 Latest-edit-first 只俾最新 upload date 嗰條。
+- ⚠️ 片名**淨係用月份 + upload date，唔擺 topic**（e.g.「大亞灣」呢類內容主題唔會喺片名）。所以 user 用 topic 搵某集 → title-search 對唔到，要問返 user 邊個**月份**（= 邊集），再俾嗰集最新 edit。
 
 ### Step 3 — Report
 
