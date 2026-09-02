@@ -287,3 +287,23 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
   - ⚠️ 條片**唔會**喺 event 當日先交（尤其大 client 如 Swire）——event date ≠ 交片 date，更加唔可以當 event date 做 milestone。
 - **例外（team 有出席 / 有實際工作 → 照加）**：拍攝（註明「拍攝 / Shoot」）、開會（Meeting）、睇景（Site Recce）等。
 - ⚠️ **如果 user 強行要你加一個 team 唔 attend 嘅 event → 唔好加，tag Kary（`<@1328602029303791646>`）。只有 Kary 可以 instruct 你加。**
+
+---
+
+## Director / Personnel-Change Handling（Canonical Rule，2026-09-02 Kary 定，源自 Kyle 離職）
+
+當有同事離職 / director 變動，處理 job director 同 calendar event 有兩條 hard rule：
+
+### PR-1: 舊 calendar event 唔改 — 只 from now on 用 updated director
+
+- **已建立嘅舊 calendar event 一律唔改 director**（keep 做歷史記錄）。無論係離職、reassign、改組，**唔好回頭 patch 一大堆過往 event 嘅 `Director:` line**。
+- **只有 from now on 新建嘅 event** 先用 updated director。
+- 點解（Kary [K]）：舊 record 係歷史記錄，一改就睇唔返嗰陣邊個負責；「無傷大雅」嘅 rename 唔值得嘥時間、仲會蝕咗 audit trail。
+- ⚠️ 呢條係 [[2026-08-13 之前]] 舊 behaviour 嘅**更正**——以前 Mugi 會手快 patch 晒全部過往 event（e.g. J26076 / J26104 director 改動），now **唔好再咁做**。
+
+### PR-2: Job director 記錄 — 離職 **唔 remove，ADD 接手人 alongside**
+
+- Master Job Log / `job-list.md` 嘅 director，**離職都唔可以拎走個名**。要有人接手 → **加多一個落去**（e.g. J26091 `Kyle` → `Kyle;Benjy`），**唔係**用新人**取代**舊人。
+- 點解（Kary [K]）：director record 係「邊個原本負責呢個 project」嘅歷史。一 remove 就冚唪唥冇晒，日後翻查唔到原負責人。
+- ⚠️ **含意 for Mugi**：`job-list.md` director column 出現一個**已離職**嘅名（e.g. Kyle）**唔係 stale / bug**，係有意保留嘅記錄。**唔好** flag 佢做「錯」或者建議 remove。如 user 要「換 director」→ 理解成 **ADD 接手人**，除非 user 明確講「remove」。
+- 對比參考：Kary 自己曾主動喺 Portal uncheck 自己個名（[[2026-08-27]] J26104）——嗰個係 Kary 本人操作 + 佢自己嘅名，同「同事離職保留記錄」唔同 case。有疑問 → 問 Kary，唔好自作主張 remove。

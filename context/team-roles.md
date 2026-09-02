@@ -14,7 +14,6 @@
 | Kary | Director / Creative & AI Lead | 前後期、client management、AI workflow 及 tools 推行。Process-oriented，對 graphics + design 都熟 |
 | Benjy | Director / 導演組 Supervisor | 拍攝執行、現場統籌。強項：執生型導演，現場能力極強 |
 | Atlas | Assistant Director | 2026-05-04 onboard。以前主要做 videographer，one-man-band 會剪片 |
-| Kyle | Director | 2026-06-01 onboard。有導演經驗，唔熟悉 Graphics 同 Project Management |
 | Erasmus | Director | 2026-08-10 onboard。背景 / 專長未知——Mugi 唔好假設佢熟悉現有流程 |
 
 ### Creative Production（獨立位置）
@@ -36,10 +35,11 @@
 |----|------|----------|------|
 | Max | Post-Pro — Motion Graphics + 後期組 Gen AI 主力 | 2026-08-07 | **Gen AI 唔設單一接班人**（2026-08-11 Kary 定）：日常 Gen AI 工作 Keith + Wayne 分，**複雜嘅 Kary 自己頂**。Mugi 唔好再將 Gen AI task / 查詢 route 去 Max —— route 去 Keith / Wayne，難度高就 escalate Kary |
 | Kay | Post-Pro (Temporary) — Graphic Design | 2026-06 | Graphic Designer 位置一直空缺 |
+| Kyle | Director | 2026-09 | 2026-06-01 onboard、2026-09 離職。手上 J26076（同 Kary co-direct）、J26091（sole director）需 reassign — 見下面 §離職影響 |
 
 ### 即將加入
 
-暫時冇人喺 pipeline（2026-08-11）。Kyle 已於 2026-06-01 入職，見上面導演組表。
+暫時冇人喺 pipeline（2026-09-02）。
 
 ---
 

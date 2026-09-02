@@ -36,7 +36,7 @@ Ki（MD / 老闆）
 ├── 導演組
 │   ├── Benjy（導演組 Supervisor）
 │   ├── Kary（Director / Creative & AI Lead）
-│   ├── Atlas（2026-05-04 加入）、Kyle（2026-06-01 加入）
+│   ├── Atlas（2026-05-04 加入）
 │   └── Erasmus（2026-08-10 加入）
 ├── Nookei（Associate Creative Producer，獨立位置，唔屬導演組 / 後期組）
 ├── 後期組

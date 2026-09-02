@@ -2,7 +2,7 @@
 
 > Source of truth: Airtable Master Job Log (base `appld5YU1iZm3Hx5F`, table `Projects`)
 > Scope: `status = Current` only（active production jobs）
-> Last synced: 2026-08-27（auto-sync via `scripts/sync-job-list.js`）
+> Last synced: 2026-09-02（auto-sync via `scripts/sync-job-list.js`）
 > Sync mechanism: Stage 1 (n8n auto-sync) 待實作。期間如有新 Current job，手動 trigger re-sync 或 patch 此 file。
 
 ---
@@ -14,12 +14,12 @@
 | J26007 | DFI | DFI Corporate video 2026 |  | Current | Benjy | 1501849664176132247 | j26007_dfi_corporate_video_2026 |
 | J26010 | Cartier | Cartier Prince Building - the making of video |  | Current | Benjy;Atlas | 1504037605006770176 | j26010-cartier-prince-building_the-making-of-videography-production |
 | J26062 | Orbis | Orbis Future Vision Leader and From Blur to Clear Campaign |  | Current | Kary;Atlas | 1493117424201891952 | j26062_orbis-future-vision-leader-and-from-blur-to-clear-campaign |
-| J26076 | DFI | DFI DFIQ corporate video |  | Current | Kyle;Kary | 1512390997894496367 | j26076-dfi-dfiq-corporate-video |
+| J26076 | DFI | DFI DFIQ corporate video |  | Current | Kary | 1512390997894496367 | j26076-dfi-dfiq-corporate-video |
 | J26079 | CLP | CLP Smart E Living revising QR code |  | Current | Ki | 1536289130273570836 | j26079_clp-smart-e-living-revising-qr-code |
 | J26081 | Department of Health | MDD 10K Listing video |  | Current | Benjy;Atlas | 1509079387339751464 | j26081_mdd_10k_listing_video_cant_vers |
 | J26084 | Department of Health | MDD 10K Listing video, English and Mandarin versions |  | Current | Benjy;Atlas | 1509079823383924747 | j26084_mdd_10k_listing_video_eng_mand_vers |
 | J26085 | Minerals_Hang Seng | Minerals Hang Seng Facility Management Award | HS Facility Award | Current | Benjy | 1509112179339694212 | j26085_minerals_hang_seng_facility_management_award |
-| J26091 | DFI_711 | DFI 7 eleven Trade show 2026 |  | Current | Kyle | 1509860999631470643 | j26091_dfi-711-trade-show-present-video |
+| J26091 | DFI_711 | DFI 7 eleven Trade show 2026 |  | Current | Kyle;Benjy | 1509860999631470643 | j26091_dfi-711-trade-show-present-video |
 | J26092 | Minerals_HSBC | Minerals HSBC new branch video |  | Current | Benjy;Erasmus | 1529001481729085511 | j26092_minerals-hsbc-new-branch-video |
 | J26094 | DFI | DFI Own Brand KV adult diapers |  | Current | Sohling | 1541654909332623380 | j26094_dfi-own-brand-kv-adult-diapers |
 | J26099 | EMSD | EMSD Event production on 3 August 2026 | EMSTF 30A;營運基金30週年;30A Event Highlight;營運基金30週年 ceremony event highlight | Current | Benjy;Atlas | 1526064153696141372 | j26099_emsd-event-production-on-3-august-2026 |
@@ -28,7 +28,9 @@
 | J26109 | John Swire & Sons (H.K.) | Swire SD Forum opening video |  | Current | Erasmus | 1536565494411296908 | j26109-sd-forum-opening-video |
 | J26110 | Orbis | Orbis Flying Eye Hospital at Macau |  | Current | Ki | 1539219419975262279 | j26110_orbis-flying-eye-hospital-at-macau |
 | J26112 | John Swire & Sons (H.K.) | Swire Summer intern |  | Current | Kary | 1533995870914088990 | j26112_swire-summer-intern-social-video |
+| J26115 | Luxury Hotels International of Hong Kong Limited | Marriott Sotheby’s event coverage |  | Current | — | 1543820601674825728 | j26115_marriott-sothebys-event-coverage |
 | J26117 | Strobomotion Limited | Strobomotion San Tin Technopole BIM convert to 3D animation |  | Current | Kary | 1541653550827044887 | j26117_strobomotion-san-tin-technopole-bim-convert-to-3d-animation |
+| J26118 | DHL Express Hong Kong | DHL MD Photo shooting |  | Current | — | 1543820609719504916 | j26118_dhl-md-photo-shooting |
 
 ---
 
