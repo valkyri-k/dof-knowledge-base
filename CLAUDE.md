@@ -377,6 +377,7 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 | **Phase 3**：For-client doc gen（Calendar 已 push，transcribe 入 template） | `skills/producer/producer-playbook.md` → §0 Phase 3 read `generate-timeline-doc.md` | "出份 doc for J26XXX"、"出 timeline doc"、"將 Calendar 寫入 template"、"幫我出埋份 doc" |
 | **Revised schedule**：Sohling 傾完 reshuffle 後 regenerate `_r2` | `skills/producer/check-cut-saturation.md` Regenerate from Revised Schedule | "revised schedule"、"做 _r2"、"重 generate timeline" |
 | 單次 Calendar 操作（add / move / delete / reschedule 一個或幾個 event，**唔係** generate full timeline） | `skills/producer/calendar-ops.md` | "add event"、"move event"、"reschedule"、"delete event"、"排個 shoot"、"push 後"、"改下個 event"、"加個 milestone" |
+| Meeting handling：book meeting room（Google Sheet）+（client meeting 先）create Calendar event | `skills/producer/meeting-room-booking.md` | "開會"、"meeting"、"book 房"、"book meeting room"、"約個 meeting"、"開個 meeting"、"同 client 開會"、"大房 / 細房"、"Teams / Zoom invite" |
 | Drive 純操作（search / read / copy / archive，冇 timeline 邏輯） | 直接執行，唔 load playbook | "搵 file"、"copy template"、"archive" |
 | Google API credentials / boilerplate | `technical/google-apis.md` | 需要 call Calendar API 或 Drive API 嘅 code |
 | Gemini API credentials / boilerplate（Vision、text gen） | `technical/gemini-api.md` | 需要 call Gemini Vision 或 Gemini text gen |

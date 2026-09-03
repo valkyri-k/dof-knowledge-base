@@ -247,6 +247,8 @@ Standalone calendar op 場景嘅用戶通常係 on-the-go（Benjy 拍緊嘢、cl
 | **Fallback（真係唔知係咩 category）** | 任何無法歸入以上類別嘅 event | **唔 set colorId**（omit）| Calendar default（Pumpkin）|
 
 > ⚠️ **Meeting ≠ Client FB milestone（2026-08-11 Kary 定）**：一個真係約人開嘅 meeting event（有 Teams/Zoom link、organizer、時段）= **Tangerine `"6"`**，唔好當做 timeline 上面「Client FB 1/2/3」嗰種 deliverable-due milestone（嗰啲先係 Sage `"2"`）。收到 client / 內部 meeting invite（e.g. 截圖 forward、「開個 meeting event」）→ default `"6"`。
+>
+> ℹ️ **完整 meeting flow（book 房 + 幾時先落 calendar）見 `skills/producer/meeting-room-booking.md`**（2026-09-03 Kary 定）：純內部傾嘢**唔** create event、client meeting 先 create（Tangerine 6）；calendar event 之外仲要 book meeting room（Google Sheet）。
 
 > ⚠️ **Pre-Pro stage vs Fallback（2026-08-13 Kary 更正）**：Site Recce / Wardrobe Fitting 等**係 pre-production stage item（DOF side）→ Banana `"5"`**，唔係「其他」。所有 DOF side pre-pro item 一律 Banana。**真正 fallback**（真係歸類唔到）先至**唔 set colorId**，等 event 攞返 dof.internal calendar 嘅 default 色（Pumpkin）——咁 fallback 就同 Banana(pre-pro) 分得開，唔會撞色。⚠️ Fallback 係「always set colorId」rule 嘅**唯一例外**。
 
