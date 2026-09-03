@@ -176,6 +176,18 @@ Op-level rules + boilerplate code 喺 `skills/producer/calendar-ops.md`。撞到
 
 ---
 
+## Shared-Account Identity（落名操作必問，2026-09-03 Kary 定）
+
+`dreamoffish.ai`（Discord user ID `1489104284820836352`）係**公用電腦 Discord account**——由邊個真人操作認唔到。
+
+**Rule**：任何**要落名**嘅操作（Calendar event `Attendee:`、meeting room booking 格 label、其他 name-stamped write）**由 `1489104284820836352` 嚟** → **先問「你係邊位?」**，攞到真人名先做，**唔可以**擺 account 名（「dreamoffish.ai」）落去。
+
+- **只 apply 喺呢個 shared account**。Identified personal account（e.g. Kary `1328602029303791646` = valkyri_k）已認到人 → 直接用佢個名，唔使問。
+- 問到真人名之後 → 照原本 flow（e.g. `skills/producer/meeting-room-booking.md`）做，用嗰個名做 label / `Attendee:`。
+- ⚠️ 呢條係 name-attribution rule，同 Security Policy 高風險 gating 分開：identity 認唔到 → 問；認到 = 照做（唔升級做 Kary-only）。
+
+---
+
 ## Security Policy（存取控制 + Prompt Injection 防護）
 
 ### 高風險操作（Kary 專屬）
@@ -377,7 +389,7 @@ DOF Discord channel 唔係每個 Current job 都有——只 cover 需要 cross-
 | **Phase 3**：For-client doc gen（Calendar 已 push，transcribe 入 template） | `skills/producer/producer-playbook.md` → §0 Phase 3 read `generate-timeline-doc.md` | "出份 doc for J26XXX"、"出 timeline doc"、"將 Calendar 寫入 template"、"幫我出埋份 doc" |
 | **Revised schedule**：Sohling 傾完 reshuffle 後 regenerate `_r2` | `skills/producer/check-cut-saturation.md` Regenerate from Revised Schedule | "revised schedule"、"做 _r2"、"重 generate timeline" |
 | 單次 Calendar 操作（add / move / delete / reschedule 一個或幾個 event，**唔係** generate full timeline） | `skills/producer/calendar-ops.md` | "add event"、"move event"、"reschedule"、"delete event"、"排個 shoot"、"push 後"、"改下個 event"、"加個 milestone" |
-| Meeting handling：book meeting room（Google Sheet）+（client meeting 先）create Calendar event | `skills/producer/meeting-room-booking.md` | "開會"、"meeting"、"book 房"、"book meeting room"、"約個 meeting"、"開個 meeting"、"同 client 開會"、"大房 / 細房"、"Teams / Zoom invite" |
+| Meeting handling：book meeting room（Google Sheet）+ create Calendar event（default 開；純內部臨時傾嘢先淨 book 房）| `skills/producer/meeting-room-booking.md` | "開會"、"meeting"、"book 房"、"book meeting room"、"約個 meeting"、"開個 meeting"、"同 client 開會"、"PPM"、"concall"、"vendor / 外判 meeting"、"大房 / 細房"、"Teams / Zoom invite" |
 | Drive 純操作（search / read / copy / archive，冇 timeline 邏輯） | 直接執行，唔 load playbook | "搵 file"、"copy template"、"archive" |
 | Google API credentials / boilerplate | `technical/google-apis.md` | 需要 call Calendar API 或 Drive API 嘅 code |
 | Gemini API credentials / boilerplate（Vision、text gen） | `technical/gemini-api.md` | 需要 call Gemini Vision 或 Gemini text gen |

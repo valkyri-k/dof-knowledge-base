@@ -4,6 +4,11 @@
 > 兩件可以獨立、可以一齊發生嘅事：**(A) book meeting room**（Google Sheet）+ **(B) create Calendar event**。
 > 收到 meeting / 開會 / book 房相關 request → read 呢個 file。
 
+> ⚠️ **Identity（落名前必 check，2026-09-03 Kary 定）**：name-stamped 操作（room booking 格 label、calendar `Attendee:`）用邊個名 = 睇 request 嘅 **actual Discord sender**：
+> - 公用電腦 account **`dreamoffish.ai`（user ID `1489104284820836352`）→ 必須先問「你係邊位?」**，攞到真人名先做，**唔可以**用 account 名。
+> - Identified personal account（e.g. Kary `1328602029303791646` = valkyri_k）→ 直接用佢個名，唔使問。
+> - 詳見 `CLAUDE.md` §Shared-Account Identity。
+
 ---
 
 ## 0. 兩個 action，分開判斷
@@ -11,9 +16,12 @@
 | Action | 幾時做 |
 |--------|-------|
 | **A. Book meeting room**（sheet）| 只要係實體開會 / user 叫 book 房。我哋通常都喺房開會，所以 **point 都要 book 房**。User 亦可以**獨立**淨叫「幫我 book 房」（唔一定有 meeting event）。 |
-| **B. Create Calendar event** | **只有 client meeting 先落 calendar**。純內部自己傾嘢 → **唔使 create event**（淨 book 房）。 |
+| **B. Create Calendar event** | **Default = 開 event**。任何 real / scheduled meeting 都要落 calendar，包括：client meeting、**PPM（拍攝前 pre-production meeting，internal 都要）**、**external vendor / 外判 concall（e.g. Drone team、supplier）**、或者任何有定時間 + attendees 嘅正式 meeting。**唯一例外（淨 book 房、唔開 event）**：純內部、臨時、冇外部參與者又冇正式 production 目的嘅「自己傾下嘢」。 |
 
-**Client vs internal 判斷**：有 client name / 「同 client 開會」/ client briefing / client feedback / 有外部參與者 → client meeting（做埋 B）。純內部 sync / 自己傾嘢 → 淨 A。**唔肯定 client 定 internal → 問 user**（因為 create event 係 side effect，寧問莫估）。
+**幾時開 event（判斷）——⚠️ 唔好一刀切「internal 就唔開」（2026-09-03 Kary 更正）**：
+- **開 event（A + B）**：有 external party（client / vendor / 外判 / 外部 concall）**或** formal production meeting（PPM 等）**或** 任何正式 scheduled meeting。
+- **淨 book 房（A only）**：純內部、臨時、傾下嘢，冇外部人、冇正式目的。
+- **唔肯定 → default 開 event**（開多過唔開安全；create event 錯咗可以 delete）。
 
 ---
 
@@ -52,7 +60,8 @@
 - 兩間都 book 咗嗰個時段 → flag user，唔好硬塞。
 
 ### Booking cell label
-- **一律用 requesting user 個名**（即叫我 book 房嗰個人），同 calendar event `Attendee:` 一致。
+- **用 requesting user 個名**（即叫我 book 房嗰個人），同 calendar event `Attendee:` 一致。
+- ⚠️ 由公用 account `dreamoffish.ai`（`1489104284820836352`）嚟 → **先問「你係邊位」**用真人名，唔好用 account 名（見上面 Identity callout）。
 
 ### 日期 check scope（room booking）
 - **Python weekday 必做**（要擺啱 column，兼 Date↔Day 一致）。
@@ -60,7 +69,7 @@
 
 ---
 
-## 2. Action B — Calendar Event（只 client meeting）
+## 2. Action B — Calendar Event（client / PPM / vendor / 任何正式 meeting）
 
 用 `skills/producer/calendar-ops.md` 標準 Service Account 寫入 path（dof.internal calendar）。要點：
 
@@ -68,9 +77,9 @@
 |-------|----|
 | **Title（summary）** | **跟 user 講法**（user 點叫就點寫，唔硬套 milestone 命名） |
 | **Time** | user 講嘅時間 → `start` / `end`（Title vs Description hard rule） |
-| **colorId** | **`"6"` Tangerine**（keep，同現有 Meeting rule 一致 — 2026-09-03 Kary confirm 唔用 Pumpkin） |
+| **colorId** | **`"6"` Tangerine**（keep，同現有 Meeting rule 一致 — 2026-09-03 Kary confirm 唔用 Pumpkin）。⚠️ 呢個 skill 開嘅**全部 meeting event 一律 Tangerine**，包括 PPM。PPM 雖然係 pre-pro 階段，但佢係一個 **meeting**（有 attendees / 時段）→ Tangerine，唔當 calendar-ops.md 嘅「pre-pro stage item = Banana」（嗰啲係 Site Recce / Wardrobe / Submit Style Frame 呢類 deliverable/stage item，唔係 meeting）。 |
 | **Meeting link**（Teams / Zoom 等） | append 落 **description**（join link / Meeting ID / passcode / organizer 全部 transcribe） |
-| **Description — attendee** | `Attendee: <requesting user>`（log 邊個 user） |
+| **Description — attendee** | `Attendee: <requesting user>`（log 邊個 user）。⚠️ 由 `dreamoffish.ai`（`1489104284820836352`）嚟 → 先問真人名再填（見 Identity callout） |
 | **Description — job** | **淨係喺 job channel 收到先 mark job**：description 第一行寫 `J26XXX - {Job Name}`（channel → job-list.md 反查 J# + project name）。喺 home base / 非 job channel → **唔理 job、唔 log job** |
 | **Director** | 唔寫（meeting 唔屬 job milestone；job channel 只 mark J#，唔加 director） |
 
@@ -95,7 +104,7 @@ Teams: https://teams.microsoft.com/l/...
 
 ## 3. 完整 flow（收到 meeting request）
 
-1. **判斷**：純內部傾嘢 → 淨 Action A。Client meeting → A + B。獨立「book 房」→ 淨 A。唔肯定 client/internal → 問。
+1. **判斷**：real / scheduled meeting（client / PPM / vendor / 任何正式）→ A + B。純內部臨時傾下嘢 → 淨 A。獨立「book 房」→ 淨 A。**唔肯定 → default A + B（開 event）**。
 2. **Room**：user 有講房就用；無講 → **自動優先大房、大房 taken 轉細房（唔問，user 想改自己 revert）**。
 3. **Book 房**（Action A）：Python weekday → 揀 tab / column → 搵 date row → 空格寫 `<user> HH:MM - HH:MM` → read-back。
 4. **（client 先做）Calendar event**（Action B）：Tangerine 6、title 跟 user、link→desc、`Attendee: <user>`、job channel 加 `J26XXX - {Job Name}`。
