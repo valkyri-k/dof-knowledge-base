@@ -76,13 +76,19 @@ creds = Credentials(
     scopes=[
         "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/documents",
-        "https://www.googleapis.com/auth/spreadsheets",
     ],
 )
 
 drive_service = build("drive", "v3", credentials=creds)
 docs_service = build("docs", "v1", credentials=creds)
+sheets_service = build("sheets", "v4", credentials=creds)
 ```
+
+> ⚠️ **`scopes=` 只准列 refresh token 真正 grant 咗嘅 scope**（而家 = `drive` + `documents`）。`google-auth` refresh 嗰陣會將呢個 list 原封送去 token endpoint，多列一個唔喺 grant 入面嘅 scope = 成個 refresh `invalid_scope` 掛掉，連 Drive / Docs 都一齊死。
+>
+> **Sheets 唔使 `spreadsheets` scope。** Sheets API v4 嘅 `spreadsheets.get` / `values.get` / `values.update` / `batchUpdate` 全部接受 `.../auth/drive` 做 authorization scope，所以上面個 `sheets_service` 用現有 grant 已經讀寫得。[[2026-04-08]] gap-log 實測過 `values.update` 200 OK。
+>
+> **唔准「順手」加返 `spreadsheets` 落個 list。** 歷史：[[2026-04-08]] re-consent 加過，跟住 [[2026-05-09]] token 過期用 `scripts/get-google-token.js` 重新 mint（個 script 只 mint `drive` + `documents`）→ grant 靜靜雞跌返兩個，但 boilerplate 冇跟住改 → [[2026-09-03]] Mugi 寫 Sheet 全掛。要真係加，**必須先改 `scripts/get-google-token.js` 嘅 `SCOPES` + re-consent + 同步 Doji**（見 vault [[doji-mugi-shared-oauth]]，兩邊共用同一個 OAuth client）。
 
 如需安裝：`pip install google-api-python-client google-auth google-auth-oauthlib`
 

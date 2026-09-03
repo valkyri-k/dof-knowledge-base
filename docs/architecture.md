@@ -16,7 +16,7 @@
 - **Dev workflow**：branch rule、plans、dev session 入口 → [dev-guide.md](dev-guide.md)。**Repo root 唔准擺 dev CLAUDE.md / `.claude/` / `AGENTS.md`**（Mugi cwd = repo root 會食咗佢哋）
 - **Container symlinks**：需要 4 個：`CLAUDE.md`、`context/`、`skills/`、`technical/`（[[2026-04-08]] 新加後兩個）
 - **Calendar API**：SA 已 migrate 到新 GCP project `agent-mugi`（`agent-mugi@agent-mugi.iam.gserviceaccount.com`），`GOOGLE_CALENDAR_CREDENTIALS` updated in Zeabur
-- **Drive / Docs / Sheets API**：OAuth2 as `dof.internal@gmail.com`——`GOOGLE_DRIVE_CLIENT_ID` / `_SECRET` / `_REFRESH_TOKEN` 全部 set in Zeabur。Calendar SA 同 Drive OAuth2 並存，互唔干擾。Scopes：`drive` + `documents` + `spreadsheets`（[[2026-04-08]] re-consented）
+- **Drive / Docs / Sheets API**：OAuth2 as `dof.internal@gmail.com`——`GOOGLE_DRIVE_CLIENT_ID` / `_SECRET` / `_REFRESH_TOKEN` 全部 set in Zeabur。Calendar SA 同 Drive OAuth2 並存，互唔干擾。Scopes：`drive` + `documents` 兩個（[[2026-05-09]] token 重新 mint 之後嘅實際 grant）。**冇 `spreadsheets`，亦唔需要** —— Sheets API v4 接受 `drive` scope，詳情同「唔准加返」嘅理由見 [google-apis.md](../technical/google-apis.md) Boilerplate 下面嗰段
 - **Drive Folder Convention**：dof.internal Drive root 入面有兩個 reserved folders——`Templates/`（by-name template lookup，命名 `[DocType]_Template`）、`Archive/`（唔 delete，move 過嚟）
 - **Document Generation naming rule**：`[DocType]_[Job Number]_[Project Title]_[YYYY-MM-DD]_[version]`（e.g. `Timeline_J26015_HSUHK Student_2026-04-07_r2`）
 - **Secrets 管理**：全部走 Zeabur Variables（env vars），唔落 disk，container restart 後自動注入
