@@ -44,6 +44,8 @@
 （pending items，resolved 即時刪）
 
 （closed 2026-06-05 by Kary: J26062/J26070/J26071 Trello member assign — ignore；J26050 saturation — ignore，如有問題再 flag）
+- [2026-08-20] 「恆生嘅片」— resolve 到 J26085 Minerals Hang Seng Facility Award，但 Sohling 未答要邊種（Vimeo / YouTube / server 片檔）+ 邊個 cut。等佢回覆（低優先，可能已無需要）
+- [2026-09-02] 「Joe Chat 大亞灣 YouTube link」— CWJ 片名淨用日期冇 topic（e.g.「CLP ChatwithJoe Sept 20260827」），title-search 對唔到「大亞灣」。已列最近 CWJ 集 + 問 Sohling 大亞灣嗰集大約邊個月/日期。等佢俾返日期先鎖定 link
 
 ---
 
@@ -58,6 +60,9 @@ First-ever Sohling interaction. Request: 喺 Calendar 4月內 search EMSD QA eve
 
 ### 2026-05-15 afternoon session
 （2026-06-05 由 valkyri_k.md migrate — 原本誤記入 Kary file，按 §Sender routing 修正。Sohling 喺 channel 做嘅，唔係 Kary。）批量 Calendar→Trello sync 3 個 request：(1) HSUHK Batch 2 Calendar→Trello sync（J26016，assign Yik + Max）——scan Calendar events，compare existing Trello list，補 missing cards；(2) EMSD GWIN Long version Calendar→Trello sync（J26063，assign Keith + Katy）——events → cards；(3) full job list Calendar→Trello comparison——掃 ALL current jobs，identify 冇 Trello list / missing cards 嘅 job，batch create。J26062 / J26070 / J26071 有 cards created 但無 member，因 Sohling 未 specify 負責人（留 open thread 等佢決定）。
+
+### 2026-08-20 to 09-02 session (2 asset lookups, both unresolved)
+Sohling 呢個 session 兩個 asset lookup（都喺 home base，非 Trello ops）。(1) **8/20「我想要恆生嘅片」**——resolve 到 J26085 Minerals Hang Seng Facility Award，但問返要邊種（Vimeo / YouTube / server 片檔）+ 邊個 cut，Sohling 未答（open thread）。(2) **9/2「joe chat 大亞灣 youtube link」**——⚠️ 呢條 04:09 send 但 Mugi 冇即時收到（inbound trigger gap，agent up；Kary 04:12 chase 先觸發），gap-log B 類。youtube-search 發現 **CWJ 片名淨用日期冇 topic**（「CLP ChatwithJoe Sept 20260827」= 9月集 upload 8/27），對唔到「大亞灣」→ 列咗最近 CWJ 集 + 問 Sohling 大亞灣係邊個月（等佢答，open thread）。同日 Kary 定咗 **latest-edit-first** rule（搵 link 只俾最新 edit，唔 dump 晒 version）+ CWJ 命名入咗 youtube-search.md。
 
 ---
 
@@ -79,3 +84,5 @@ First-ever Sohling interaction. Request: 喺 Calendar 4月內 search EMSD QA eve
 | 2026-05-15 | EMSD GWIN Long version Calendar→Trello sync (J26063, Keith + Katy) | Events → Trello cards ✅ (migrated from valkyri_k.md 2026-06-05) |
 | 2026-05-15 | Full job list Calendar→Trello comparison — batch create missing cards across all current jobs | Done ✅; J26062/J26070/J26071 cards created without member (Sohling 未 specify) → open thread (migrated from valkyri_k.md 2026-06-05) |
 | 2026-06-05 | J26050 CUHK IFOS 2030: Calendar + Trello (Katy + Keith), 8 milestones | 7/8 Calendar events pushed (1st Cut Jun 11 held — saturation, 5th cut that day); 8 Trello cards created ✅; Jun 11 pending Sohling confirm |
+| 2026-08-20 | 恆生嘅片 (home base) | Resolved 恆生 → J26085 Minerals Hang Seng Facility Award; asked which format (Vimeo/YT/server) + which cut. Sohling never replied → open thread |
+| 2026-09-02 | Joe Chat 大亞灣 YouTube link (home base) | ⚠️ Msg sent 04:09 but Mugi didn't receive until Kary DM'd at 04:12 (trigger gap, agent up). youtube-search: CWJ titles date-based only, 大亞灣 not in any title → can't isolate. Listed recent CWJ episodes + asked Sohling for the date. Open thread |

@@ -61,3 +61,13 @@ Total shooting days: 4
 ### [[2026-07-30]] evening — Add client meeting event
 - **Kary 問**：Add "meeting with client" event to calendar，Aug-5 (Wed) 11am
 - **Mugi 做**：Rules check pass (Wed weekday, no HK holiday)；created timed event `Client Meeting - Orbis` Aug 5 11:00–12:00 (1hr default)，colorId 5，desc J26062/Director Kary ✅
+
+### [[2026-08-26]] afternoon — Add "Meeting with Erica" (Teams)
+- **Kary 問**：add calendar Meeting with Erica, Aug-27 15:00-16:00, Teams meeting info
+- **Mugi 做**：建 timed event `lcskl9hu3mn77lsvf2lhcc7t30`「Meeting with Erica - Orbis」8/27(Thu) 15:00–16:00, colorId 6 (Meeting/Tangerine), location Teams, desc J26062 + Teams join/ID/passcode。Weekday Python-verified (Thu, 非假期) ✅
+- **Followup**：（none）
+
+### [[2026-08-27]] afternoon — Add 4-video post-pro schedule (12 events)
+- **Kary 問**：add 4 條唔同片 (A 群姐 / B 醫生訪問 / C Real-Case Docu / D CEO)，B/C/D 各自 separate event，每條 1st/2nd cut + Final Output
+- **Mugi 做**：date-verified 全部 OK。Flag Sep-11 saturation（連 DFIQ Final 共 5 條交片）→ Kary「Sep-11 照入」→ push 12 events (cut=7, Final Output=Grape 3)，各片獨立 shorthand（Orbis 群姐/醫生訪問/Real-Case Docu/CEO Video），desc J26062/Director Kary,Atlas ✅
+- **Followup**：9/11 密（5 條交片），後期 buffer 要留意

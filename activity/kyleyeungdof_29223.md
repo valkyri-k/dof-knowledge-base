@@ -49,6 +49,9 @@ Kyle 喺 home base 問 J25072 CWB New Store 有冇 clean version。呢個係 loo
 ### 2026-07-27 afternoon session (7-Eleven YouTube sweep)
 Kyle 喺 home base 問 dofofapple YouTube channel 全部同 7-Eleven HK 有關嘅片。行 youtube-search.js 掃 `7eleven` / `7-11` / `711` 三個 variant（warm cache），~92 條 genuine 片，隔走「711」撞正 date 嘅 false-positive（20240711 Hang Seng、CLP、Disney、PHILIPS 等）。整理成 10 個 campaign 覆返：Chicken 2019 (26)、1000th Store 2021 (14)、TradeShow Event 2025 (13)、ENG/TC 2025 (10)、Trade Show 2022 (8)、Leadership Forum 2025 (6)、Coca-Cola / DFI Store / Summer Run (各 4)、2016 Event (3, 全 private)。Flag 咗 private 片（link 開唔到）+ 提 unlisted 唔好公開散。Kyle 嘅 style 一致：直接 title-text lookup，Mugi 一次過俾晒 grouped links。
 
+### 2026-08-07 to 08-25 session (J26091 ops) — ⚠️ Kyle 於 2026-09 離職 DOF
+Kyle 呢個 session 兩件事：(1) 8/7 喺 J26091 channel 問 Google Drive server folder location → 搵到 `My Drive / job-files / j26091_...`；(2) 8/25 喺 home base 俾 J26091 711 Trade Show post-pro schedule（7 milestone，8/24 soundbites → 9/7 Final Output），Mugi push 埋 Calendar + Trello（新 list「J26091 711 Trade Show」+ 7 cards），但 Trello cards 未 assign editor/mograph（問咗 Kyle 未答）。⚠️ 8/25 佢 3 條 message 一度冇即時覆，Kary 澄清係 agent re-login/downtime（唔係 silent-reply bug）。**Kary 9/2 通知 Kyle 已於 9 月離職**——KB team roster 標離職，J26091 director 加咗 Benjy alongside（Kyle 保留做記錄，PR-2）。J26091 Trello 未 assign 嘅問題 moot（Sohling 管 Trello，由佢定）。Kyle file 之後唔再有新 interaction。
+
 ---
 
 ## Request Log
@@ -61,3 +64,4 @@ Kyle 喺 home base 問 dofofapple YouTube channel 全部同 7-Eleven HK 有關�
 | 2026-07-23 | J25072 CWB New Store — 有冇 clean version | Searched YT/Vimeo/dof.internal Drive；found DFI 7-11 CWB Store cuts (all with-text/graphics, unlisted) + Vimeo Restoration_16x9 (password)；**冇 clean/textless master**。對唔到 J#（片名無 J#）；Drive 搵唔到 j25072 folder。Flagged + offered tag Sohling。gap-log logged |
 | 2026-07-27 | All 7-Eleven HK videos in YouTube channel | youtube-search.js swept 7eleven/7-11/711 → ~92 genuine clips (date false-positives filtered)；grouped into 10 campaigns，private/unlisted flagged ✅ |
 | 2026-08-07 | J26091 (in job channel) — 問 Google Drive server folder location | Searched dof.internal Drive → `My Drive / job-files / j26091_dfi-711-trade-show-present-video`；replied w/ clickable link ✅ |
+| 2026-08-25 | J26091 711 Trade Show — mark post-pro schedule to Calendar + Trello (home base) | 7 milestones (8/24 soundbites → 9/7 Final Output) pushed: 7 Calendar events (cut=7, client/mgmt FB=2, Final Output=Grape 3) + new Trello list "J26091 711 Trade Show" w/ 7 cards (labels cut/from client/mograph/final, **members unassigned — asked Kyle editor/mograph**). Date-verified. Noted "edit schedule" but no existing J#-tagged milestone events → new create. 8/24 past (kept). ⚠️ Kyle's 3 msgs (02:41–02:47) got no immediate reply — Kary clarified cause = agent re-login/downtime (NOT silent-reply trigger bug) |

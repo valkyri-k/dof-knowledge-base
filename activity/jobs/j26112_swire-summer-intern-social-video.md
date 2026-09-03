@@ -25,3 +25,8 @@ last_updated: [[2026-08-11]]
 - **Kary 問**：Director: Kary, Erase, Atlas；just add to calendar, no need to update master job log yet
 - **Mugi 做**：Patch 3 個 shoot event description 加 `Director: Kary, Erase, Atlas`（Day1/2/3），master job log 冇郁。Flag「Erase」team record 冇呢個名（照原文入，問係咪 typo）
 - **Followup**：待 Kary confirm「Erase」串法
+
+### [[2026-09-02]] evening — Add post-pro production timeline (7 milestones)
+- **Kary 問**：production timeline 7 個 milestone（Video Flow & Style Frame 9/2 → Final 9/30），部分標 [TBC]
+- **Mugi 做**：date-verified 全部 OK、saturation clear。Push 7 個 event。[TBC] 4 個（9/4/17/25/30）用 (TBC) prefix。9/2 Video Flow & Style Frame combine 一個 event 用 Blueberry 9（flag Video Flow 本係 Banana，問拆唔拆）；FB=Sage 2、cut=Peacock 7、9/30 Final=Grape 3 (HR-1)。desc J26112/Director Kary ✅
+- **Followup**：9/2 改咗做 Peacock 7 (same as edit task, Kary); Kary: only this case (唔改 KB general rule)。resolved ✅

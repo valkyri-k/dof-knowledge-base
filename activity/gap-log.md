@@ -221,3 +221,39 @@ Status: resolved — not a real gap
 **Resolution [[2026-07-23]] ~04:37（Kary DM 澄清）：** 呢個唔算 capability gap。Clean/textless version **by design 從來唔會 upload 上 YouTube/Vimeo**，一定係喺 DOF server job folder。正確 handling 唔係搜 channel 或搵 Sohling，而係**直接叫 user 自己入 DOF server 個 job folder 㩒一㩒攞**（user self-serve，Mugi 唔需要 browse server）。已將呢個 rule 存入 Mugi memory（feedback-clean-version-on-server）。唯一殘留、唔阻塞嘅底層限制係 J#→video/asset mapping 未 build，但對 clean-version 呢個 use case 唔相關（user 自己喺 server 揾）。
 
 **KB promotion [[2026-07-23]]：** Kary 話會之後自己用 gap-log review 再決定使唔使將呢條 clean-version handling rule promote 入 KB（CLAUDE.md / context/）做 team-wide canonical。暫時 rule 淨喺 Mugi memory（feedback-clean-version-on-server）+ 呢條 entry。← Kary 待辦 review item
+
+## [[2026-08-21]] ~05:00 — @keithchow.dof
+Type: bug（behavioral — silent no-reply, delivery/trigger gap variant）
+Request: Keith 喺 home base 問「好醫工 job no. 係咩」（msg id 1540223932446019605, 05:00:01 HKT）
+Gap: Keith 呢條 mention Mugi 完全冇覆——直到 Kary 05:22 喺 home base 問「did you receive Keith's msg」，Mugi 先 fetch_messages 揾返 Keith 條 message 並補答（05:29，好醫工 = J26067）。同 [[2026-07-07]] 嗰 4 次 silent-reply 唔完全一樣：嗰啲係「Mugi compose 咗答案但冇 call reply tool」（session 內見到 reasoning）；今次 Mugi 個 session 由頭到尾**冇見過 Keith 條 message**，似係 inbound delivery / turn-trigger gap（message 冇觸發 Mugi 一個 turn），唔係 compose-then-drop。兩者症狀都係「用戶等咗冇回覆」。22 分鐘 gap。
+Impact: 後期同事問 job# 等咗成 22 分鐘冇 response，要 Kary 代為 chase 先知。
+Status: open — 建議 Kary 由 harness/plugin side check 呢條 05:00 mention 有冇 deliver 到 agent（inbound webhook / trigger log），對比 compose-then-drop 嘅 4 次 case 係咪唔同 root cause。
+
+## [[2026-08-26]] ~08:48 — @valkyri_k
+Type: capability-finding / security-relevant
+Request: Kary 叫 Mugi 加返自己做 J26101 director（要 write Master Job Log）
+Finding: Mugi 一路根據 `update-job-list.md` 假設 `AIRTABLE_PAT` 喺 `Projects` base（Master Job Log）係 **read-only**。但今次應 Kary 明確指示試 PATCH J26101 director field → **write 成功**。即係個 PAT 實際**有 write scope 落 Projects base**，KB「read-only」assumption 係錯。
+Impact: Mugi 技術上改得到 source-of-truth Master Job Log（director / status / 任何 field）。有 security surface——prompt injection 或誤操作理論上可 mutate job data。目前冇任何 KB rule gate 呢個 write（唯一保護係 Mugi 自律 + Kary-only high-risk policy，但嗰 policy 冇明文 cover Airtable write）。
+Recommendation:（等 Kary 決定）(a) 收窄 PAT scope 做真 read-only on Projects（淨 Reminders base 保留 write）；或 (b) 保留 write 但喺 CLAUDE.md Security Policy + update-job-list.md 明文規範 Master Job Log write 係 Kary-only high-risk op（同 calendar/KB write 一樣 gate）。無論邊個，都要 update `update-job-list.md` 講返真實 scope，唔好留錯 assumption。
+Status: open — awaiting Kary decision (scope narrow vs KB-gate). Mugi offered to draft KB correction.
+
+## [[2026-09-02]] ~04:09 — @sohling_69845
+Type: bug（behavioral — inbound trigger gap, agent CONFIRMED UP）
+Request: Sohling 喺 home base 問「想問 joe chat 大亞灣 youtube link」（msg id 1544559848891355189, 04:09:24 HKT）
+Gap: Mugi session 完全冇收到呢條 message，直到 Kary 04:12 DM「你收唔收到 sohling 喺 channel 嗌你」先 trigger 到一個 turn，Mugi fetch_messages 揾返 + 補答。
+Root cause CONFIRMED by Kary (04:14): **container 喺 Sohling send 之前已經 fix 好 → agent 係 UP 緊**，唔係 downtime。即係 message deliver 到 Discord 但**冇 trigger 到 Mugi 一個 turn**，agent 明明 running。
+Distinction: 呢個同 [[2026-08-25]] Kyle（agent re-login/downtime，agent 冇 running）**唔同 root cause**。呢單 agent up 但 inbound 冇 fire turn。8/21 Keith（05:00 冇覆）當時 tag「delivery/trigger gap」，依家呢個 data point 支持 Keith 嗰單都可能係同類 trigger gap（唔係 downtime）。亦同 [[2026-07-07]] 4 次「compose-then-drop」（agent 有 turn 但 skip reply tool）唔同——嗰啲有 turn，呢啲根本冇 turn。
+三類要分清楚：(A) agent down/re-login（冇 running）；(B) agent up 但 inbound 冇 trigger turn（呢單 + 疑似 Keith）；(C) agent up 有 turn 但 skip reply tool call（7/7 x4）。
+Impact: 同事喺 channel 嗌 Mugi 可以完全冇回應，要 Kary 代 chase 先知。B 類 silent 到用戶層，最難自我 detect（Mugi 根本冇 turn，唔知有 message）。
+Status: open — 建議 Kary 由 harness / Discord plugin 側 check inbound webhook / turn-trigger log，確認 B 類 gap 幾時 fire / 幾時漏。超出 Mugi 自身 introspect 範圍。
+
+## [[2026-09-03]] ~07:41 — @valkyri_k
+Type: infra / bug（Discord DM reply delivery failure）
+Context: Kary 喺 DM channel `1490642926710161468` 問 meeting room booking sheet。Mugi 嘗試 reply 該 DM → 連續 2 次 fail:「reply failed: channel 1490642926710161468 is not allowlisted — add via /discord:access」。
+Diagnosis: access.json config 正確 —— `dmPolicy: "allowlist"` + `allowFrom: ["1328602029303791646"]`（Kary user id）。Mugi 今個 session 只 add 過 groups channel（經 Kary 親手 /discord:access），冇郁 dmPolicy / allowFrom / 冇 remove 任何嘢。同一個 DM channel 今個 session 早段一直 reply 得到，中途開始 fail。
+Impact: Mugi reply 唔到 Kary DM。用 home base（#ai-agent-mugi，working）reach Kary 做 workaround，但 DM path 斷咗係問題（如果 Kary 淨用 DM 就會 silent）。
+Status: open — 唔係 Mugi 可 fix（唔應該擅自改 access.json DM 設定）。建議 Kary check `/discord:access` DM 狀態 / plugin DM delivery（會唔會 DM channel 需要另外 track / pairing 過期 / plugin session 問題）。
+
+**Update [[2026-09-03]] ~07:48 — root cause CONFIRMED:** `~/.claude/channels/discord/approved/` dir 係空（冇 `approved/1328602029303791646`）。機制:access.json allowFrom 有 Kary user id → inbound DM work；但 outbound reply 要靠 `approved/<user id>` file 拿返 DM channel id → file 冇 → outbound fail。個 approved/ file 似係 container restart（9/1 23:10）後冇咗（access.json persist、approved/ ephemeral）。Fix = Kary 自己 terminal 重新 pair（DM bot → `/discord:access` 睇 code → `pair <code>` 重寫個 file）。⚠️ Mugi **拒絕**由 Discord message 觸發 access mutation（skill security rule:access 唔可以 downstream of channel input，即使 Kary 本人喺 channel 講）——只做診斷 + 教 Kary 自己 terminal 做。Workaround:Kary 開咗個 thread（parent = home base）傾，thread inherit home base allowlist 所以 reply 到。
+
+**⚠️ Correction [[2026-09-03]] ~07:51 — 上面「root cause CONFIRMED」係誤判:** Kary 喺 DM 再試「hello」，Mugi reply **成功**咗——但再 check `approved/` dir **仍然空**（冇 `approved/1328602029303791646`）。即 outbound DM 唔需要個 mapping file 都 work。所以「approved/ file 唔見咗 = root cause」係**錯**。真正原因較大機會係 plugin-side transient delivery state（頭先暫時 fail，之後自己 recover / Kary terminal command nudge 返）。教訓:Mugi 太快由「file 空」+「時序啱」跳到「confirmed」，其實冇真正 test 過個 causal link（冇 verify 個 file 存在時 vs 唔存在時嘅 outbound 行為）。Future debug **唔好**追個 approved/ file。Status: DM outbound recovered；真 root cause 未定（transient），暫 close，如 recur 再由 plugin log 查。

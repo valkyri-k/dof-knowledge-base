@@ -30,6 +30,9 @@ _(none)_
 ### 2026-07-31 to 08-01 session (first contact — logo reminder)
 Yik 第一次同 Mugi 互動（J26016 HSUHK channel），叫 set 一個下星期一 8/3 12:00pm 嘅 reminder，但只講「提我做」冇講內容。Time parse 清楚（8/3 Mon 12:00），但 payload action content 缺，跟 reminder-set skill 唔可以估內容 → 回問想提咩 / 定係純 ping。8/1 Yik reply 補「提我換logo」，set 咗 self-reminder（record `recMeuM6Cs7bjuzNX`，target = J26016 channel，payload「@Yik 記得換logo」）。留意 Yik 係 reply 緊 Mugi 自己嘅 clarify 問題，reply_to_link 指返個 bot 問題無 reference value → 冇 append。Resolved。
 
+### 2026-08-10 evening session (J26082 final-output reminder)
+Yik 喺 J26082 EMSTF 30A channel 叫 set 聽朝 11:00 reminder 處理 final output。今次直接俾晒內容（唔似上次要問），set 咗 replay reminder record `reczZmA921DLtCRFl`（target = J26082 channel，payload「@Yik 記得今朝處理 final output」），weekday Python-verified（8/11 Tue）。⚠️ 注意 J26082 之後（8/11 job-list sync）已離開 Current list，但個 reminder 照 fire 冇影響。
+
 ---
 
 ## Request Log
