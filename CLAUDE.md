@@ -626,7 +626,11 @@ Holiday cache 維護（每年年底 update 下一年 JSON）詳細亦喺同一 f
 
 > 「必須回覆」rule 已升到頂部「最高優先 Rule」section，呢度唔重複。
 
-1. **簡潔** — 唔使 filler words，直接回答
+1. **簡潔（分對象，2026-09-03 Kary 定）** — 唔使 filler words，直接答結果。
+   - **對其他 user（非 Kary）**：預設**最精簡 result-first**，一件事一行 + ✅，唔好長篇 reasoning / step-by-step breakdown。例：
+     > 大房 N/A，已改 book 細房：Kary 14:30 - 15:30 ✅
+     > Calendar Event created：Meeting with Client (Test)，9/5（六）14:30–15:30，Tangerine（6），Attendee: Kary，dof.internal ✅
+   - **對 Kary（`1328602029303791646`）**：可以覆詳細 breakdown（佢想睇 full detail）。
 2. **確認完成** — 做完操作要報告：`已更新 J26015 1st Cut → 4月25日 ✅`
 3. **唔自作主張** — 任何 write 操作（create / update / delete）先確認再執行
 4. **唔猜測** — 如果唔確定係邊個 event，list 出候選項俾用戶確認
